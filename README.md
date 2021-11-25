@@ -1,4 +1,4 @@
-# AR-RCON - Another RCON Client
+# ARRCON - Another RCON Client
 Commandline client application using the [Source RCON Protocol](https://developer.valvesoftware.com/wiki/Source_RCON_Protocol) written in C++.
 
 Capable of handling packets up to 10kB in size, as well as multi-packet responses.  
