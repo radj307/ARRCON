@@ -2,6 +2,7 @@
 
 #include <ParamsAPI2.hpp>
 #include <env.hpp>
+#include <future>
 
 #include <signal.h>
 #include <unistd.h>
@@ -96,9 +97,33 @@ inline void handle_args(const opt::ParamsAPI2& args)
 
 #ifdef OS_WIN
 #include <ControlEventHandler.hpp>
-inline void handler(void) { throw std::exception("SIGINT"); }
+inline void handler(void) { g_connected = false; throw std::exception("SIGINT"); }
 #endif
 
+static std::optional<std::exception> listener_ex{ std::nullopt };
+
+/**
+ * @brief		Listens for packets on the global socket, receives them, and pushes them to the global queue.
+ * @param mtx	Mutex Reference
+ */
+inline void listener(std::mutex& mtx)
+{
+	try {
+		fd_set set{ 1u, g_socket };
+		const TIMEVAL sel_t{ 2L, 0L }; // 2s
+		while (g_connected) { // while the socket is connected
+			if (select(NULL, &set, NULL, NULL, &sel_t)) { // check if the socket has data to read (timeout 2s)
+				const auto p{ net::recv_packet(g_socket) };
+				std::scoped_lock<std::mutex> lock{ mtx };
+				packet::Queue.push(p);
+				g_wait_for_listener = false; // unset wait for listener
+			}
+		}
+	} catch (const std::exception& ex) {
+		listener_ex = ex;
+		g_connected = false;
+	}
+}
 
 int main(int argc, char** argv, char** envp)
 {
@@ -109,7 +134,7 @@ int main(int argc, char** argv, char** envp)
 	#endif
 		std::cout << sys::term::EnableANSI; // enable ANSI escape sequences on windows
 
-		const opt::ParamsAPI2 args{ argc, argv, 'H', 'P', 'p' }; // parse arguments
+		const opt::ParamsAPI2 args{ argc, argv, 'H', 'P', 'p', 'd', "delay" }; // parse arguments
 		const auto& [host, port, pass] { get_target(args) }; // get connection target info
 
 		handle_args(args);
@@ -123,10 +148,15 @@ int main(int argc, char** argv, char** envp)
 
 		// auth & commands
 		if (rcon::authenticate(g_socket, pass)) {
+			auto thread_listener{ std::async(std::launch::async, listener, std::ref(g_mutex)) };
 			if (const std::vector<std::string> parameters{ args.typegetv_all<opt::Parameter>() }; !parameters.empty())
 				mode::batch(parameters);
 			else
 				mode::interactive(g_socket, "RCON@"s + host);
+			g_connected = false; ///< kill listener thread
+
+			if (thread_listener.valid() && listener_ex.has_value())
+				throw listener_ex.value();
 		}
 		else throw std::exception("Authentication Failed!");
 

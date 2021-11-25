@@ -35,6 +35,14 @@ namespace net {
 		close(sd);
 	#endif
 	}
+
+	inline void set_blocking(const SOCKET& sd, const bool& enabled)
+	{
+		u_long socket_mode{ !enabled };
+		if (const auto rc{ ioctlsocket(sd, FIONBIO, &socket_mode) }; rc != NO_ERROR)
+			throw std::exception("Failed to set socket mode with error " + rc);
+	}
+
 	inline SOCKET connect(const std::string& host, const std::string& port)
 	{
 		SOCKET sd;
@@ -80,9 +88,9 @@ namespace net {
 		}
 
 		return sd;
-}
+	}
 
-	inline int send_packet(const SOCKET& sd, const packet::rc_packet& packet)
+	inline int send_packet(const SOCKET& sd, const packet::Packet& packet)
 	{
 		int len;
 		int total = 0;	// bytes we've sent
@@ -105,54 +113,40 @@ namespace net {
 		return ret == -1 ? -1 : 1;
 	}
 
-	inline int flush(const SOCKET& sd, int size)
+	inline void flush(const SOCKET& sd)
 	{
-		std::unique_ptr<char> tmp;
-		//char tmp[size];
-		int ret = recv(sd, tmp.get(), size, 0);
-
-		if (ret == 0) {
-			fprintf(stderr, "Connection lost.\n");
-			g_connected = 0;
+		fd_set set{ 1u, sd };
+		auto rc{ select(NULL, &set, NULL, NULL, NULL) };
+		while (rc != 0 && rc != SOCKET_ERROR) {
+			if (recv(sd, std::unique_ptr<char>{}.get(), packet::PSIZE_MAX, 0) == 0)
+				throw std::exception("Connection Lost! Last Error: " + WSAGetLastError());
+			rc = select(NULL, &set, NULL, NULL, NULL);
 		}
-
-		return ret;
 	}
 
-	inline std::optional<packet::rc_packet> recv_packet(const SOCKET& sd)
+	inline packet::Packet recv_packet(const SOCKET& sd)
 	{
 		int psize;
 
-		if (int ret{ recv(sd, (char*)&psize, sizeof(int), 0) }; ret == 0) {
-			std::cerr << sys::term::error << "Connection Lost!" << std::endl;
-		#ifdef _WIN32
-			std::cerr << "Last socket error code: " << WSAGetLastError() << std::endl;
-		#endif
-			return std::nullopt;
-		}
-		else if (ret != sizeof(int)) {
-			std::cerr << "Receive operation failed because the packet size was invalid! (" << ret << ')' << std::endl;
-			g_connected = 0;
-			return std::nullopt;
-		}
+		if (int ret{ recv(sd, (char*)&psize, sizeof(int), 0) }; ret == 0)
+			throw std::exception("Connection Lost! Last Error: " + WSAGetLastError());
+		else if (ret != sizeof(int))
+			throw std::exception("Invalid packet size: " + ret);
 
 		if (psize < packet::PSIZE_MIN) {
 			std::cerr << sys::term::warn << "Received unexpectedly small packet size: " << psize << std::endl;
 		}
 		else if (psize > packet::PSIZE_MAX) {
 			std::cerr << sys::term::warn << "Received unexpectedly large packet size: " << psize << std::endl;
-			flush(sd, packet::PSIZE_MAX);
+			flush(sd);
 		}
 
 		packet::serialized_packet spacket{ psize, 0, 0, {0x00} }; ///< create a serialized packet to receive data
 
 		for (int received{ 0 }, ret{ 0 }; received < psize; received += ret) {
 			ret = recv(sd, (char*)&spacket + sizeof(int) + received, psize - received, 0);
-			if (ret == 0) { /* connection closed before completing receving */
-				fprintf(stderr, "Connection lost.\n");
-				g_connected = 0;
-				return std::nullopt;
-			}
+			if (ret == 0)
+				throw std::exception("Connection Lost! Last Error: " + WSAGetLastError());
 		}
 
 		return { spacket };

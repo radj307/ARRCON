@@ -2,6 +2,7 @@
 #include "globals.h"
 
 #include <ostream>
+#include <deque>
 
 namespace packet {
 	/// @brief Minimum allowable packet size
@@ -53,18 +54,18 @@ namespace packet {
 	} serialized_packet;
 
 	/**
-	 * @struct	rc_packet
+	 * @struct	Packet
 	 * @brief	Non-serialized RCON Protocol Packet Structure.
 	 */
-	struct rc_packet {
+	struct Packet {
 		int size;
 		int id;
 		int type;
 		std::string body;
-		rc_packet() : size{ 0 }, id{ 0 }, type{ 0 }, body{ "" } {}
-		rc_packet(const serialized_packet& spacket) : size{ spacket.size }, id{ spacket.id }, type{ spacket.type }, body{ spacket.body } {}
-		rc_packet(const int& id, const int& type, const std::string& body) : size{ static_cast<int>(sizeof(int) * 2ull + body.size() + 2ull) }, id{ id }, type{ type }, body{ body } {}
-		rc_packet& operator=(const rc_packet& o)
+		Packet() : size{ 0 }, id{ 0 }, type{ 0 }, body{ "" } {}
+		Packet(const serialized_packet& spacket) : size{ spacket.size }, id{ spacket.id }, type{ spacket.type }, body{ spacket.body } {}
+		Packet(const int& id, const int& type, const std::string& body) : size{ static_cast<int>(sizeof(int) * 2ull + body.size() + 2ull) }, id{ id }, type{ type }, body{ body } {}
+		Packet& operator=(const Packet& o)
 		{
 			body.clear();
 			size = o.size;
@@ -84,7 +85,7 @@ namespace packet {
 			return s;
 		}
 
-		friend std::ostream& operator<<(std::ostream& os, const rc_packet& packet)
+		friend std::ostream& operator<<(std::ostream& os, const Packet& packet)
 		{
 			os << g_palette.set(UIElem::PACKET) << packet.body << g_palette.reset();
 			if (packet.body.back() != '\n')
@@ -103,13 +104,6 @@ namespace packet {
 	private:
 		int _current_id{ ID_MIN };
 
-		constexpr int req()
-		{
-			if (_current_id >= ID_MAX)
-				_current_id = ID_MIN;
-			return _current_id;
-		}
-
 	public:
 		constexpr int get()
 		{
@@ -123,4 +117,24 @@ namespace packet {
 			return _current_id;
 		}
 	} ID_Manager;
+
+	/**
+	 * @struct	Queue
+	 * @brief	Handles the packet receiving queue.
+	 */
+	static struct {
+	private:
+		std::deque<packet::Packet> queue;
+
+	public:
+		auto flush() noexcept { queue.clear(); }
+		bool empty() const noexcept { return queue.empty(); }
+		auto push(auto&& packet) noexcept(false) { return queue.push_back(std::forward<decltype(packet)>(packet)); }
+		auto pop() noexcept
+		{
+			const auto copy{ queue.front() };
+			queue.pop_front();
+			return copy;
+		}
+	} Queue;
 }
