@@ -7,7 +7,7 @@
 #include <signal.h>
 #include <unistd.h>
 
-inline constexpr const auto VERSION{ "1.0.0" };
+inline constexpr const auto VERSION{ "0.0.0" };
 
 /**
  * @brief	Emergency stop handler, should be passed to the std::atexit() function to allow a controlled shutdown of the socket.
