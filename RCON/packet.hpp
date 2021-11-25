@@ -88,7 +88,7 @@ namespace packet {
 		friend std::ostream& operator<<(std::ostream& os, const Packet& packet)
 		{
 			os << g_palette.set(UIElem::PACKET) << packet.body << g_palette.reset();
-			if (packet.body.back() != '\n')
+			if (!packet.body.empty() && packet.body.back() != '\n')
 				os << '\n'; // print newline if packet doesn't already have one
 			os.flush();
 			return os;

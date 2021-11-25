@@ -90,7 +90,7 @@ namespace net {
 		return sd;
 	}
 
-	inline int send_packet(const SOCKET& sd, const packet::Packet& packet)
+	inline bool send_packet(const SOCKET& sd, const packet::Packet& packet)
 	{
 		int len;
 		int total = 0;	// bytes we've sent
@@ -110,7 +110,7 @@ namespace net {
 			bytesleft -= ret;
 		}
 
-		return ret == -1 ? -1 : 1;
+		return ret != -1;
 	}
 
 	inline void flush(const SOCKET& sd)

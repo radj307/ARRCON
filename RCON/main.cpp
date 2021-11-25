@@ -7,7 +7,8 @@
 #include <signal.h>
 #include <unistd.h>
 
-inline constexpr const auto VERSION{ "0.0.0" };
+inline constexpr const auto VERSION{ "0.1.0" };
+
 
 /**
  * @brief	Emergency stop handler, should be passed to the std::atexit() function to allow a controlled shutdown of the socket.
@@ -100,6 +101,7 @@ inline void handle_args(const opt::ParamsAPI2& args)
 inline void handler(void) { g_connected = false; throw std::exception("SIGINT"); }
 #endif
 
+#ifdef MULTITHREADING
 static std::optional<std::exception> listener_ex{ std::nullopt };
 
 /**
@@ -124,6 +126,7 @@ inline void listener(std::mutex& mtx)
 		g_connected = false;
 	}
 }
+#endif
 
 int main(int argc, char** argv, char** envp)
 {
@@ -148,15 +151,19 @@ int main(int argc, char** argv, char** envp)
 
 		// auth & commands
 		if (rcon::authenticate(g_socket, pass)) {
+		#ifdef MULTITHREADING
 			auto thread_listener{ std::async(std::launch::async, listener, std::ref(g_mutex)) };
+		#endif
 			if (const std::vector<std::string> parameters{ args.typegetv_all<opt::Parameter>() }; !parameters.empty())
 				mode::batch(parameters);
 			else
 				mode::interactive(g_socket, "RCON@"s + host);
 			g_connected = false; ///< kill listener thread
 
+		#ifdef MULTITHREADING
 			if (thread_listener.valid() && listener_ex.has_value())
 				throw listener_ex.value();
+		#endif
 		}
 		else throw std::exception("Authentication Failed!");
 

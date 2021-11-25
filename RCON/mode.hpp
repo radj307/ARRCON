@@ -2,6 +2,10 @@
 #include "globals.h"
 #include "rcon.hpp"
 
+/**
+ * @namespace	mode
+ * @brief		Contains all of the mode functions.
+ */
 namespace mode {
 	// Batch execute all command parameters mode
 	inline size_t batch(const std::vector<std::string>& commands)
@@ -22,9 +26,9 @@ namespace mode {
 		const auto prompt_str{ str::stringify(g_palette.set(UIElem::TERM_PROMPT_NAME), prompt, g_palette.reset(UIElem::TERM_PROMPT_ARROW), '>', g_palette.reset(), ' ') };
 
 		while (g_connected) {
+		#ifdef MULTITHREADING
 			// wait for the listener thread to finish its operation
 			while (g_wait_for_listener) { std::this_thread::sleep_for(50us); }
-
 			{
 				std::scoped_lock<std::mutex> lock(g_mutex); // lock the mutex
 				while (!packet::Queue.empty()) {
@@ -41,6 +45,7 @@ namespace mode {
 					std::this_thread::sleep_for(50us); // sleep for 50us
 				}
 			} // mutex is unlocked
+		#endif
 
 			std::string command;
 
@@ -51,7 +56,9 @@ namespace mode {
 				break;
 
 			if (command.size() > 0 && g_connected) {
+			#ifdef MULTITHREADING
 				g_wait_for_listener = true;
+			#endif
 				rcon::command(sock, command);
 				std::this_thread::sleep_for(std::chrono::milliseconds(50));
 			}

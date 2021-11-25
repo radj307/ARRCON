@@ -69,12 +69,12 @@ namespace rcon {
 		const auto pid{ packet::ID_Manager.get() };
 		packet::Packet packet{ pid, packet::Type::SERVERDATA_AUTH, passwd };
 
-		if (int ret{ net::send_packet(sock, packet) }; !ret)
-			return false;
+		if (net::send_packet(sock, packet)) {
+			packet = net::recv_packet(sock);
+			return packet.id == pid;
+		}
+		return false;
 
-		packet = net::recv_packet(sock);
-
-		return packet.id == pid;
 	}
 	/**
 	 * @brief			Send a command to the connected RCON server.
@@ -85,12 +85,33 @@ namespace rcon {
 	inline bool command(const SOCKET& sock, const std::string& command)
 	{
 		const auto pid{ packet::ID_Manager.get() };
-		packet::Packet packet{ pid, packet::Type::SERVERDATA_EXECCOMMAND, command };
 
-		net::send_packet(sock, packet);
+		if (!net::send_packet(sock, { pid, packet::Type::SERVERDATA_EXECCOMMAND, command }))
+			return false;
+
+	#ifdef MULTITHREADING
 		return true;
-		//packet = net::recv_packet(sock);
+	#else
+		const auto terminator_pid{ packet::ID_Manager.get() };
+		bool wait_for_term{ false };
+		std::this_thread::sleep_for(std::chrono::milliseconds(10)); // allow some time for the server to respond
+		auto p{ net::recv_packet(sock) };
 
-		//return packet.id == pid;
+		std::cout << p;
+		fd_set socket_set{ 1u, sock };
+		const TIMEVAL timeout{ 0L, 500L };
+		for (size_t i{ 0ull }; select(NULL, &socket_set, NULL, NULL, &timeout) == 1; p = net::recv_packet(sock), ++i) {
+			if (i == 0ull && net::send_packet(sock, { terminator_pid, packet::Type::SERVERDATA_RESPONSE_VALUE, "TERM" }))
+				wait_for_term = true;
+			if (wait_for_term && p.id == terminator_pid) {
+				net::flush(sock);
+				break;
+			}
+			else std::cout << p.body; ///< don't print newlines automatically
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+		}
+		std::cout << std::endl; ///< print newline & flush STDOUT
+		return p.id == terminator_pid || !wait_for_term; // if the last received packet has the terminator's ID, or if the terminator wasn't set
+	#endif
 	}
 }

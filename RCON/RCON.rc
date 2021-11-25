@@ -69,12 +69,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "radj307"
             VALUE "FileDescription", "Commandline Remote CONsole (RCON) Client"
-            VALUE "FileVersion", "0.0.0"
+            VALUE "FileVersion", "0.1.0"
             VALUE "InternalName", "RCON.exe"
             VALUE "LegalCopyright", "GNU General Public License v3.0"
             VALUE "OriginalFilename", "RCON.exe"
             VALUE "ProductName", "RCON-Client"
-            VALUE "ProductVersion", "0.0.0"
+            VALUE "ProductVersion", "0.1.0"
         END
     END
     BLOCK "VarFileInfo"
