@@ -1,3 +1,8 @@
+/**
+ * @file	net.hpp
+ * @author	Tiiffi, radj307
+ * @brief	Contains all of the raw networking functions used by the rcon namespace.
+ */
 #pragma once
 #include "packet.hpp"
 
@@ -8,10 +13,10 @@
 #include <winsock.h>
 #include <sys/socket.h>
 
-/**
- * @namespace	net
- * @brief		Contains functions used to interact with sockets.
- */
+ /**
+  * @namespace	net
+  * @brief		Contains functions used to interact with sockets.
+  */
 namespace net {
 #ifdef _WIN32
 	inline void init_WSA(void) noexcept(false)

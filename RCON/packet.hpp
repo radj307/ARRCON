@@ -1,9 +1,16 @@
+/**
+ * @file	packet.hpp
+ * @author	radj307
+ * @brief	Contains all of the packet-related objects & methods.
+ */
 #pragma once
 #include "globals.h"
-
 #include <ostream>
-#include <deque>
 
+ /**
+  * @namespace	packet
+  * @brief		Contains the Packet, serialized_packet, and ID_Manager objects.
+  */
 namespace packet {
 	/// @brief Minimum allowable packet size
 	inline constexpr const int PSIZE_MIN{ 10 };
@@ -58,14 +65,36 @@ namespace packet {
 	 * @brief	Non-serialized RCON Protocol Packet Structure.
 	 */
 	struct Packet {
-		int size;
-		int id;
-		int type;
-		std::string body;
-		Packet() : size{ 0 }, id{ 0 }, type{ 0 }, body{ "" } {}
+		int size;			///< @brief Packet Size
+		int id;				///< @brief Packet ID
+		int type;			///< @brief Packet Type
+		std::string body;	///< @brief Packet Body
+
+		/**
+		 * @brief	Zeroed/Null Constructor.
+		 */
+		Packet() : size{ NULL }, id{ NULL }, type{ NULL } {}
+		/**
+		 * @brief			Unserialize Constructor.
+		 * @param spacket	A serialized_packet object to copy values from.
+		 */
 		Packet(const serialized_packet& spacket) : size{ spacket.size }, id{ spacket.id }, type{ spacket.type }, body{ spacket.body } {}
+		/**
+		 * @brief		Constructor.
+		 * @param id	Packet ID number. (Must be greater than 1 to be valid)
+		 * @param type	Packet Type. Accepts the integral value or a Type object.
+		 * @param body	Packet Body / Message String
+		 */
 		Packet(const int& id, const int& type, const std::string& body) : size{ static_cast<int>(sizeof(int) * 2ull + body.size() + 2ull) }, id{ id }, type{ type }, body{ body } {}
-		Packet& operator=(const Packet& o)
+
+		/**
+		 * @brief		Packet assignment operator.
+		 * @tparam T	Input Type.
+		 * @param o		Another Packet or serialized_packet instance.
+		 * @returns		Packet&
+		 */
+		template<class T> requires std::same_as<T, Packet> || std::same_as<T, serialized_packet>
+		Packet & operator=(const T & o) noexcept
 		{
 			body.clear();
 			size = o.size;
@@ -75,6 +104,10 @@ namespace packet {
 			return *this;
 		}
 
+		/**
+		 * @brief	Retrieve a serialized packet with this packet's data.
+		 * @returns	serialized_packet
+		 */
 		serialized_packet serialize() const
 		{
 			serialized_packet s{ 0, 0, 0, {0x00} };
@@ -85,42 +118,68 @@ namespace packet {
 			return s;
 		}
 
+		/**
+		 * @brief	Zeroes all parameters, effectively resetting the packet data.
+		 */
+		void zero()
+		{
+			size = 0;
+			id = 0;
+			type = 0;
+			body.clear();
+		}
+
+		/**
+		 * @brief			Stream insertion operator. Appends a newline to the packet body if one doesn't already exist.
+		 * @param os		Output Stream.
+		 * @param packet	Packet instance.
+		 * @returns			std::ostream&
+		 */
 		friend std::ostream& operator<<(std::ostream& os, const Packet& packet)
 		{
 			os << g_palette.set(UIElem::PACKET) << packet.body << g_palette.reset();
 			if (!packet.body.empty() && packet.body.back() != '\n')
 				os << '\n'; // print newline if packet doesn't already have one
-			os.flush();
-			return os;
+			return os.flush();
 		}
 	};
 
 	/**
 	 * @struct	ID_Manager
-	 * @brief	Manages command ID codes.
+	 * @brief	Manages packet ID codes, which are used to match responses to the request that provoked it.
 	 */
 	static struct {
-		static const int ID_MIN{ 1 }, ID_MAX{ INT_MAX - 10 };
+		static const int
+			/// @brief Minimum possible packet ID number.
+			ID_MIN{ 1 },
+			/// @brief Maximum possible packet ID number.
+			ID_MAX{ INT_MAX / 2 };
 	private:
+		/// @brief Tracks the last used packet ID number.
 		int _current_id{ ID_MIN };
 
 	public:
+		/**
+		 * @brief	Retrieve a unique packet ID number.
+		 *\n		Numbers are unique so far as they can be guaranteed to not match
+		 *\n		any packets still being processed at the same time when the number
+		 *\n		of responses per request is smaller than (INT_MAX / 2).
+		 * @returns	int
+		 */
 		constexpr int get()
 		{
-			return ++_current_id;
-		}
-
-		constexpr int prev() const
-		{
-			if (_current_id > ID_MIN)
-				return _current_id - 1;
-			return _current_id;
+			if (_current_id + 1 < ID_MAX) // if id is in range, increment it and return
+				return ++_current_id;
+			return _current_id = ID_MIN; // else, loop id back to the minimum bound of the valid ID range
 		}
 	} ID_Manager;
 
+#ifdef MULTITHREADING
+#include <deque>
+
 	/**
 	 * @struct	Queue
-	 * @brief	Handles the packet receiving queue.
+	 * @brief	Handles the packet receiving queue when using multithreading.
 	 */
 	static struct {
 	private:
@@ -137,4 +196,5 @@ namespace packet {
 			return copy;
 		}
 	} Queue;
+#endif
 }

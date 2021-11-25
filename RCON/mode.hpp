@@ -1,14 +1,19 @@
+/**
+ * @file	mode.hpp
+ * @author	radj307
+ * @brief	Contains the mode namespace.
+ */
 #pragma once
 #include "globals.h"
 #include "rcon.hpp"
 
-/**
- * @namespace	mode
- * @brief		Contains all of the mode functions.
- */
+ /**
+  * @namespace	mode
+  * @brief		Contains all of the mode functions.
+  */
 namespace mode {
 	// Batch execute all command parameters mode
-	inline size_t batch(const std::vector<std::string>& commands)
+	inline size_t commandline(const std::vector<std::string>& commands)
 	{
 		size_t count{ 0ull };
 		for (auto& cmd : commands) {
@@ -22,7 +27,8 @@ namespace mode {
 	inline void interactive(const SOCKET& sock, const std::string& prompt = "RCON")
 	{
 		using namespace std::chrono_literals;
-		std::cout << "Authentication Successful.\nUse <Ctrl + C> or type \"exit\" to exit.\n";
+		if (!g_no_prompt)
+			std::cout << "Authentication Successful.\nUse <Ctrl + C> or type \"exit\" to exit.\n";
 		const auto prompt_str{ str::stringify(g_palette.set(UIElem::TERM_PROMPT_NAME), prompt, g_palette.reset(UIElem::TERM_PROMPT_ARROW), '>', g_palette.reset(), ' ') };
 
 		while (g_connected) {
@@ -41,15 +47,16 @@ namespace mode {
 						std::cout << g_palette.set(UIElem::PACKET) << p << g_palette.reset();
 						if (p.body.back() != '\n')
 							std::cout << std::endl;
-					}
+	}
 					std::this_thread::sleep_for(50us); // sleep for 50us
-				}
+}
 			} // mutex is unlocked
 		#endif
 
 			std::string command;
 
-			std::cout << prompt_str;
+			if (!g_no_prompt)
+				std::cout << prompt_str;
 			std::getline(std::cin, command);
 
 			if (const auto lc_com{ str::tolower(command) }; lc_com == "exit")
