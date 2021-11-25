@@ -175,7 +175,6 @@
     <ClInclude Include="net.hpp" />
     <ClInclude Include="packet.hpp" />
     <ClInclude Include="rcon.hpp" />
-    <ClInclude Include="resource.h" />
     <ClInclude Include="resource1.h" />
   </ItemGroup>
   <ItemGroup>
