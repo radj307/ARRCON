@@ -51,10 +51,11 @@ int main(int argc, char** argv, char** envp)
 		sys::registerEventHandler();
 		sys::setEventHandlerFunc(sys::Event::CTRL_C, handler);
 	#endif
+
 		std::cout << sys::term::EnableANSI; // enable ANSI escape sequences on windows
 
-		const opt::ParamsAPI2 args{ argc, argv, 'H', 'P', 'p', 'd', "delay" }; // parse arguments
-		const auto& [host, port, pass] { get_target(args) }; // get connection target info
+		const opt::ParamsAPI2 args{ argc, argv, 'H', 'P', 'p', 'd', "delay", 'f', "file" }; // parse arguments
+		const auto& [host, port, pass] { get_server_info(args) };
 
 		handle_args(args);
 

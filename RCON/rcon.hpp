@@ -22,10 +22,10 @@ namespace rcon {
 	 * @param passwd	RCON Password.
 	 * @returns			bool
 	 */
-	inline bool authenticate(const SOCKET& sd, const std::string& passwd)
+	inline bool authenticate(const SOCKET& sd, const std::string& pass)
 	{
 		const auto pid{ packet::ID_Manager.get() };
-		packet::Packet packet{ pid, packet::Type::SERVERDATA_AUTH, passwd };
+		packet::Packet packet{ pid, packet::Type::SERVERDATA_AUTH, pass };
 
 		if (net::send_packet(sd, packet)) {
 			packet = net::recv_packet(sd);
@@ -45,10 +45,6 @@ namespace rcon {
 
 		if (!net::send_packet(sd, { pid, packet::Type::SERVERDATA_EXECCOMMAND, command }))
 			return false;
-
-	#ifdef MULTITHREADING
-		return true; // return early when using listener, don't send additional packets & don't receive packets in the command function.
-	#else
 
 		const auto terminator_pid{ packet::ID_Manager.get() };
 		bool wait_for_term{ false }; ///< true when terminator packet was sent successfully
@@ -74,6 +70,5 @@ namespace rcon {
 		}
 		std::cout << std::endl; ///< print newline & flush STDOUT
 		return p.id == terminator_pid || !wait_for_term; // if the last received packet has the terminator's ID, or if the terminator wasn't set
-	#endif
 	}
 }

@@ -15,6 +15,10 @@ DEFAULT_PROGRAM_NAME{ "RCON.exe" },
 DEFAULT_HOST{ "localhost" },
 DEFAULT_PORT{ "27015" };
 
+/**
+ * @enum	UIElem
+ * @brief	Defines various UI elements, used by the color palette to select appropriate colors.
+ */
 enum class UIElem : unsigned char {
 	TERM_PROMPT_NAME,	// interactive mode prompt name
 	TERM_PROMPT_ARROW,	// interactive mode prompt arrow '>'
@@ -23,12 +27,14 @@ enum class UIElem : unsigned char {
 };
 
 static struct {
+	/// @brief Color palette
 	color::ColorPalette<UIElem> palette{
 		std::make_pair(UIElem::TERM_PROMPT_NAME, color::setcolor{ color::green, color::Layer::FOREGROUND, color::FormatFlag::BOLD }),
 		std::make_pair(UIElem::TERM_PROMPT_ARROW, color::green),
 		std::make_pair(UIElem::PACKET, color::white),
 		std::make_pair(UIElem::PACKET_EMPTY, color::light_gray),
 	};
+
 	/// @brief When true, response packets are not printed to the terminal
 	bool quiet{ false };
 

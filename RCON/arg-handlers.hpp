@@ -12,7 +12,7 @@
  *\n			1	RCON Port
  *\n			2	RCON Password
  */
-inline std::tuple<std::string, std::string, std::string> get_target(const opt::ParamsAPI2& args)
+inline std::tuple<std::string, std::string, std::string> get_server_info(const opt::ParamsAPI2& args)
 {
 	return{
 		args.typegetv<opt::Flag>('H').value_or(DEFAULT_HOST), // hostname
