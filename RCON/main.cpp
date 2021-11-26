@@ -168,7 +168,7 @@ inline std::vector<std::string> read_script_file(std::string filename)
 	if (!file::exists(filename))
 		filename = env::PATH{}.resolve(filename, { "", ".ini", ".txt", ".bat", ".scr" });
 	if (!file::exists(filename))
-		return{};
+		throw std::exception(("Failed to locate file: \""s + filename + "\""s).c_str());
 	if (auto file{ file::read(filename) }; !file.fail()) {
 		std::vector<std::string> commands;
 		commands.reserve(file::count(file, '\n'));
@@ -179,7 +179,7 @@ inline std::vector<std::string> read_script_file(std::string filename)
 		commands.shrink_to_fit();
 		return commands;
 	}
-	return {};
+	throw std::exception(("IO Error Reading File: \""s + filename + "\""s).c_str());
 }
 
 #ifdef OS_WIN
@@ -230,9 +230,9 @@ int main(int argc, char** argv, char** envp)
 				mode::commandline(commands);
 			if (no_commands || MainGlobal.force_interactive)
 				mode::interactive(g_socket, "RCON@"s + host);
-			g_connected = false; ///< kill listener thread
 
 		#ifdef MULTITHREADING
+			g_connected = false; ///< kill listener thread
 			if (thread_listener.valid() && listener_ex.has_value())
 				throw listener_ex.value();
 		#endif
