@@ -77,6 +77,13 @@ namespace net {
 	#endif
 	}
 
+	/**
+	 * @brief
+	 * @author		Tiiffi
+	 * @param host	Target
+	 * @param port
+	 * @return
+	*/
 	inline SOCKET connect(const std::string& host, const std::string& port)
 	{
 		SOCKET sd;

@@ -29,10 +29,10 @@ namespace mode {
 
 	/**
 	 * @brief			Prompts the user for input & handles an interactive session.
-	 * @param sock		Connected RCON socket
+	 * @param sd		Connected RCON socket
 	 * @param prompt	Custom prompt string, not including the arrow.
 	 */
-	inline void interactive(const SOCKET& sock, const std::string& prompt = "RCON")
+	inline void interactive(const SOCKET& sd, const std::string& prompt = "RCON")
 	{
 		using namespace std::chrono_literals;
 		if (!Global.no_prompt)
@@ -50,7 +50,7 @@ namespace mode {
 				break;
 
 			if (Global.connected && !command.empty()) {
-				rcon::command(sock, command);
+				rcon::command(sd, command);
 				std::this_thread::sleep_for(std::chrono::milliseconds(50));
 			}
 		}
