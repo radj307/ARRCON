@@ -15,9 +15,9 @@
 inline std::tuple<std::string, std::string, std::string> get_server_info(const opt::ParamsAPI2& args)
 {
 	return{
-		args.typegetv<opt::Flag>('H').value_or(DEFAULT_HOST), // hostname
-		args.typegetv<opt::Flag>('P').value_or(DEFAULT_PORT), // port
-		args.typegetv<opt::Flag>('p').value_or("")            // password
+		args.typegetv<opt::Flag>('H').value_or(Global.DEFAULT_HOST), // hostname
+		args.typegetv<opt::Flag>('P').value_or(Global.DEFAULT_PORT), // port
+		args.typegetv<opt::Flag>('p').value_or(Global.DEFAULT_PASS)            // password
 	};
 }
 
@@ -25,11 +25,11 @@ inline std::tuple<std::string, std::string, std::string> get_server_info(const o
  * @brief		Handle commandline arguments.
  * @param args	Arguments from main()
  */
-inline void handle_args(const opt::ParamsAPI2& args)
+inline void handle_args(const opt::ParamsAPI2& args, const std::string& program_name)
 {
 	// help:
 	if (args.check_any<opt::Flag, opt::Option>('h', "help")) {
-		std::cout << Help(env::PATH().resolve_split(args.arg0().value()).second);
+		std::cout << Help(program_name);
 		std::exit(EXIT_SUCCESS);
 	}
 	// version:
@@ -37,7 +37,11 @@ inline void handle_args(const opt::ParamsAPI2& args)
 		std::cout << DEFAULT_PROGRAM_NAME << " v" << VERSION << std::endl;
 		std::exit(EXIT_SUCCESS);
 	}
-
+	// write-ini:
+	else if (args.check<opt::Option>("write-ini")) {
+		config::write_default_config(Global.ini_path);
+		std::exit(EXIT_SUCCESS);
+	}
 	// quiet:
 	if (args.check_any<opt::Option, opt::Flag>('q', "quiet"))
 		Global.quiet = true;

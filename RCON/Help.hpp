@@ -8,8 +8,8 @@ struct Help {
 private:
 	const std::string _program_name;
 	const std::vector<std::pair<std::string, std::string>> _options{
-		{ "-H <Host>"s, "RCON Address.   (Default: \""s + DEFAULT_HOST + "\")"s },
-		{ "-P <Port>"s, "RCON Port.      (Default: \""s + DEFAULT_PORT + "\")"s },
+		{ "-H <Host>"s, "RCON Address.   (Default: \""s + Global.DEFAULT_HOST + "\")"s },
+		{ "-P <Port>"s, "RCON Port.      (Default: \""s + Global.DEFAULT_PORT + "\")"s },
 		{ "-p <Pass>"s, "RCON Password." },
 		{ "-f <file>  --file <file>"s, "Load the specified file and run each line as a command."s },
 		{ "-h  --help"s, "Show the help display."s },
@@ -19,6 +19,7 @@ private:
 		{ "-d <ms>  --delay <ms>"s, "Time in milliseconds to wait between each command in commandline mode."s },
 		{ "-n  --no-color"s, "Disable colorized console output."s },
 		{ "--no-prompt"s,"Hides the prompt in interactive mode."s},
+		{ "--write-ini"s, "(Over)write the configuration file with the default values, then exit."s},
 	};
 	const size_t _longest_optname, _max_line_length;
 

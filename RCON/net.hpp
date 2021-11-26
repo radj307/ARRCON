@@ -78,11 +78,11 @@ namespace net {
 	}
 
 	/**
-	 * @brief
+	 * @brief		Connect the socket to the specified RCON server.
 	 * @author		Tiiffi
-	 * @param host	Target
-	 * @param port
-	 * @return
+	 * @param host	Target server IP address or hostname.
+	 * @param port	Target server port.
+	 * @returns		SOCKET
 	*/
 	inline SOCKET connect(const std::string& host, const std::string& port)
 	{
@@ -127,6 +127,12 @@ namespace net {
 		return sd;
 	}
 
+	/**
+	 * @brief			Send a packet to the specified socket.
+	 * @param sd		Socket to use.
+	 * @param packet	Packet to send to the server.
+	 * @returns			bool
+	 */
 	inline bool send_packet(const SOCKET& sd, const packet::Packet& packet)
 	{
 		int len;
@@ -161,9 +167,14 @@ namespace net {
 		}
 	}
 
+	/**
+	 * @brief		Receive a single packet from the specified socket.
+	 * @param sd	Socket to use.
+	 * @returns		packet::Packet
+	 */
 	inline packet::Packet recv_packet(const SOCKET& sd)
 	{
-		int psize;
+		int psize{ NULL };
 
 		if (int ret{ recv(sd, (char*)&psize, sizeof(int), 0) }; ret == 0)
 			throw std::exception("Connection Lost! Last Error: " + lastError());
@@ -178,7 +189,7 @@ namespace net {
 			flush(sd);
 		}
 
-		packet::serialized_packet spacket{ psize, 0, 0, {0x00} }; ///< create a serialized packet to receive data
+		packet::serialized_packet spacket{ psize, NULL, NULL, { 0x00 } }; ///< create a serialized packet to receive data
 
 		for (int received{ 0 }, ret{ 0 }; received < psize; received += ret) {
 			ret = recv(sd, (char*)&spacket + sizeof(int) + received, psize - received, 0);

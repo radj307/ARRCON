@@ -10,10 +10,8 @@
 #include <chrono>
 
 inline constexpr const auto
-VERSION{ "1.0.0" },
-DEFAULT_PROGRAM_NAME{ "RCON.exe" },
-DEFAULT_HOST{ "localhost" },
-DEFAULT_PORT{ "27015" };
+VERSION{ "1.1.0" },
+DEFAULT_PROGRAM_NAME{ "ARRCON.exe" };
 
 /**
  * @enum	UIElem
@@ -34,6 +32,11 @@ static struct {
 		std::make_pair(UIElem::PACKET, color::white),
 		std::make_pair(UIElem::PACKET_EMPTY, color::light_gray),
 	};
+	std::string
+		DEFAULT_HOST{ "localhost" },
+		DEFAULT_PORT{ "27015" },
+		DEFAULT_PASS{ "" };
+
 
 	/// @brief When true, response packets are not printed to the terminal
 	bool quiet{ false };
@@ -41,11 +44,21 @@ static struct {
 	/// @brief When true, hides the prompt in interactive mode.
 	bool no_prompt{ false };
 
+	std::string custom_prompt{};
+
 	/// @brief When true, the RCON socket is currently connected.
 	bool connected{ false };
 
 	/// @brief Delay between sending each command when using commandline mode.
-	std::chrono::milliseconds command_delay{ 0u };
+	std::chrono::milliseconds command_delay{ 0ll };
+
+	/// @brief Delay between receive calls. Changing this may break or fix multi-packet response handling. (Default is 10)
+	std::chrono::milliseconds receive_delay{ 10ll };
+
+	/// @brief amount of time before the select() function times out.
+	std::chrono::milliseconds select_timeout{ 500ll };
+
+	std::string ini_path;
 
 	/// @brief Global socket connected to the RCON server.
 	SOCKET socket{ static_cast<SOCKET>(SOCKET_ERROR) };

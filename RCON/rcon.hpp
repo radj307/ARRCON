@@ -48,13 +48,13 @@ namespace rcon {
 
 		const auto terminator_pid{ packet::ID_Manager.get() };
 		bool wait_for_term{ false }; ///< true when terminator packet was sent successfully
-		std::this_thread::sleep_for(std::chrono::milliseconds(10)); ///< allow some time for the server to respond
+		std::this_thread::sleep_for(Global.receive_delay); ///< allow some time for the server to respond
 		auto p{ net::recv_packet(sd) }; ///< receive first packet
 		std::cout << p;
 
 		// init required vars for the select function
 		fd_set socket_set{ 1u, sd };
-		const TIMEVAL timeout{ 0L, 500L };
+		const timeval timeout{ static_cast<long>(std::trunc(Global.select_timeout.count() / 1000ll)), static_cast<long>(Global.select_timeout.count()) };
 
 		// loop while 1 socket has pending data
 		for (size_t i{ 0ull }; select(NULL, &socket_set, NULL, NULL, &timeout) == 1; p = net::recv_packet(sd), ++i) {
@@ -65,10 +65,10 @@ namespace rcon {
 				break;
 			}
 			else std::cout << p.body; ///< don't print newlines automatically
-			std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			std::this_thread::sleep_for(Global.receive_delay);
 			p = {}; ///< wipe existing packet
 		}
-		std::cout << std::endl; ///< print newline & flush STDOUT
+		std::cout.flush(); ///< print newline & flush STDOUT
 		return p.id == terminator_pid || !wait_for_term; // if the last received packet has the terminator's ID, or if the terminator wasn't set
 	}
 }

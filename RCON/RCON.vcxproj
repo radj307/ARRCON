@@ -133,48 +133,56 @@
     <IncludePath>X:\_Workspace\_repo\_external\libunistd\unistd;$(IncludePath)</IncludePath>
     <SourcePath>$(SourcePath)</SourcePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
+    <TargetName>ARRCON</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MultiThreading-Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>X:\_Workspace\_repo\_external\libunistd\unistd;$(IncludePath)</IncludePath>
     <SourcePath>$(SourcePath)</SourcePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
+    <TargetName>ARRCON</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>X:\_Workspace\_repo\_external\libunistd\unistd;$(IncludePath)</IncludePath>
     <SourcePath>$(SourcePath)</SourcePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
+    <TargetName>ARRCON</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MultiThreading-Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>X:\_Workspace\_repo\_external\libunistd\unistd;$(IncludePath)</IncludePath>
     <SourcePath>$(SourcePath)</SourcePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
+    <TargetName>ARRCON</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>X:\_Workspace\_repo\_external\libunistd\unistd;$(IncludePath)</IncludePath>
     <SourcePath>$(SourcePath)</SourcePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
+    <TargetName>ARRCON</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MultiThreading-Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>X:\_Workspace\_repo\_external\libunistd\unistd;$(IncludePath)</IncludePath>
     <SourcePath>$(SourcePath)</SourcePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
+    <TargetName>ARRCON</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>X:\_Workspace\_repo\_external\libunistd\unistd;$(IncludePath)</IncludePath>
     <SourcePath>$(SourcePath)</SourcePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
+    <TargetName>ARRCON</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MultiThreading-Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <IncludePath>X:\_Workspace\_repo\_external\libunistd\unistd;$(IncludePath)</IncludePath>
     <SourcePath>$(SourcePath)</SourcePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
+    <TargetName>ARRCON</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -317,6 +325,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="arg-handlers.hpp" />
+    <ClInclude Include="config.hpp" />
     <ClInclude Include="globals.h" />
     <ClInclude Include="Help.hpp" />
     <ClInclude Include="mode.hpp" />

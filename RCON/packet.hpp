@@ -173,28 +173,4 @@ namespace packet {
 			return _current_id = ID_MIN; // else, loop id back to the minimum bound of the valid ID range
 		}
 	} ID_Manager;
-
-#ifdef MULTITHREADING
-#include <deque>
-
-	/**
-	 * @struct	Queue
-	 * @brief	Handles the packet receiving queue when using multithreading.
-	 */
-	static struct {
-	private:
-		std::deque<packet::Packet> queue;
-
-	public:
-		auto flush() noexcept { queue.clear(); }
-		bool empty() const noexcept { return queue.empty(); }
-		auto push(auto&& packet) noexcept(false) { return queue.push_back(std::forward<decltype(packet)>(packet)); }
-		auto pop() noexcept
-		{
-			const auto copy{ queue.front() };
-			queue.pop_front();
-			return copy;
-		}
-	} Queue;
-#endif
 }

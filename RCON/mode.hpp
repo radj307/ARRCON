@@ -34,7 +34,6 @@ namespace mode {
 	 */
 	inline void interactive(const SOCKET& sd, const std::string& prompt = "RCON")
 	{
-		using namespace std::chrono_literals;
 		if (!Global.no_prompt)
 			std::cout << "Authentication Successful.\nUse <Ctrl + C> or type \"exit\" to exit.\n";
 		const auto prompt_str{ str::stringify(Global.palette.set(UIElem::TERM_PROMPT_NAME), prompt, Global.palette.reset(UIElem::TERM_PROMPT_ARROW), '>', Global.palette.reset(), ' ') };
