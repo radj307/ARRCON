@@ -1,7 +1,30 @@
 /**
  * @file	net.hpp
- * @author	Tiiffi, radj307
+ * @author	Tiiffi (Updated & modified for C++ by radj307)
  * @brief	Contains all of the raw networking functions used by the rcon namespace.
+ *\n		These functions were originally created by Tiiffi for mcrcon: (https://github.com/Tiiffi/mcrcon)
+ *\n		This is the original license:
+ *\n
+ *\n		Copyright (c) 2012-2021, Tiiffi <tiiffi at gmail>
+ *\n
+ *\n		This software is provided 'as-is', without any express or implied
+ *\n		warranty. In no event will the authors be held liable for any damages
+ *\n		arising from the use of this software.
+ *\n
+ *\n		Permission is granted to anyone to use this software for any purpose,
+ *\n		including commercial applications, and to alter it and redistribute it
+ *\n		freely, subject to the following restrictions:
+ *\n
+ *\n		  1. The origin of this software must not be misrepresented; you must not
+ *\n		  claim that you wrote the original software. If you use this software
+ *\n		  in a product, an acknowledgment in the product documentation would be
+ *\n		  appreciated but is not required.
+ *\n
+ *\n		  2. Altered source versions must be plainly marked as such, and must not be
+ *\n		  misrepresented as being the original software.
+ *\n
+ *\n		  3. This notice may not be removed or altered from any source
+ *\n		  distribution.
  */
 #pragma once
 #include "packet.hpp"
@@ -41,11 +64,17 @@ namespace net {
 	#endif
 	}
 
-	inline void set_blocking(const SOCKET& sd, const bool& enabled)
+	/**
+	 * @brief	Retrieve the last reported socket error code.
+	 * @returns	int
+	 */
+	inline int lastError()
 	{
-		u_long socket_mode{ !enabled };
-		if (const auto rc{ ioctlsocket(sd, FIONBIO, &socket_mode) }; rc != NO_ERROR)
-			throw std::exception("Failed to set socket mode with error " + rc);
+	#ifdef OS_WIN
+		return WSAGetLastError();
+	#else
+		return -1;
+	#endif
 	}
 
 	inline SOCKET connect(const std::string& host, const std::string& port)
@@ -65,10 +94,8 @@ namespace net {
 	#endif
 
 		int ret = getaddrinfo(host.c_str(), port.c_str(), &hints, &server_info);
-		if (ret != 0) {
-			std::cerr << "Name resolution failed with error code " << ret << std::endl;
-			exit(EXIT_FAILURE);
-		}
+		if (ret != 0)
+			throw std::exception(("Name resolution failed with error code "s + std::to_string(ret) + " (Last Socket Error: "s + std::to_string(lastError()) + ")").c_str());
 
 		// Go through the hosts and try to connect
 		for (p = server_info; p != NULL; p = p->ai_next) {
@@ -78,7 +105,7 @@ namespace net {
 				continue;
 
 			ret = connect(sd, p->ai_addr, static_cast<int>(p->ai_addrlen));
-			if (ret == -1) {
+			if (ret == SOCKET_ERROR) {
 				close_socket(sd);
 				continue;
 			}
@@ -87,10 +114,8 @@ namespace net {
 
 		freeaddrinfo(server_info);
 
-		if (p == NULL) {
-			std::cerr << "Connection failed with error code " << WSAGetLastError() << std::endl;
-			exit(EXIT_FAILURE);
-		}
+		if (p == NULL)
+			throw std::exception(("Connection failed with error code "s + std::to_string(lastError())).c_str());
 
 		return sd;
 	}
@@ -124,7 +149,7 @@ namespace net {
 		auto rc{ select(NULL, &set, NULL, NULL, NULL) };
 		while (rc != 0 && rc != SOCKET_ERROR) {
 			if (recv(sd, std::unique_ptr<char>{}.get(), packet::PSIZE_MAX, 0) == 0)
-				throw std::exception("Connection Lost! Last Error: " + WSAGetLastError());
+				throw std::exception("Connection Lost! Last Error: " + lastError());
 			rc = select(NULL, &set, NULL, NULL, NULL);
 		}
 	}
@@ -134,7 +159,7 @@ namespace net {
 		int psize;
 
 		if (int ret{ recv(sd, (char*)&psize, sizeof(int), 0) }; ret == 0)
-			throw std::exception("Connection Lost! Last Error: " + WSAGetLastError());
+			throw std::exception("Connection Lost! Last Error: " + lastError());
 		else if (ret != sizeof(int))
 			throw std::exception("Invalid packet size: " + ret);
 
@@ -151,7 +176,7 @@ namespace net {
 		for (int received{ 0 }, ret{ 0 }; received < psize; received += ret) {
 			ret = recv(sd, (char*)&spacket + sizeof(int) + received, psize - received, 0);
 			if (ret == 0)
-				throw std::exception("Connection Lost! Last Error: " + WSAGetLastError());
+				throw std::exception("Connection Lost! Last Error: " + lastError());
 		}
 
 		return { spacket };

@@ -32,7 +32,6 @@ namespace rcon {
 			return packet.id == pid;
 		}
 		return false;
-
 	}
 	/**
 	 * @brief			Send a command to the connected RCON server.

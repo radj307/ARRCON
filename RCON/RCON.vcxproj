@@ -316,7 +316,9 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="arg-handlers.hpp" />
     <ClInclude Include="globals.h" />
+    <ClInclude Include="Help.hpp" />
     <ClInclude Include="mode.hpp" />
     <ClInclude Include="net.hpp" />
     <ClInclude Include="packet.hpp" />
