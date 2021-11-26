@@ -7,31 +7,12 @@ Supports running scripts & commands directly from the commandline, and/or an int
 # Installation
 No installation is required, simply download the executable and put it somewhere.  
 
-## _(Optional)_ Add location to your PATH
-This allows you to call it from anywhere you open a terminal, or from scripts, without having to specify the absolute filepath.  
-_Note: If you already had a terminal open, you will have to close & re-open it to update its environment._
-
-### __Windows__
-1. Press __Win+R__ to open the run dialog, then paste the following and press enter:  
-   `rundll32.exe sysdm.cpl,EditEnvironmentVariables`
-2. Under _User variables for \<USERNAME\>_, select _Path_, then click _Edit..._ -> _New_ & paste the path to the directory containing `RCON.exe`
-
-   For example, if you placed the executable here: `X:\bin\RCON.exe`, you would put `X:\bin` on your path.  
-
-### __Linux__
-I'd recommend just placing the executable somewhere that is already on your path, such as `/usr/local/bin` as modifying the path permanently requires modifying the shell configuration files.  
-_If you want to anyway:_
-1. Choose whether you want all users to be able to use the program, or just your current user.
-  - Current User:  
-    Use `~/.bashrc` for ___\<SHELL_CFG_FILE\>___ in the command below.
-  - All Users:  
-    Use `/etc/environment` or `/etc/profile` for ___\<SHELL_CFG_FILE\>___ in the command below.
-2. Use `echo "export PATH="<RCON_PATH>:$PATH"" >> <SHELL_CFG_FILE>`  
-   _Make sure to swap __\<RCON_PATH\>__ with the directory where the RCON program is located._
+[_(Optional)_ Add location to your PATH](https://github.com/radj307/ARRCON/wiki/Adding-To-Path)
 
 # Usage
 
-Open a terminal in the location where you placed the executable
+Open a terminal in the location where you placed the executable, and run `arrcon --help` for usage instructions.  
+Additional documentation is available below, but it may be out of date.  
 
 ## Modes
 The operation mode is selected based on context, but can be influenced by some options.  
@@ -57,3 +38,4 @@ There are 2 modes:
 |`-q` `--quiet`               | Prevents server response packets from being displayed, but does not silence errors or exception messages.
 |`-n` `--no-color`            | Disables colorized terminal output.
 | `--no-prompt`               | Hides the prompt when using interactive mode.
+| `--write-ini`               | (Over)Writes the default `.ini` configuration file.
