@@ -102,7 +102,7 @@ namespace net {
 
 		int ret = getaddrinfo(host.c_str(), port.c_str(), &hints, &server_info);
 		if (ret != 0)
-			throw std::exception(("Name resolution failed with error code "s + std::to_string(ret) + " (Last Socket Error: "s + std::to_string(lastError()) + ")").c_str());
+			throw std::exception(str::stringify("Name resolution of \"", host, ':', port, "\" failed with error code ", lastError(), '!').c_str());
 
 		// Go through the hosts and try to connect
 		for (p = server_info; p != NULL; p = p->ai_next) {
@@ -121,8 +121,10 @@ namespace net {
 
 		freeaddrinfo(server_info);
 
-		if (p == NULL)
-			throw std::exception(("Connection failed with error code "s + std::to_string(lastError())).c_str());
+		if (p == NULL) {
+			const auto err{ lastError() };
+			throw std::exception(str::stringify("Failed to connect to \"", host, ':', port, "\"", (err == 0 ? "" : " with error code "s + std::to_string(err)), '!').c_str());
+		}
 
 		return sd;
 	}

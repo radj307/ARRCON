@@ -43,18 +43,18 @@ inline void sighandler(int sig)
  * @param filename	Target Filename
  * @returns			std::vector<std::string>
  */
-inline std::vector<std::string> read_script_file(std::string filename)
+inline std::vector<std::string> read_script_file(std::string filename, const env::PATH& pathvar)
 {
 	if (!file::exists(filename)) // if the filename doesn't exist, try to resolve it from the PATH
-		filename = env::PathVar{}.resolve(filename, { "", ".ini", ".txt", ".bat", ".scr" }).generic_string();
+		filename = pathvar.resolve(filename, { ".txt" }).generic_string();
 	if (!file::exists(filename)) // if the resolved filename still doesn't exist, throw
 		std::cerr << sys::term::warn << "Couldn't find file: \"" << filename << "\"\n";
 	// read the file, parse it if the stream didn't fail
 	else if (auto file{ file::read(filename) }; !file.fail()) {
 		std::vector<std::string> commands;
-		commands.reserve(file::count(file, '\n'));
+		commands.reserve(file::count(file, '\n') + 1ull);
 
-		for (std::string line{}; str::getline(file, line, '\n'); )
+		for (std::string line{}; std::getline(file, line, '\n'); )
 			if (line = str::strip_line(line, "#;"); !line.empty())
 				commands.emplace_back(line);
 
@@ -69,13 +69,13 @@ inline std::vector<std::string> read_script_file(std::string filename)
  * @param args	All commandline arguments.
  * @returns		std::vector<std::string>
  */
-inline std::vector<std::string> get_commands(const opt::ParamsAPI2& args)
+inline std::vector<std::string> get_commands(const opt::ParamsAPI2& args, const env::PATH& pathvar)
 {
 	std::vector<std::string> vec{ args.typegetv_all<opt::Parameter>() }; // Arg<std::string> is implicitly convertable to std::string
 	for (auto& file : Global.scriptfiles) {// iterate through all user-specified files
-		const auto script_commands{ read_script_file(file) };
+		const auto script_commands{ read_script_file(file, pathvar) };
 		if (!Global.quiet && !script_commands.empty())
-			std::cout << sys::term::log << "Successfully read commands from \"" << file << "\"";
+			std::cout << sys::term::log << "Successfully read commands from \"" << file << "\"\n";
 		vec.reserve(vec.size() + script_commands.size());
 		for (auto& command : script_commands) // add each command from the file
 			vec.emplace_back(command);
@@ -89,15 +89,17 @@ int main(int argc, char** argv, char** envp)
 {
 	try {
 		std::cout << sys::term::EnableANSI; // enable ANSI escape sequences on windows
-
 		const opt::ParamsAPI2 args{ argc, argv, 'H', "host", 'P', "port", 'p', "password", 'd', "delay", 'f', "file" }; // parse arguments
-		const auto& [prog_path, prog_name] { env::PATH{}.resolve_split(args.arg0().value()) };
+		env::PATH PATH{ args.arg0().value_or("") };
+		const auto& [prog_path, prog_name] { PATH.resolve_split(args.arg0().value()) };
 
-		if (Global.ini_path = prog_path + '/' + std::filesystem::path(prog_name).replace_extension(".ini").generic_string(); file::exists(Global.ini_path))
+		if (Global.ini_path = (prog_path / prog_name).replace_extension(".ini").generic_string(); file::exists(Global.ini_path))
 			config::apply_config(Global.ini_path);
 
 		const auto& [host, port, pass] { get_server_info(args) };
-		handle_args(args, prog_name);
+		handle_args(args, prog_name.generic_string());
+
+		const auto commands{ get_commands(args, PATH) };
 
 		if (Global.custom_prompt.empty())
 			Global.custom_prompt = (Global.no_prompt ? "" : str::stringify(Global.palette.set(UIElem::TERM_PROMPT_NAME), "RCON@", host, Global.palette.reset(UIElem::TERM_PROMPT_ARROW), '>', Global.palette.reset(), ' '));
@@ -124,7 +126,7 @@ int main(int argc, char** argv, char** envp)
 
 		// auth & commands
 		if (rcon::authenticate(Global.socket, pass)) {
-			if (mode::commandline(get_commands(args)) == 0ull || Global.force_interactive)
+			if (mode::commandline(commands) == 0ull || Global.force_interactive)
 				mode::interactive(Global.socket);
 		}
 		else throw std::exception(("Authentication Failed! ("s + host + ":"s + port + ")"s).c_str());
