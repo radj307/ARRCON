@@ -21,7 +21,7 @@ enum class UIElem : unsigned char {
 	TERM_PROMPT_NAME,	// interactive mode prompt name
 	TERM_PROMPT_ARROW,	// interactive mode prompt arrow '>'
 	PACKET,				// interactive mode response
-	PACKET_EMPTY,		// interactive mode empty response [ No Response ]
+	COMMAND_ECHO,		// commandline mode command echo
 };
 
 inline constexpr const auto MAX_DELAY{ std::chrono::hours(24) };
@@ -29,10 +29,10 @@ inline constexpr const auto MAX_DELAY{ std::chrono::hours(24) };
 static struct {
 	/// @brief Color palette
 	color::ColorPalette<UIElem> palette{
-		std::make_pair(UIElem::TERM_PROMPT_NAME, color::setcolor{ color::green, color::Layer::FOREGROUND, color::FormatFlag::BOLD }),
+		std::make_pair(UIElem::TERM_PROMPT_NAME, color::setcolor{ color::green, color::FormatFlag::BOLD }),
 		std::make_pair(UIElem::TERM_PROMPT_ARROW, color::green),
 		std::make_pair(UIElem::PACKET, color::white),
-		std::make_pair(UIElem::PACKET_EMPTY, color::light_gray),
+		std::make_pair(UIElem::COMMAND_ECHO, color::green),
 	};
 	std::string
 		DEFAULT_HOST{ "localhost" },
@@ -71,4 +71,9 @@ static struct {
 	/// @brief When entries are present, the user specified at least one [-f|--file] option.
 	std::vector<std::string> scriptfiles{};
 } Global;
+
+inline timeval duration_to_timeval(const std::chrono::milliseconds& ms)
+{
+	return{ static_cast<long>(std::trunc(Global.select_timeout.count() / 1000ll)), static_cast<long>(Global.select_timeout.count()) };
+}
 
