@@ -156,15 +156,21 @@ namespace net {
 		return ret != -1;
 	}
 
-	inline void flush(const SOCKET& sd)
+	/**
+	 * @brief		Flush all remaining packets.
+	 * @param sd	Target Socket.
+	 */
+	inline void flush(const SOCKET& sd, const bool& do_check_first = true)
 	{
 		fd_set set{ 1u, sd };
-		auto rc{ select(NULL, &set, NULL, NULL, NULL) };
-		while (rc != 0 && rc != SOCKET_ERROR) {
+		const auto timeout{ duration_to_timeval(Global.select_timeout) };
+		if (do_check_first && select(NULL, &set, NULL, NULL, &timeout) != 1)
+			return;
+		do {
 			if (recv(sd, std::unique_ptr<char>{}.get(), packet::PSIZE_MAX, 0) == 0)
 				throw std::exception("Connection Lost! Last Error: " + lastError());
-			rc = select(NULL, &set, NULL, NULL, NULL);
-		}
+			std::this_thread::sleep_for(Global.receive_delay);
+		} while (select(NULL, &set, NULL, NULL, &timeout) == 1);
 	}
 
 	/**
