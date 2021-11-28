@@ -66,7 +66,8 @@ namespace rcon {
 					net::flush(sd, false); // flush any remaining packets
 				break;
 			}
-			else std::cout << p.body; ///< don't print newlines automatically
+			else if (!Global.quiet)
+				std::cout << p.body; ///< don't print newlines automatically
 			std::this_thread::sleep_for(Global.receive_delay);
 			p = {}; ///< wipe existing packet
 		}
