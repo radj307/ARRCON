@@ -50,18 +50,17 @@ inline std::vector<std::string> read_script_file(std::string filename, const env
 	if (!file::exists(filename)) // if the resolved filename still doesn't exist, throw
 		std::cerr << sys::term::warn << "Couldn't find file: \"" << filename << "\"\n";
 	// read the file, parse it if the stream didn't fail
-	else if (auto file{ file::read(filename) }; !file.fail()) {
+	else if (auto fss{ file::read(filename) }; !fss.fail()) {
 		std::vector<std::string> commands;
-		commands.reserve(file::count(file, '\n') + 1ull);
+		commands.reserve(file::count(fss, '\n') + 1ull);
 
-		for (std::string line{}; std::getline(file, line, '\n'); )
+		for (std::string line{}; std::getline(fss, line, '\n'); )
 			if (line = str::strip_line(line, "#;"); !line.empty())
 				commands.emplace_back(line);
 
 		commands.shrink_to_fit();
 		return commands;
 	}
-	else throw std::exception(("IO Error Reading File: \""s + filename + "\""s).c_str());
 	return{};
 }
 /**
@@ -71,18 +70,21 @@ inline std::vector<std::string> read_script_file(std::string filename, const env
  */
 inline std::vector<std::string> get_commands(const opt::ParamsAPI2& args, const env::PATH& pathvar)
 {
-	std::vector<std::string> vec{ args.typegetv_all<opt::Parameter>() }; // Arg<std::string> is implicitly convertable to std::string
+	std::vector<std::string> commands{ args.typegetv_all<opt::Parameter>() }; // Arg<std::string> is implicitly convertable to std::string
 	for (auto& file : Global.scriptfiles) {// iterate through all user-specified files
-		const auto script_commands{ read_script_file(file, pathvar) };
-		if (!Global.quiet && !script_commands.empty())
-			std::cout << sys::term::log << "Successfully read commands from \"" << file << "\"\n";
-		vec.reserve(vec.size() + script_commands.size());
-		for (auto& command : script_commands) // add each command from the file
-			vec.emplace_back(command);
+		if (const auto script_commands{ read_script_file(file, pathvar) }; !script_commands.empty()) {
+			if (!Global.quiet && !script_commands.empty()) // feedback
+				std::cout << sys::term::log << "Successfully read commands from \"" << file << "\"\n";
+
+			commands.reserve(commands.size() + script_commands.size());
+
+			for (auto& command : script_commands)
+				commands.emplace_back(command);
+		}
 
 	}
-	vec.shrink_to_fit();
-	return vec;
+	commands.shrink_to_fit();
+	return commands;
 }
 
 int main(int argc, char** argv, char** envp)
