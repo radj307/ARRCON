@@ -17,7 +17,7 @@ inline std::tuple<std::string, std::string, std::string> get_server_info(const o
 	return{
 		args.typegetv<opt::Flag>('H').value_or(Global.DEFAULT_HOST), // hostname
 		args.typegetv<opt::Flag>('P').value_or(Global.DEFAULT_PORT), // port
-		args.typegetv<opt::Flag>('p').value_or(Global.DEFAULT_PASS)            // password
+		args.typegetv<opt::Flag>('p').value_or(Global.DEFAULT_PASS)  // password
 	};
 }
 
@@ -38,9 +38,12 @@ inline void handle_args(const opt::ParamsAPI2& args, const std::string& program_
 		std::exit(EXIT_SUCCESS);
 	}
 	// write-ini:
-	else if (args.check<opt::Option>("write-ini")) {
-		config::write_default_config(Global.ini_path);
-		std::exit(EXIT_SUCCESS);
+	if (args.check_any<opt::Option>("write-ini")) {
+		if (!Global.ini_path.empty() && config::write_default_config(Global.ini_path)) {
+			std::cout << "Successfully wrote to config: \"" << Global.ini_path << '\"' << std::endl;
+			std::exit(EXIT_SUCCESS);
+		}
+		else throw std::exception(("I/O operation failed: \""s + Global.ini_path + "\" couldn't be written to."s).c_str());
 	}
 	// quiet:
 	if (args.check_any<opt::Option, opt::Flag>('q', "quiet"))
@@ -53,29 +56,12 @@ inline void handle_args(const opt::ParamsAPI2& args, const std::string& program_
 		Global.force_interactive = true;
 	// command delay:
 	if (const auto arg{ args.typegetv_any<opt::Flag, opt::Option>('d', "delay") }; arg.has_value()) {
-		if (std::all_of(arg.value().begin(), arg.value().end(), isdigit))
-			Global.command_delay = std::chrono::milliseconds(str::stoi(arg.value()));
-		// check for appended unit
-		else if (const auto dPos{ arg.value().find_first_not_of("0123456789") }; str::pos_valid(dPos)) {
-			const auto& [num, unit] { str::tolower(str::split(arg.value(), dPos, true)) };
-			if (!unit.empty() && unit.back() == 's' && std::all_of(num.begin(), num.end(), isdigit))
-				switch (unit.front()) {
-				case 's':
-					Global.command_delay = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::seconds(str::stoi(num)));
-					break;
-				case 'm':
-					Global.command_delay = std::chrono::milliseconds(str::stoi(num));
-					break;
-				case 'u':
-					Global.command_delay = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::microseconds(str::stoi(num)));
-					break;
-				case 'n':
-					Global.command_delay = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::nanoseconds(str::stoi(num)));
-					break;
-				default:
-					break;
-				}
+		if (std::all_of(arg.value().begin(), arg.value().end(), isdigit)) {
+			if (const auto t{ std::chrono::milliseconds(std::abs(str::stoll(arg.value()))) }; t <= MAX_DELAY)
+				Global.command_delay = t;
+			else throw std::exception(("Cannot set a delay value longer than "s + std::to_string(MAX_DELAY.count()) + " hours!"s).c_str());
 		}
+		else throw std::exception(("Invalid delay value given: \""s + arg.value() + "\", expected an integer."s).c_str());
 	}
 	// disable colors:
 	if (const auto arg{ args.typegetv_any<opt::Option, opt::Flag>('n', "no-color") }; arg.has_value())

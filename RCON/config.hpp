@@ -38,10 +38,7 @@ namespace config {
 		struct MakeHeader {
 			const std::string _str;
 			constexpr MakeHeader(const std::string& str) : _str{ str } {}
-			friend std::ostream& operator<<(std::ostream& os, const MakeHeader& h)
-			{
-				return os << '[' << h._str << ']' << '\n';
-			}
+			friend std::ostream& operator<<(std::ostream& os, const MakeHeader& h) { return os << '[' << h._str << ']' << '\n'; }
 		};
 	}
 
@@ -61,9 +58,9 @@ namespace config {
 			<< "sCustomPrompt =\n"
 			<< '\n'
 			<< MakeHeader(HEADER_TIMING)
-			<< "iCommandDelay = 0"
-			<< "iReceiveDelay = 10"
-			<< "iSelectDelay = 500"
+			<< "iCommandDelay = 0\n"
+			<< "iReceiveDelay = 10\n"
+			<< "iSelectDelay = 500\n"
 			<< '\n';
 
 		return file::write(filename, ss, append);

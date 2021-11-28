@@ -15,13 +15,13 @@ namespace mode {
 	/**
 	 * @brief			Execute a list of commands.
 	 * @param commands	List of commands to execute, in order.
-	 * @returns			size_t
+	 * @returns size_t	Number of commands successfully executed.
 	 */
 	inline size_t commandline(const std::vector<std::string>& commands)
 	{
 		size_t count{ 0ull };
 		for (auto& cmd : commands) {
-			rcon::command(Global.socket, cmd);
+			count += !!rcon::command(Global.socket, cmd);
 			std::this_thread::sleep_for(Global.command_delay);
 		}
 		return count;
@@ -34,18 +34,17 @@ namespace mode {
 	 */
 	inline void interactive(const SOCKET& sd, const std::string& prompt = "RCON")
 	{
-		if (!Global.no_prompt)
+		if (!Global.no_prompt) {
 			std::cout << "Authentication Successful.\nUse <Ctrl + C> or type \"exit\" to exit.\n";
-		const auto prompt_str{ str::stringify(Global.palette.set(UIElem::TERM_PROMPT_NAME), prompt, Global.palette.reset(UIElem::TERM_PROMPT_ARROW), '>', Global.palette.reset(), ' ') };
-
-		while (Global.connected) {
-			std::string command;
-
+			if (Global.custom_prompt.empty())
+				Global.custom_prompt = str::stringify(Global.palette.set(UIElem::TERM_PROMPT_NAME), prompt, Global.palette.reset(UIElem::TERM_PROMPT_ARROW), '>', Global.palette.reset(), ' ');
+		}
+		for (std::string command; Global.connected; ) {
 			if (!Global.no_prompt)
-				std::cout << prompt_str;
+				std::cout << Global.custom_prompt;
 			std::getline(std::cin, command);
 
-			if (const auto lc_com{ str::tolower(command) }; lc_com == "exit")
+			if (str::tolower(command) == "exit")
 				break;
 
 			if (Global.connected && !command.empty()) {

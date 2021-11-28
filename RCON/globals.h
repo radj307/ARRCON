@@ -24,6 +24,8 @@ enum class UIElem : unsigned char {
 	PACKET_EMPTY,		// interactive mode empty response [ No Response ]
 };
 
+inline constexpr const auto MAX_DELAY{ std::chrono::hours(24) };
+
 static struct {
 	/// @brief Color palette
 	color::ColorPalette<UIElem> palette{
