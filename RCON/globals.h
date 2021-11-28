@@ -10,7 +10,7 @@
 #include <chrono>
 
 inline constexpr const auto
-VERSION{ "1.1.0" },
+VERSION{ "1.2.0" },
 DEFAULT_PROGRAM_NAME{ "ARRCON.exe" };
 
 /**
