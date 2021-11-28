@@ -15,6 +15,27 @@ inline void safeExit(void)
 	if (Global.socket != SOCKET_ERROR)
 		net::close_socket(Global.socket);
 	WSACleanup();
+	std::cout << Global.palette.reset();
+}
+
+/**
+ * @brief		Handler function for OS signals. Passed to sigaction/signal to intercept interrupts and shut down the socket correctly.
+ * @param sig	The signal thrown to prompt the calling of this function.
+ */
+inline void sighandler(int sig)
+{
+	Global.connected = false;
+	std::cout << Global.palette.reset();
+	switch (sig) {
+	case SIGINT:
+		throw std::exception("Received SIGINT");
+	case SIGTERM:
+		throw std::exception("Received SIGTERM");
+	case SIGABRT_COMPAT: [[fallthrough]];
+	case SIGABRT:
+		throw std::exception("Received SIGABRT");
+	default:break;
+	}
 }
 
 /**
@@ -25,7 +46,7 @@ inline void safeExit(void)
 inline std::vector<std::string> read_script_file(std::string filename)
 {
 	if (!file::exists(filename)) // if the filename doesn't exist, try to resolve it from the PATH
-		filename = env::PATH{}.resolve(filename, { "", ".ini", ".txt", ".bat", ".scr" });
+		filename = env::PathVar{}.resolve(filename, { "", ".ini", ".txt", ".bat", ".scr" }).generic_string();
 	if (!file::exists(filename)) // if the resolved filename still doesn't exist, throw
 		std::cerr << sys::term::warn << "Couldn't find file: \"" << filename << "\"\n";
 	// read the file, parse it if the stream didn't fail
@@ -43,22 +64,6 @@ inline std::vector<std::string> read_script_file(std::string filename)
 	else throw std::exception(("IO Error Reading File: \""s + filename + "\""s).c_str());
 	return{};
 }
-
-inline void sighandler(int sig)
-{
-	Global.connected = false;
-	switch (sig) {
-	case SIGINT:
-		throw std::exception("Received SIGINT");
-	case SIGTERM:
-		throw std::exception("Received SIGTERM");
-	case SIGABRT_COMPAT: [[fallthrough]];
-	case SIGABRT:
-		throw std::exception("Received SIGABRT");
-	default:break;
-	}
-}
-
 /**
  * @brief		Retrieves a list of all user-specified commands to be sent to the RCON server, in order.
  * @param args	All commandline arguments.
@@ -67,13 +72,14 @@ inline void sighandler(int sig)
 inline std::vector<std::string> get_commands(const opt::ParamsAPI2& args)
 {
 	std::vector<std::string> vec{ args.typegetv_all<opt::Parameter>() }; // Arg<std::string> is implicitly convertable to std::string
-	vec.reserve(vec.size() + Global.scriptfiles.size());
 	for (auto& file : Global.scriptfiles) {// iterate through all user-specified files
-		const auto sz{ Global.scriptfiles.size() };
-		for (auto& command : read_script_file(file)) // add each command from the file
-			vec.emplace_back(command);
-		if (!Global.quiet && Global.scriptfiles.size() > sz)
+		const auto script_commands{ read_script_file(file) };
+		if (!Global.quiet && !script_commands.empty())
 			std::cout << sys::term::log << "Successfully read commands from \"" << file << "\"";
+		vec.reserve(vec.size() + script_commands.size());
+		for (auto& command : script_commands) // add each command from the file
+			vec.emplace_back(command);
+
 	}
 	vec.shrink_to_fit();
 	return vec;
@@ -92,6 +98,9 @@ int main(int argc, char** argv, char** envp)
 
 		const auto& [host, port, pass] { get_server_info(args) };
 		handle_args(args, prog_name);
+
+		if (Global.custom_prompt.empty())
+			Global.custom_prompt = (Global.no_prompt ? "" : str::stringify(Global.palette.set(UIElem::TERM_PROMPT_NAME), "RCON@", host, Global.palette.reset(UIElem::TERM_PROMPT_ARROW), '>', Global.palette.reset(), ' '));
 
 		// Register the cleanup function before connecting the socket
 		std::atexit(&safeExit);
@@ -116,8 +125,7 @@ int main(int argc, char** argv, char** envp)
 		// auth & commands
 		if (rcon::authenticate(Global.socket, pass)) {
 			if (mode::commandline(get_commands(args)) == 0ull || Global.force_interactive)
-				mode::interactive(Global.socket, (Global.custom_prompt.empty() ? ("RCON@"s + host) : Global.custom_prompt));
-			else std::cerr << sys::term::error << "No commands were executed." << std::endl;
+				mode::interactive(Global.socket);
 		}
 		else throw std::exception(("Authentication Failed! ("s + host + ":"s + port + ")"s).c_str());
 

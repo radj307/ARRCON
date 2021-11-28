@@ -50,25 +50,27 @@ namespace rcon {
 		bool wait_for_term{ false }; ///< true when terminator packet was sent successfully
 		std::this_thread::sleep_for(Global.receive_delay); ///< allow some time for the server to respond
 		auto p{ net::recv_packet(sd) }; ///< receive first packet
-		std::cout << p;
+		if (!Global.quiet)
+			std::cout << Global.palette.set(UIElem::PACKET) << p;
 
 		// init required vars for the select function
 		fd_set socket_set{ 1u, sd };
-		const timeval timeout{ static_cast<long>(std::trunc(Global.select_timeout.count() / 1000ll)), static_cast<long>(Global.select_timeout.count()) };
+		const timeval timeout{ duration_to_timeval(Global.select_timeout) };
 
 		// loop while 1 socket has pending data
 		for (size_t i{ 0ull }; select(NULL, &socket_set, NULL, NULL, &timeout) == 1; p = net::recv_packet(sd), ++i) {
 			if (i == 0ull && net::send_packet(sd, { terminator_pid, packet::Type::SERVERDATA_RESPONSE_VALUE, "TERM" }))
 				wait_for_term = true;
 			if (wait_for_term && p.id == terminator_pid) {
-				net::flush(sd);
+				if (select(NULL, &socket_set, NULL, NULL, &timeout) == 1)
+					net::flush(sd, false); // flush any remaining packets
 				break;
 			}
 			else std::cout << p.body; ///< don't print newlines automatically
 			std::this_thread::sleep_for(Global.receive_delay);
 			p = {}; ///< wipe existing packet
 		}
-		std::cout.flush(); ///< print newline & flush STDOUT
+		std::cout.flush() << Global.palette.reset();; ///< flush STDOUT & reset color (interrupts before color reset call are handled by sighandler so colors don't bleed out)
 		return p.id == terminator_pid || !wait_for_term; // if the last received packet has the terminator's ID, or if the terminator wasn't set
 	}
 }
