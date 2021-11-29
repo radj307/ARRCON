@@ -6,10 +6,14 @@
 #pragma once
 #include "globals.h"
 
+#define USE_DEPRECATED_INI
 #include <INI.hpp>
 
 namespace config {
-	inline file::ini::INI read_config(const std::string& filename) noexcept(false) { return (file::exists(filename) ? file::ini::INI(filename) : file::ini::INI{}); }
+	inline file::ini::INI read_config(const std::string& filename) noexcept(false)
+	{
+		return (file::exists(filename) ? file::ini::INI(filename) : file::ini::INI{});
+	}
 
 	inline constexpr const auto HEADER_APPEARANCE{ "appearance" }, HEADER_TIMING{ "timing" }, HEADER_TARGET{ "target" };
 
