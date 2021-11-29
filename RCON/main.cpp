@@ -73,7 +73,7 @@ inline std::vector<std::string> get_commands(const opt::ParamsAPI2& args, const 
 	std::vector<std::string> commands{ args.typegetv_all<opt::Parameter>() }; // Arg<std::string> is implicitly convertable to std::string
 	for (auto& file : Global.scriptfiles) {// iterate through all user-specified files
 		if (const auto script_commands{ read_script_file(file, pathvar) }; !script_commands.empty()) {
-			if (!Global.quiet && !script_commands.empty()) // feedback
+			if (!Global.quiet) // feedback
 				std::cout << sys::term::log << "Successfully read commands from \"" << file << "\"\n";
 
 			commands.reserve(commands.size() + script_commands.size());
@@ -81,7 +81,7 @@ inline std::vector<std::string> get_commands(const opt::ParamsAPI2& args, const 
 			for (auto& command : script_commands)
 				commands.emplace_back(command);
 		}
-
+		else std::cerr << sys::term::warn << "Failed to read any commands from \"" << file << "\"\n";
 	}
 	commands.shrink_to_fit();
 	return commands;
