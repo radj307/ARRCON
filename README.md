@@ -25,6 +25,7 @@ There are 2 modes:
   - You can also use the `-f <filepath>` or `--file <filepath>` options to specify a scriptfile, which is executed line-by-line after any commands passed on the commandline.
 
 ## Options
+Options can be specified anywhere on the commandline, and must use a dash `-` delimiter.  
 | Commandline Option / Flag   | Description                                              |
 |-----------------------------|:---                                                      |
 |`-H <Address>`               | Specify the RCON server's IP address or hostname.
@@ -40,8 +41,15 @@ There are 2 modes:
 | `--no-prompt`               | Hides the prompt (Default prompt is "RCON@HOST> ").
 | `--write-ini`               | (Over)Writes the default `.ini` configuration file.
 
+For example, to connect to _MyHostname:27015_ using _myPassword_ as the password, send the _help_ command, then start an interactive session:  
+`arrcon -i -H MyHostname -P 27015 -p myPassword help`  
+
+
 ## INI Configuration
-You can create a default INI file by using the `rcon --write-ini` command.
+INI files must have the same name as the executable (excluding extension) to be detected.  
+Keep this in mind if you rename the executable!  
+
+You can create a default INI file by using the `arrcon --write-ini` command.  
 ```ini
 [target]
 sHost =                           ; Defines the default hostname/IP, unless a hostname/IP was specified on the commandline.
