@@ -37,5 +37,24 @@ There are 2 modes:
 |`-d <ms>` `--delay <ms>`     | Set the delay (in milliseconds) between sending each command packet when using batch mode.
 |`-q` `--quiet`               | Prevents server response packets from being displayed, but does not silence errors or exception messages.
 |`-n` `--no-color`            | Disables colorized terminal output.
-| `--no-prompt`               | Hides the prompt when using interactive mode.
+| `--no-prompt`               | Hides the prompt (Default prompt is "RCON@HOST> ").
 | `--write-ini`               | (Over)Writes the default `.ini` configuration file.
+
+## INI Configuration
+You can create a default INI file by using the `rcon --write-ini` command.
+```ini
+[target]
+sHost =                           ; Defines the default hostname/IP, unless a hostname/IP was specified on the commandline.
+sPort =                           ; Defines the default port, unless a port was specified on the commandline.
+sPass =                           ; Defines the default password, unless a password was specified on the commandline.
+
+[appearance]
+bDisablePrompt = false            ; When true, this is the equivalent of always specifying the --no-prompt option.
+bDisableColors = false            ; When true, this is the equivalent of always specifying the -n/--no-color option.
+sCustomPrompt =                   ; Accepts a string to use in place of the default prompt, excluding the end, which is always "> ".
+
+[timing]
+iCommandDelay = 0                 ; The delay in milliseconds between sending each command when using commandline/scriptfile mode.
+iReceiveDelay = 10                ; The time in milliseconds to wait after receiving packets. Raise this if multi-packet responses aren't fully received. 
+iSelectTimeout = 500              ; The max amount of time to wait for packets before timing out. Raise this if your network is slow.
+```
