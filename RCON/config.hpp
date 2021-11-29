@@ -52,9 +52,9 @@ namespace config {
 		std::stringstream ss;
 		ss
 			<< MakeHeader(HEADER_TARGET)
-			<< "sHost =\n"
-			<< "sPort =\n"
-			<< "sPass =\n"
+			<< "sHost = 127.0.0.1\n"
+			<< "sPort = 27015\n"
+			<< "sPass = \n"
 			<< '\n'
 			<< MakeHeader(HEADER_APPEARANCE)
 			<< "bDisablePrompt = false\n"
@@ -64,7 +64,7 @@ namespace config {
 			<< MakeHeader(HEADER_TIMING)
 			<< "iCommandDelay = 0\n"
 			<< "iReceiveDelay = 10\n"
-			<< "iSelectDelay = 500\n"
+			<< "iSelectTimeout = 500\n"
 			<< '\n';
 
 		return file::write(filename, ss, append);
