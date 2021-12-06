@@ -4,13 +4,68 @@
  * @brief	Contains all of the packet-related objects & methods.
  */
 #pragma once
+#include <Sequence.hpp>
+
 #include "globals.h"
 #include <ostream>
 
- /**
-  * @namespace	packet
-  * @brief		Contains the Packet, serialized_packet, and ID_Manager objects.
-  */
+
+namespace mc_color {
+	inline ANSI::Sequence to_sequence(const char& ch)
+	{
+		using namespace ANSI;
+		switch (ch) {
+		case '0': // black
+			return { make_sequence(ESC, CSI, color::black, END) };
+		case '1': // dark blue
+			return { make_sequence(ESC, CSI, color::dark_blue, END) };
+		case '2': // dark green
+			return { make_sequence(ESC, CSI, color::dark_green, END) };
+		case '3': // dark aqua
+			return { make_sequence(ESC, CSI, color::dark_cyan, END) };
+		case '4': // dark red
+			return { make_sequence(ESC, CSI, color::dark_red, END) };
+		case '5': // dark purple
+			return { make_sequence(ESC, CSI, color::dark_purple, END) };
+		case '6': // gold
+			return { make_sequence(ESC, CSI, color::gold, END) };
+		case '7': // gray
+			return { make_sequence(ESC, CSI, color::gray, END) };
+		case '8': // dark gray
+			return { make_sequence(ESC, CSI, color::dark_gray, END) };
+		case '9': // blue
+			return { make_sequence(ESC, CSI, color::blue, END) };
+		case 'a': // green
+			return { make_sequence(ESC, CSI, color::green, END) };
+		case 'b': // aqua
+			return { make_sequence(ESC, CSI, color::cyan, END) };
+		case 'c': // red
+			return { make_sequence(ESC, CSI, color::red, END) };
+		case 'd': // light purple
+			return { make_sequence(ESC, CSI, color::light_purple, END) };
+		case 'e': // yellow
+			return { make_sequence(ESC, CSI, color::yellow, END) };
+		case 'f': // white
+			return { make_sequence(ESC, CSI, color::white, END) };
+		case 'r': // reset
+			return { make_sequence(ESC, CSI, '0', END) };
+		case 'n': // underline
+			return { make_sequence(ESC, CSI, '4', END) };
+		case 'l': // bold
+			return { make_sequence(ESC, CSI, '1', END) };
+		case 'k': // obfuscated
+		case 'm': [[fallthrough]]; // strikethrough
+		case 'o': [[fallthrough]]; // italic
+		default:
+			return{};
+		}
+	}
+}
+
+/**
+ * @namespace	packet
+ * @brief		Contains the Packet, serialized_packet, and ID_Manager objects.
+ */
 namespace packet {
 	/// @brief Minimum allowable packet size
 	inline constexpr const int PSIZE_MIN{ 10 };
@@ -150,7 +205,20 @@ namespace packet {
 		 */
 		friend std::ostream& operator<<(std::ostream& os, const Packet& packet)
 		{
-			os << Global.palette.set(UIElem::PACKET) << packet.body << Global.palette.reset();
+			if (Global.enable_bukkit_color_support) {
+				for (auto ch{ packet.body.begin() }; ch != packet.body.end(); ++ch) {
+					switch (*ch) {
+					case static_cast<char>(0xC2): // first part of section sign
+						if (*(ch += 1) == static_cast<char>(0xA7)) // second part of section sign
+							os << mc_color::to_sequence(*(ch += 1));
+						break;
+					default:
+						os << *ch;
+						break;
+					}
+				}
+			}
+			else os << Global.palette.set(UIElem::PACKET) << packet.body << Global.palette.reset();
 			if (!packet.body.empty() && packet.body.back() != '\n')
 				os << '\n'; // print newline if packet doesn't already have one
 			return os.flush();

@@ -71,6 +71,15 @@ namespace net {
 	#endif
 	}
 
+	/// @brief	Emergency stop handler, should be passed to the std::atexit() function to allow a controlled shutdown of the socket.
+	inline void cleanup(void)
+	{
+		if (Global.socket != SOCKET_ERROR)
+			net::close_socket(Global.socket);
+		WSACleanup();
+		std::cout << Global.palette.reset();
+	}
+
 	/**
 	 * @brief	Retrieve the last reported socket error code.
 	 * @returns	int

@@ -22,19 +22,20 @@ namespace config {
 		using namespace std::chrono_literals;
 		if (const auto ini{ read_config(filename) }; !ini.empty()) {
 			// Appearance:
-			Global.no_prompt = str::string_to_bool(ini.getv("appearance", "bDisablePrompt").value_or("")).value_or(false);
-			if (ini.checkv("appearance", "bDisableColors", "true", false))
+			Global.no_prompt = str::string_to_bool<bool>(ini.getv(HEADER_APPEARANCE, "bDisablePrompt").value_or(""));
+			if (ini.checkv(HEADER_APPEARANCE, "bDisableColors", "true", false))
 				Global.palette.setActive(false);
-			Global.custom_prompt = ini.getv("appearance", "sCustomPrompt").value_or("");
+			Global.custom_prompt = ini.getv(HEADER_APPEARANCE, "sCustomPrompt").value_or("");
+			Global.enable_bukkit_color_support = str::string_to_bool<bool>(ini.getv(HEADER_APPEARANCE, "bEnableBukkitColors").value_or(""));
 			// Timing:
 			const auto to_ms{ [](const std::optional<std::string>& str, const std::chrono::milliseconds& def) -> std::chrono::milliseconds { return ((str.has_value() && std::all_of(str.value().begin(), str.value().end(), isdigit)) ? std::chrono::milliseconds(str::stoi(str.value())) : def); } };
-			Global.command_delay = to_ms(ini.getv("timing", "iCommandDelay"), 0ms);
-			Global.receive_delay = to_ms(ini.getv("timing", "iReceiveDelay"), 10ms);
-			Global.select_timeout = to_ms(ini.getv("timing", "iSelectTimeout"), 500ms);
+			Global.command_delay = to_ms(ini.getv(HEADER_TIMING, "iCommandDelay"), 0ms);
+			Global.receive_delay = to_ms(ini.getv(HEADER_TIMING, "iReceiveDelay"), 10ms);
+			Global.select_timeout = to_ms(ini.getv(HEADER_TIMING, "iSelectTimeout"), 500ms);
 			// Target:
-			Global.DEFAULT_HOST = ini.getv("target", "sHost").value_or(Global.DEFAULT_HOST);
-			Global.DEFAULT_PORT = ini.getv("target", "sPort").value_or(Global.DEFAULT_PORT);
-			Global.DEFAULT_PASS = ini.getv("target", "sPass").value_or(Global.DEFAULT_PASS);
+			Global.DEFAULT_HOST = ini.getv(HEADER_TARGET, "sHost").value_or(Global.DEFAULT_HOST);
+			Global.DEFAULT_PORT = ini.getv(HEADER_TARGET, "sPort").value_or(Global.DEFAULT_PORT);
+			Global.DEFAULT_PASS = ini.getv(HEADER_TARGET, "sPass").value_or(Global.DEFAULT_PASS);
 		}
 	}
 
@@ -60,6 +61,7 @@ namespace config {
 			<< "bDisablePrompt = false\n"
 			<< "bDisableColors = false\n"
 			<< "sCustomPrompt =\n"
+			<< "bEnableBukkitColors = false\n"
 			<< '\n'
 			<< MakeHeader(HEADER_TIMING)
 			<< "iCommandDelay = 0\n"
