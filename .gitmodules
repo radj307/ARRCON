@@ -5,7 +5,7 @@
 
 [submodule "FileLib"]
 	path = FileLib
-	url = git://github.com/radj307/file-parser-lib
+	url = git://github.com/radj307/cpp-file-parser
 	branch = cmake
 	
 [submodule "optlib"]
