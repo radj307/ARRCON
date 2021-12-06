@@ -2,12 +2,12 @@
   "version": 2,
   "configurePresets": [
     {
-      "cmakeExecutable": "X:\\Utilities\\cmake\\bin\\cmake.exe",
       "name": "linux-default",
-      "displayName": "Ninja",
+      "displayName": "Linux Debug",
       "description": "Target the Windows Subsystem for Linux (WSL) or a remote Linux system.",
-      "generator": "Visual Studio 17 2022",
+      "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cmakeExecutable": "/usr/bin/cmake",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
@@ -18,12 +18,12 @@
       }
     },
     {
-      "cmakeExecutable": "X:\\Utilities\\cmake\\bin\\cmake.exe",
       "name": "linux-release",
-      "displayName": "Linux x64 Release",
+      "displayName": "Linux Release",
       "description": "Target the Windows Subsystem for Linux (WSL) or a remote Linux system.",
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "cmakeExecutable": "/usr/bin/cmake",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
         "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"

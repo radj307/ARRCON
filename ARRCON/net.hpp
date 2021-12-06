@@ -33,7 +33,6 @@
 
 #include <optional>
 #include <string>
-#include <winsock.h>
 #include <sys/socket.h>
 
  /**
@@ -41,18 +40,25 @@
   * @brief		Contains functions used to interact with sockets.
   */
 namespace net {
-#ifdef _WIN32
-	inline void init_WSA(void) noexcept(false)
+	/**
+	 * @brief	Call WSAStartup & initialize the winsock dll.
+	 *\n		Only necessary on Windows, as the Linux socket library
+	 *			performs the startup & cleanup operations automatically.
+	 */
+	inline void init(void) noexcept(false)
 	{
+	#ifdef _WIN32
 		WSADATA wsaData;
 		int rc{ 0 };
 		if (rc = WSAStartup(WINSOCK_VERSION, &wsaData); rc != 0 || LOBYTE(wsaData.wVersion) != LOBYTE(WINSOCK_VERSION) || HIBYTE(wsaData.wVersion) != HIBYTE(WINSOCK_VERSION))
 			throw std::exception("WSAStartup failed with error code " + rc);
+	#else
+
+	#endif
 	}
-#endif
 
 	/**
-	 * @brief		Close the socket & call WSACleanup.
+	 * @brief		Close the socket & call WSACleanup on windows.
 	 * @param sd	The socket descriptor to close.
 	 */
 	inline void close_socket(const SOCKET& sd)
@@ -97,9 +103,7 @@ namespace net {
 		hints.ai_socktype = SOCK_STREAM;
 		hints.ai_protocol = IPPROTO_TCP;
 
-	#ifdef _WIN32
-		init_WSA();
-	#endif
+		net::init();
 
 		int ret = getaddrinfo(host.c_str(), port.c_str(), &hints, &server_info);
 		if (ret != 0)
@@ -120,7 +124,7 @@ namespace net {
 			break; // connection successful, break from loop
 		}
 
-		freeaddrinfo(server_info);
+		freeaddrinfo(server_info); // release address info memory
 
 		if (p == NULL) {
 			const auto err{ lastError() };

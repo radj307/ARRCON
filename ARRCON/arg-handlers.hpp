@@ -3,6 +3,7 @@
 #include "Help.hpp"
 #include <ParamsAPI2.hpp>
 #include <env.hpp>
+#include <make_exception.hpp>
 
 /**
  * @brief		Retrieve the user's specified connection target.
@@ -43,7 +44,7 @@ inline void handle_args(const opt::ParamsAPI2& args, const std::string& program_
 			std::cout << "Successfully wrote to config: \"" << Global.ini_path << '\"' << std::endl;
 			std::exit(EXIT_SUCCESS);
 		}
-		else throw std::exception(("I/O operation failed: \""s + Global.ini_path + "\" couldn't be written to."s).c_str());
+		else throw make_exception(("I/O operation failed: \""s + Global.ini_path + "\" couldn't be written to."s));
 	}
 	// quiet:
 	if (args.check_any<opt::Option, opt::Flag>('q', "quiet"))
@@ -59,9 +60,9 @@ inline void handle_args(const opt::ParamsAPI2& args, const std::string& program_
 		if (std::all_of(arg.value().begin(), arg.value().end(), isdigit)) {
 			if (const auto t{ std::chrono::milliseconds(std::abs(str::stoll(arg.value()))) }; t <= MAX_DELAY)
 				Global.command_delay = t;
-			else throw std::exception(("Cannot set a delay value longer than "s + std::to_string(MAX_DELAY.count()) + " hours!"s).c_str());
+			else throw make_exception(("Cannot set a delay value longer than "s + std::to_string(MAX_DELAY.count()) + " hours!"s).c_str());
 		}
-		else throw std::exception(("Invalid delay value given: \""s + arg.value() + "\", expected an integer."s).c_str());
+		else throw make_exception(("Invalid delay value given: \""s + arg.value() + "\", expected an integer."s).c_str());
 	}
 	// disable colors:
 	if (const auto arg{ args.typegetv_any<opt::Option, opt::Flag>('n', "no-color") }; arg.has_value())

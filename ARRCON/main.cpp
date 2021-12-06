@@ -1,13 +1,17 @@
-#include "mode.hpp"
-#include "config.hpp"
-#include "arg-handlers.hpp"
+#undef __cplusplus
+#define __cplusplus 202002L
+#include "mode.hpp"				///< RCON client modes
+#include "config.hpp"			///< INI functions
+#include "arg-handlers.hpp"		///< CLI argument handler
 
-#include <fileio.hpp>
+#include <fileio.hpp>			///< file I/O functions
 
-#include <signal.h>
-#include <../libunistd/unistd/unistd.h>
-#undef read		///< fileio.hpp compat
-#undef write	///< fileio.hpp compat
+#include <signal.h>				///< signal handling
+#include <unistd.h>
+
+// undefine unistd macros for fileio.hpp compat
+#undef read
+#undef write
 
 /// @brief	Emergency stop handler, should be passed to the std::atexit() function to allow a controlled shutdown of the socket.
 inline void safeExit(void)
@@ -87,7 +91,7 @@ inline std::vector<std::string> get_commands(const opt::ParamsAPI2& args, const 
 	return commands;
 }
 
-int main(int argc, char** argv, char** envp)
+int main(int argc, char** argv)
 {
 	try {
 		std::cout << sys::term::EnableANSI; // enable ANSI escape sequences on windows

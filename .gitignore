@@ -31,9 +31,3 @@ _ReSharper*/
 #Nuget packages folder
 packages/
 out/
-
-FileLib/*
-sharedlib/*
-libunistd/*
-TermAPI/*
-optlib/*
