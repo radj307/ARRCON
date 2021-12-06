@@ -1,5 +1,3 @@
-#undef __cplusplus
-#define __cplusplus 202002L
 #include "mode.hpp"				///< RCON client modes
 #include "config.hpp"			///< INI functions
 #include "arg-handlers.hpp"		///< CLI argument handler
@@ -127,15 +125,18 @@ int main(int argc, char** argv)
 		// Connect the socket
 		Global.socket = net::connect(host, port);
 
-		if (Global.connected = Global.socket != SOCKET_ERROR; !Global.connected)
-			throw std::exception(("Failed to connect to "s + host + ":"s + port).c_str()); // connection failed
+		if (Global.connected = Global.socket != SOCKET_ERROR; !Global.connected) {
+			std::cerr << "Failed to connect to " << host << ':' << port << ", is the target reachable?\n";
+			throw make_exception("Socket error: ");
+			throw std::exception(("Failed to connect to "s + host + ":"s + port + "\n\t\tLast socket error code: "s + std::to_string(net::lastError())).c_str());
+		}
 
 		// auth & commands
 		if (rcon::authenticate(Global.socket, pass)) {
 			if (mode::commandline(commands) == 0ull || Global.force_interactive)
 				mode::interactive(Global.socket);
 		}
-		else throw std::exception(("Authentication Failed! ("s + host + ":"s + port + ")"s).c_str());
+		else throw make_exception("Authentication Failed! (", host, ':', port, ')');
 
 		return EXIT_SUCCESS;
 	} catch (const std::exception& ex) { ///< catch std::exception

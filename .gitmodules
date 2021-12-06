@@ -1,0 +1,23 @@
+[submodule "SharedLib"]
+	path = sharedlib
+	url = git://github.com/radj307/SharedLib
+	branch = cmake
+
+[submodule "FileLib"]
+	path = FileLib
+	url = git://github.com/radj307/file-parser-lib
+	branch = cmake
+	
+[submodule "optlib"]
+	path = optlib
+	url = git://github.com/radj307/cli-opt-lib
+	branch = cmake
+	
+[submodule "TermAPI"]
+	path = TermAPI
+	url = git://github.com/radj307/TermAPI
+	branch = cmake
+	
+[submodule "libunistd"]
+	path = libunistd
+	url = git://github.com/robinrowe/libunistd

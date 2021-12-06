@@ -107,7 +107,7 @@ namespace net {
 
 		int ret = getaddrinfo(host.c_str(), port.c_str(), &hints, &server_info);
 		if (ret != 0)
-			throw std::exception(str::stringify("Name resolution of \"", host, ':', port, "\" failed with error code ", lastError(), '!').c_str());
+			throw make_exception("Name resolution of \"", host, ':', port, "\" failed with error code ", lastError(), '!');
 
 		// Go through the hosts and try to connect
 		for (p = server_info; p != NULL; p = p->ai_next) {
@@ -128,7 +128,7 @@ namespace net {
 
 		if (p == NULL) {
 			const auto err{ lastError() };
-			throw std::exception(str::stringify("Failed to connect to \"", host, ':', port, "\"", (err == 0 ? "" : " with error code "s + std::to_string(err)), '!').c_str());
+			throw make_exception("Failed to connect to \"", host, ':', port, "\"", (err == 0 ? "" : " with error code "s + std::to_string(err)), '!');
 		}
 
 		return sd;
@@ -175,7 +175,7 @@ namespace net {
 			return;
 		do {
 			if (recv(sd, std::unique_ptr<char>{}.get(), packet::PSIZE_MAX, 0) == 0)
-				throw std::exception("Connection Lost! Last Error: " + lastError());
+				throw make_exception("Connection Lost! Last Error: ", lastError());
 			std::this_thread::sleep_for(Global.receive_delay);
 		} while (select(NULL, &set, NULL, NULL, &timeout) == 1);
 	}
@@ -191,8 +191,10 @@ namespace net {
 
 		if (int ret{ recv(sd, (char*)&psize, sizeof(int), 0) }; ret == 0)
 			throw std::exception("Connection Lost! Last Error: " + lastError());
-		else if (ret != sizeof(int))
-			throw std::exception("Invalid packet size: " + ret);
+		else if (ret != sizeof(int)) {
+			std::cerr << sys::term::warn << "Received a corrupted packet! Code " << ret << '\n';
+			return{};
+		}
 
 		if (psize < packet::PSIZE_MIN) {
 			std::cerr << sys::term::warn << "Received unexpectedly small packet size: " << psize << std::endl;
@@ -207,7 +209,7 @@ namespace net {
 		for (int received{ 0 }, ret{ 0 }; received < psize; received += ret) {
 			ret = recv(sd, (char*)&spacket + sizeof(int) + received, psize - received, 0);
 			if (ret == 0)
-				throw std::exception("Connection Lost! Last Error: " + lastError());
+				throw make_exception("Connection Lost! Last Error: ", lastError());
 		}
 
 		return { spacket };

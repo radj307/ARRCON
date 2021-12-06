@@ -3,7 +3,6 @@
 #include "Help.hpp"
 #include <ParamsAPI2.hpp>
 #include <env.hpp>
-#include <make_exception.hpp>
 
 /**
  * @brief		Retrieve the user's specified connection target.

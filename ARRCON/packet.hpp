@@ -16,6 +16,10 @@ namespace packet {
 	inline constexpr const int PSIZE_MIN{ 10 };
 	/// @brief Maximum allowable packet size
 	inline constexpr const int PSIZE_MAX{ 10240 };
+	/// @brief Minimum allowable packet ID number.
+	inline constexpr const int PID_MIN{ 1 };
+	/// @brief Maximum allowable packet ID number.
+	inline constexpr const int PID_MAX{ INT_MAX / 2 };
 
 	/**
 	 * @struct	Type
@@ -105,6 +109,15 @@ namespace packet {
 		}
 
 		/**
+		 * @brief	Check if this Packet has valid member values.
+		 * @returns	bool
+		 */
+		bool isValid() const
+		{
+			return (size > PSIZE_MIN && size < PSIZE_MAX) && (id >= PID_MIN && id <= PID_MAX) && (type == 0 || type == 2 || type == 3);
+		}
+
+		/**
 		 * @brief	Retrieve a serialized packet with this packet's data.
 		 * @returns	serialized_packet
 		 */
@@ -149,14 +162,9 @@ namespace packet {
 	 * @brief	Manages packet ID codes, which are used to match responses to the request that provoked it.
 	 */
 	static struct {
-		static const int
-			/// @brief Minimum possible packet ID number.
-			ID_MIN{ 1 },
-			/// @brief Maximum possible packet ID number.
-			ID_MAX{ INT_MAX / 2 };
 	private:
 		/// @brief Tracks the last used packet ID number.
-		int _current_id{ ID_MIN };
+		int _current_id{ PID_MIN };
 
 	public:
 		/**
@@ -168,9 +176,9 @@ namespace packet {
 		 */
 		constexpr int get()
 		{
-			if (_current_id + 1 < ID_MAX) // if id is in range, increment it and return
+			if (_current_id + 1 < PID_MAX) // if id is in range, increment it and return
 				return ++_current_id;
-			return _current_id = ID_MIN; // else, loop id back to the minimum bound of the valid ID range
+			return _current_id = PID_MIN; // else, loop id back to the minimum bound of the valid ID range
 		}
 	} ID_Manager;
 }

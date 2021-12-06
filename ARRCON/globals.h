@@ -72,8 +72,24 @@ static struct {
 	std::vector<std::string> scriptfiles{};
 } Global;
 
+/**
+ * @brief		Convert a std::chrono millisecond duration to a timeval struct.
+ * @param ms	Input duration in milliseconds.
+ * @returns		timeval
+ */
 inline timeval duration_to_timeval(const std::chrono::milliseconds& ms)
 {
 	return{ static_cast<long>(std::trunc(Global.select_timeout.count() / 1000ll)), static_cast<long>(Global.select_timeout.count()) };
 }
 
+/**
+ * @brief				Make an exception with a given message.
+ * @tparam VT...		Variadic Templated Arguments. Types must be insertable into a std::ostream.
+ * @param ...message	Any number of parameters to include as the exception message.
+ * @returns				std::exception
+ */
+template<typename... VT>
+static std::exception make_exception(const VT&... message)
+{
+	return std::exception(str::stringify(message...).c_str());
+}
