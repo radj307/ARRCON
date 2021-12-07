@@ -26,6 +26,7 @@ private:
 		{ "-n  --no-color"s, "Disable colorized console output."s },
 		{ "--no-prompt"s,"Hides the prompt in interactive mode."s},
 		{ "--write-ini"s, "(Over)write the configuration file with the default values & exit."s},
+		{ "--save-host <name>"s, "Save the current target to the .hosts config as <name>. You can recall it later with ARRCON <name>"s },
 	};
 	const size_t _longest_optname, _max_line_length;
 
@@ -38,7 +39,7 @@ public:
 			<< "CLI Application that allows communicating with servers using the Source RCON Protocol.\n"
 			<< '\n'
 			<< "USAGE:\n"
-			<< "  " << help._program_name << " [OPTIONS] [COMMANDS]\n"
+			<< "  " << help._program_name << " [OPTIONS] [CONFIG HOSTNAME] [COMMANDS]\n"
 			<< '\n'
 			<< "OPTIONS:\n";
 		for (auto& [optname, desc] : help._options)

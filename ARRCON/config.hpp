@@ -12,7 +12,9 @@
 namespace config {
 	inline file::ini::INI read_config(const std::string& filename) noexcept(false)
 	{
-		return (file::exists(filename) ? file::ini::INI(filename) : file::ini::INI{});
+		if (file::exists(filename))
+			return file::ini::INI(filename);
+		throw make_exception("Cannot read \"", filename, "\" because it doesn't exist!");
 	}
 
 	inline constexpr const auto HEADER_APPEARANCE{ "appearance" }, HEADER_TIMING{ "timing" }, HEADER_TARGET{ "target" };
@@ -33,16 +35,16 @@ namespace config {
 			Global.receive_delay = to_ms(ini.getv(HEADER_TIMING, "iReceiveDelay"), 10ms);
 			Global.select_timeout = to_ms(ini.getv(HEADER_TIMING, "iSelectTimeout"), 500ms);
 			// Target:
-			Global.DEFAULT_HOST = ini.getv(HEADER_TARGET, "sHost").value_or(Global.DEFAULT_HOST);
-			Global.DEFAULT_PORT = ini.getv(HEADER_TARGET, "sPort").value_or(Global.DEFAULT_PORT);
-			Global.DEFAULT_PASS = ini.getv(HEADER_TARGET, "sPass").value_or(Global.DEFAULT_PASS);
+			Global.DEFAULT_HOST = ini.getv(HEADER_TARGET, "sDefaultHost").value_or(Global.DEFAULT_HOST);
+			Global.DEFAULT_PORT = ini.getv(HEADER_TARGET, "sDefaultPort").value_or(Global.DEFAULT_PORT);
+			Global.DEFAULT_PASS = ini.getv(HEADER_TARGET, "sDefaultPass").value_or(Global.DEFAULT_PASS);
 		}
 	}
 
 	namespace _internal {
 		struct MakeHeader {
 			const std::string _str;
-			constexpr MakeHeader(const std::string& str) : _str{ str } {}
+			_WINCONSTEXPR MakeHeader(const std::string& str) : _str{ str } {}
 			friend std::ostream& operator<<(std::ostream& os, const MakeHeader& h) { return os << '[' << h._str << ']' << '\n'; }
 		};
 	}
@@ -53,9 +55,9 @@ namespace config {
 		std::stringstream ss;
 		ss
 			<< MakeHeader(HEADER_TARGET)
-			<< "sHost = 127.0.0.1\n"
-			<< "sPort = 27015\n"
-			<< "sPass = \n"
+			<< "sDefaultHost = 127.0.0.1\n"
+			<< "sDefaultPort = 27015\n"
+			<< "sDefaultPass = \n"
 			<< '\n'
 			<< MakeHeader(HEADER_APPEARANCE)
 			<< "bDisablePrompt = false\n"
@@ -70,5 +72,71 @@ namespace config {
 			<< '\n';
 
 		return file::write(filename, ss, append);
+	}
+
+	struct HostInfo {
+		std::string hostname, port, password;
+		friend std::ostream& operator<<(std::ostream& os, const HostInfo& hostinfo)
+		{
+			return (os
+				<< "hostname = " << hostinfo.hostname << '\n'
+				<< "port = " << hostinfo.port << '\n'
+				<< "password = " << hostinfo.password << '\n'
+				).flush();
+		}
+	};
+
+	using HostList = std::unordered_map<std::string, HostInfo>;
+
+	inline HostList read_hostfile(const std::string& filename) noexcept(false)
+	{
+		const auto hostfile{ read_config(filename) };
+		HostList hosts{};
+		for (auto& [name, targetinfo] : hostfile) {
+			const auto getv{ [&targetinfo](const std::string& var_name) -> std::optional<std::string> {
+				if (const auto target{targetinfo.find(var_name)}; target != targetinfo.end())
+					return target->second;
+				return std::nullopt;
+			} };
+			if (!targetinfo.empty())
+				hosts.insert_or_assign(name, HostInfo{ getv("hostname").value_or(Global.DEFAULT_HOST), getv("port").value_or(Global.DEFAULT_PORT), getv("password").value_or(Global.DEFAULT_PASS) });
+		}
+		return hosts;
+	}
+
+	/**
+	 * @brief			Insert a given target into the hostlist
+	 * @param hostlist	A reference to the host list.
+	 * @param name		Name to save host info as.
+	 * @param info		Host info to save.
+	 * @returns			std::pair<iterator, bool>
+	 */
+	inline auto save_hostinfo(HostList& hostlist, const std::string& name, const HostInfo& info)
+	{
+		return hostlist.insert_or_assign(name, info);
+	}
+
+	/// @brief HostList insertion operator used for writing it to a file.
+	inline std::ostream& operator<<(std::ostream& os, const HostList& hostlist)
+	{
+		for (auto& [name, hostinfo] : hostlist) {
+			os
+				<< '[' << name << "]\n"
+				<< "hostname = " << hostinfo.hostname << '\n'
+				<< "port = " << hostinfo.port << '\n'
+				<< "password = " << hostinfo.password << "\n\n";
+		}
+		return os;
+	}
+
+	/**
+	 * @brief			Write the given hostlist to a file.
+	 * @param hostlist	Host list to write.
+	 * @param filename	Target filename to write to.
+	 * @returns			bool
+	 */
+	inline auto write_hostfile(const HostList& hostlist, const std::string& filename)
+	{
+		return file::write(filename, hostlist, false);
 	}
 }

@@ -66,17 +66,13 @@ namespace net {
 	#ifdef _WIN32
 		closesocket(sd);
 		WSACleanup();
-	#else
-		close(sd);
 	#endif
 	}
 
 	/// @brief	Emergency stop handler, should be passed to the std::atexit() function to allow a controlled shutdown of the socket.
 	inline void cleanup(void)
 	{
-		if (Global.socket != SOCKET_ERROR)
-			net::close_socket(Global.socket);
-		WSACleanup();
+		net::close_socket(Global.socket);
 		std::cout << Global.palette.reset();
 	}
 

@@ -22,10 +22,17 @@
  *\n			1	RCON Port
  *\n			2	RCON Password
  */
-inline std::tuple<std::string, std::string, std::string> get_server_info(const opt::ParamsAPI2& args)
+inline std::tuple<std::string, std::string, std::string> get_server_info(const opt::ParamsAPI2& args, const config::HostList& hostlist)
 {
+	if (const auto param{ args.typeget_any<opt::Parameter>() }; param.has_value()) {
+		if (const auto entry{ hostlist.find(param.value()) }; entry != hostlist.end()) {
+			Global.using_hostname = entry->first;
+			const auto [host, port, pass] { entry->second };
+			return{ args.typegetv<opt::Flag>('H').value_or(host), args.typegetv<opt::Flag>('P').value_or(port), args.typegetv<opt::Flag>('p').value_or(pass) };
+		}
+	}
 	return{
-		args.typegetv<opt::Flag>('H').value_or(Global.DEFAULT_HOST), // hostname
+		args.typegetv<opt::Flag>('H').value_or(Global.DEFAULT_HOST), // host
 		args.typegetv<opt::Flag>('P').value_or(Global.DEFAULT_PORT), // port
 		args.typegetv<opt::Flag>('p').value_or(Global.DEFAULT_PASS)  // password
 	};
@@ -35,7 +42,7 @@ inline std::tuple<std::string, std::string, std::string> get_server_info(const o
  * @brief		Handle commandline arguments.
  * @param args	Arguments from main()
  */
-inline void handle_args(const opt::ParamsAPI2& args, const std::string& program_name)
+inline void handle_args(const opt::ParamsAPI2& args, config::HostList& hosts, const config::HostInfo& target, const std::string& program_name, const std::string& ini_path, const std::string& hostfile_path)
 {
 	// help:
 	if (args.check_any<opt::Flag, opt::Option>('h', "help")) {
@@ -49,11 +56,11 @@ inline void handle_args(const opt::ParamsAPI2& args, const std::string& program_
 	}
 	// write-ini:
 	if (args.check_any<opt::Option>("write-ini")) {
-		if (!Global.ini_path.empty() && config::write_default_config(Global.ini_path)) {
-			std::cout << "Successfully wrote to config: \"" << Global.ini_path << '\"' << std::endl;
+		if (!ini_path.empty() && config::write_default_config(ini_path)) {
+			std::cout << "Successfully wrote to config: \"" << ini_path << '\"' << std::endl;
 			std::exit(EXIT_SUCCESS);
 		}
-		else throw make_exception("I/O operation failed: \""s, Global.ini_path, "\" couldn't be written to."s);
+		else throw make_exception("I/O operation failed: \""s, ini_path, "\" couldn't be written to."s);
 	}
 	// quiet:
 	if (args.check_any<opt::Option, opt::Flag>('q', "quiet"))
@@ -79,6 +86,13 @@ inline void handle_args(const opt::ParamsAPI2& args, const std::string& program_
 	// scriptfiles:
 	for (auto& scriptfile : args.typegetv_all<opt::Option, opt::Flag>('f', "file"))
 		Global.scriptfiles.emplace_back(scriptfile);
+	// save-host
+	if (const auto arg{ args.typegetv<opt::Option>("save-host") }; arg.has_value()) {
+		if (config::save_hostinfo(hosts, arg.value(), target).second)
+			std::cout << "Saved \"" << target.hostname << ':' << target.port << "\" as \"" << arg.value() << "\"\n";
+		else std::cout << "Updated \"" << arg.value() << "\" with target \"" << target.hostname << ':' << target.port << "\"\n";
+		config::write_hostfile(hosts, hostfile_path);
+	}
 }
 
 
@@ -93,12 +107,14 @@ inline void sighandler(int sig)
 	std::cout << Global.palette.reset();
 	switch (sig) {
 	case SIGINT:
-		throw std::exception("Received SIGINT");
+		throw make_exception("Received SIGINT");
 	case SIGTERM:
-		throw std::exception("Received SIGTERM");
+		throw make_exception("Received SIGTERM");
+	#ifdef OS_WIN
 	case SIGABRT_COMPAT: [[fallthrough]];
+	#endif
 	case SIGABRT:
-		throw std::exception("Received SIGABRT");
+		throw make_exception("Received SIGABRT");
 	default:break;
 	}
 }
@@ -136,6 +152,10 @@ inline std::vector<std::string> read_script_file(std::string filename, const env
 inline std::vector<std::string> get_commands(const opt::ParamsAPI2& args, const env::PATH& pathvar)
 {
 	std::vector<std::string> commands{ args.typegetv_all<opt::Parameter>() }; // Arg<std::string> is implicitly convertable to std::string
+	if (Global.using_hostname.has_value()) {
+		const auto pos{ std::find(commands.begin(), commands.end(), Global.using_hostname.value()) };
+		commands.erase(pos);
+	}
 	for (auto& file : Global.scriptfiles) {// iterate through all user-specified files
 		if (const auto script_commands{ read_script_file(file, pathvar) }; !script_commands.empty()) {
 			if (!Global.quiet) // feedback
@@ -156,34 +176,34 @@ int main(int argc, char** argv)
 {
 	try {
 		std::cout << sys::term::EnableANSI; // enable ANSI escape sequences on windows
-		const opt::ParamsAPI2 args{ argc, argv, 'H', "host", 'P', "port", 'p', "password", 'd', "delay", 'f', "file" }; // parse arguments
+		const opt::ParamsAPI2 args{ argc, argv, 'H', "host", 'P', "port", 'p', "password", 'd', "delay", 'f', "file", "save-host" }; // parse arguments
 		env::PATH PATH{ args.arg0().value_or("") };
 		const auto& [prog_path, prog_name] { PATH.resolve_split(args.arg0().value()) };
 
-		if (Global.ini_path = (prog_path / prog_name).replace_extension(".ini").generic_string(); file::exists(Global.ini_path))
-			config::apply_config(Global.ini_path);
+		config::HostList hosts;
 
-		const auto& [host, port, pass] { get_server_info(args) };
-		handle_args(args, prog_name.generic_string());
+		const auto ini_path{ (prog_path / prog_name).replace_extension(".ini").generic_string() };
+		if (file::exists(ini_path))
+			config::apply_config(ini_path);
+
+		const auto hostfile_path{ (prog_path / prog_name).replace_extension(".hosts").generic_string() };
+		if (file::exists(hostfile_path))
+			hosts = config::read_hostfile(hostfile_path);
+
+		const auto& [host, port, pass] { get_server_info(args, hosts) };
+		handle_args(args, hosts, { host, port, pass }, prog_name.generic_string(), ini_path, hostfile_path);
 
 		const auto commands{ get_commands(args, PATH) };
 
 		if (Global.custom_prompt.empty())
 			Global.custom_prompt = (Global.no_prompt ? "" : str::stringify(Global.palette.set(UIElem::TERM_PROMPT_NAME), "RCON@", host, Global.palette.reset(UIElem::TERM_PROMPT_ARROW), '>', Global.palette.reset(), ' '));
 
-		// Register the cleanup function before connecting the socket
-		std::atexit(&net::cleanup);
-
-	#ifdef OS_WIN // use signal function as sigaction doesn't work correctly
 		signal(SIGINT, &sighandler);
 		signal(SIGTERM, &sighandler);
 		signal(SIGABRT, &sighandler);
-	#else
-		struct sigaction sa { &sighandler, nullptr, {}, SA_RESTART, nullptr };
-		sigaction(SIGINT, &sa, nullptr);
-		sigaction(SIGTERM, &sa, nullptr);
-		sigaction(SIGABRT, &sa, nullptr);
-	#endif
+
+		// Register the cleanup function before connecting the socket
+		std::atexit(&net::cleanup);
 
 		// Connect the socket
 		Global.socket = net::connect(host, port);
@@ -195,13 +215,14 @@ int main(int argc, char** argv)
 
 		// auth & commands
 		if (rcon::authenticate(Global.socket, pass)) {
+			// authentication succeeded
 			if (mode::commandline(commands) == 0ull || Global.force_interactive)
-				mode::interactive(Global.socket);
+				mode::interactive(Global.socket); // if no commands were executed from the commandline or if the force interactive flag was set
 		}
-		else throw make_exception("Authentication Failed! (", host, ':', port, ')');
+		else throw make_exception("Authentication with ", host, ':', port, ") failed because of an incorrect password.");
 
 		return EXIT_SUCCESS;
-	} catch (const std::exception& ex) { ///< catch std::exception
+	} catch (const std::exception& ex) { ///< catch exceptions
 		std::cerr << sys::term::error << ex.what() << std::endl;
 	} catch (...) { ///< catch all other exceptions
 		std::cerr << sys::term::error << "An unknown exception occurred!" << std::endl;

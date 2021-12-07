@@ -5,12 +5,14 @@
  */
 #pragma once
 #include <ColorPalette.hpp>
+#include <make_exception.hpp>
 
+#include <cmath>
 #include <sys/socket.h>
 #include <chrono>
 
 inline constexpr const auto
-VERSION{ "1.2.0" },
+VERSION{ "2.0.0" },
 DEFAULT_PROGRAM_NAME{ "ARRCON.exe" };
 
 /**
@@ -39,12 +41,13 @@ static struct {
 		DEFAULT_PORT{ "27015" },
 		DEFAULT_PASS{ "" };
 
-
 	/// @brief When true, response packets are not printed to the terminal
 	bool quiet{ false };
 
 	/// @brief When true, hides the prompt in interactive mode.
 	bool no_prompt{ false };
+
+	std::optional<std::string> using_hostname;
 
 	std::string custom_prompt{};
 
@@ -63,7 +66,9 @@ static struct {
 	/// @brief amount of time before the select() function times out.
 	std::chrono::milliseconds select_timeout{ 500ll };
 
-	std::string ini_path;
+#ifndef SOCKET_ERROR
+#define SOCKET_ERROR -1l
+#endif
 
 	/// @brief Global socket connected to the RCON server.
 	SOCKET socket{ static_cast<SOCKET>(SOCKET_ERROR) };
@@ -83,16 +88,4 @@ static struct {
 inline timeval duration_to_timeval(const std::chrono::milliseconds& ms)
 {
 	return{ static_cast<long>(std::trunc(Global.select_timeout.count() / 1000ll)), static_cast<long>(Global.select_timeout.count()) };
-}
-
-/**
- * @brief				Make an exception with a given message.
- * @tparam VT...		Variadic Templated Arguments. Types must be insertable into a std::ostream.
- * @param ...message	Any number of parameters to include as the exception message.
- * @returns				std::exception
- */
-template<typename... VT>
-static std::exception make_exception(const VT&... message)
-{
-	return std::exception(str::stringify(message...).c_str());
 }
