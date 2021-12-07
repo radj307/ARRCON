@@ -156,7 +156,8 @@ inline std::vector<std::string> get_commands(const opt::ParamsAPI2& args, const 
 		const auto pos{ std::find(commands.begin(), commands.end(), Global.using_hostname.value()) };
 		commands.erase(pos);
 	}
-	for (auto& file : Global.scriptfiles) {// iterate through all user-specified files
+	// iterate through all user-specified files
+	for (auto& file : Global.scriptfiles) {
 		if (const auto script_commands{ read_script_file(file, pathvar) }; !script_commands.empty()) {
 			if (!Global.quiet) // feedback
 				std::cout << sys::term::log << "Successfully read commands from \"" << file << "\"\n";
@@ -177,8 +178,9 @@ int main(int argc, char** argv)
 	try {
 		std::cout << sys::term::EnableANSI; // enable ANSI escape sequences on windows
 		const opt::ParamsAPI2 args{ argc, argv, 'H', "host", 'P', "port", 'p', "password", 'd', "delay", 'f', "file", "save-host" }; // parse arguments
-		env::PATH PATH{ args.arg0().value_or("") };
-		const auto& [prog_path, prog_name] { PATH.resolve_split(args.arg0().value()) };
+
+		env::PATH PATH{ args.arg0() };
+		const auto& [prog_path, prog_name] { PATH.resolve_split(args.arg0()) };
 
 		config::HostList hosts;
 
@@ -215,7 +217,7 @@ int main(int argc, char** argv)
 
 		// auth & commands
 		if (rcon::authenticate(Global.socket, pass)) {
-			// authentication succeeded
+			// authentication succeeded, run commands
 			if (mode::commandline(commands) == 0ull || Global.force_interactive)
 				mode::interactive(Global.socket); // if no commands were executed from the commandline or if the force interactive flag was set
 		}

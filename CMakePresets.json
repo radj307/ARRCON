@@ -5,7 +5,7 @@
       "name": "linux-default",
       "displayName": "Linux Debug",
       "description": "Target the Windows Subsystem for Linux (WSL) or a remote Linux system.",
-      "generator": "Ninja",
+      "generator": "Unix Makefiles",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
       "cmakeExecutable": "/usr/bin/cmake",
       "cacheVariables": {
@@ -21,7 +21,7 @@
       "name": "linux-release",
       "displayName": "Linux Release",
       "description": "Target the Windows Subsystem for Linux (WSL) or a remote Linux system.",
-      "generator": "Ninja",
+      "generator": "Unix Makefiles",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
       "cmakeExecutable": "/usr/bin/cmake",
       "cacheVariables": {
