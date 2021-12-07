@@ -61,7 +61,7 @@ sDefaultPass =                    ; Defines the default password, unless a passw
 bDisablePrompt = false            ; When true, this is the equivalent of always specifying the --no-prompt option.
 bDisableColors = false            ; When true, this is the equivalent of always specifying the -n/--no-color option.
 sCustomPrompt =                   ; Accepts a string to use in place of the default prompt, excluding the end, which is always "> ".
-bEnableBukkitColors = false       ; Enables support for Bukkit's color syntax. _(Minecraft)_ 
+bEnableBukkitColors = false       ; Enables support for Bukkit's color syntax. This is only relevant for minecraft servers running Bukkit.
 
 [timing]
 iCommandDelay = 0                 ; The delay in milliseconds between sending each command when using commandline/scriptfile mode.
