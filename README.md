@@ -40,6 +40,7 @@ Options can be specified anywhere on the commandline, and must use a dash `-` de
 |`-n` `--no-color`            | Disables colorized terminal output.
 | `--no-prompt`               | Hides the prompt (Default prompt is "RCON@HOST> ").
 | `--write-ini`               | (Over)Writes the default `.ini` configuration file.
+| `--save-host <name>`        | Save the current target to the `.hosts` config as `<name>`. You can recall it later with `ARRCON <name>`
 
 For example, to connect to _MyHostname:27015_ using _myPassword_ as the password, send the _help_ command, then start an interactive session:  
 `arrcon -i -H MyHostname -P 27015 -p myPassword help`  
@@ -52,17 +53,26 @@ Keep this in mind if you rename the executable!
 You can create a default INI file by using the `arrcon --write-ini` command.  
 ```ini
 [target]
-sHost =                           ; Defines the default hostname/IP, unless a hostname/IP was specified on the commandline.
-sPort =                           ; Defines the default port, unless a port was specified on the commandline.
-sPass =                           ; Defines the default password, unless a password was specified on the commandline.
+sDefaultHost =                    ; Defines the default hostname/IP, unless a hostname/IP was specified on the commandline.
+sDefaultPort =                    ; Defines the default port, unless a port was specified on the commandline.
+sDefaultPass =                    ; Defines the default password, unless a password was specified on the commandline.
 
 [appearance]
 bDisablePrompt = false            ; When true, this is the equivalent of always specifying the --no-prompt option.
 bDisableColors = false            ; When true, this is the equivalent of always specifying the -n/--no-color option.
 sCustomPrompt =                   ; Accepts a string to use in place of the default prompt, excluding the end, which is always "> ".
+bEnableBukkitColors = false       ; Enables support for Bukkit's color syntax. This is only relevant for minecraft servers running Bukkit.
 
 [timing]
 iCommandDelay = 0                 ; The delay in milliseconds between sending each command when using commandline/scriptfile mode.
 iReceiveDelay = 10                ; The time in milliseconds to wait after receiving packets. Raise this if multi-packet responses aren't fully received. 
 iSelectTimeout = 500              ; The max amount of time to wait for packets before timing out. Raise this if your network is slow.
 ```
+
+## Host Configuration (v3.0.0)
+You can also use a file named `ARRCON.hosts` to save a target's IP, Port, and password as a friendly name, similar to SSH.  
+*(If you rename the `.exe`, you need to rename the `.hosts` file as well!)*  
+
+You can also use the `--save-host <name>` option to do this directly from the commandline, any target specified with `-H`/`-P`/`-p` will be saved with the name given as a parameter to `--save-host`.
+
+The `.hosts` file uses INI syntax, where the header name represents the name of the target, and each header has the keys *hostname*, *port*, & *password*.
