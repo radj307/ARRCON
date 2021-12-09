@@ -1,23 +1,7 @@
-[submodule "SharedLib"]
-	path = sharedlib
-	url = git://github.com/radj307/SharedLib
-	branch = cmake
-
-[submodule "FileLib"]
-	path = FileLib
-	url = git://github.com/radj307/cpp-file-parser
-	branch = cmake
-	
-[submodule "optlib"]
-	path = optlib
-	url = git://github.com/radj307/cli-opt-lib
-	branch = cmake
-	
-[submodule "TermAPI"]
-	path = TermAPI
-	url = git://github.com/radj307/TermAPI
-	branch = cmake
 	
 [submodule "libunistd"]
 	path = libunistd
 	url = git://github.com/robinrowe/libunistd
+[submodule "307lib"]
+	path = 307lib
+	url = https://github.com/radj307/307lib.git
