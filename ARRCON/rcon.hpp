@@ -37,7 +37,7 @@ namespace rcon {
 	 * @brief			Send a command to the connected RCON server.
 	 * @param sd		Socket to use.
 	 * @param command	Command string to send.
-	 * @returns			std::optional<packet::Packet>
+	 * @returns			bool
 	 */
 	inline bool command(const SOCKET& sd, const std::string& command)
 	{

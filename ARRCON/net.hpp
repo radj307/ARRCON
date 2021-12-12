@@ -131,10 +131,8 @@ namespace net {
 
 		freeaddrinfo(server_info); // release address info memory
 
-		if (p == NULL) {
-			const auto err{ lastError() };
-			throw make_exception("Failed to connect to \"", host, ':', port, "\"", (err == 0 ? "" : " with error code "s + std::to_string(err)), '!');
-		}
+		if (p == NULL)
+			throw make_exception("Failed to connect to ", host, ':', port, "!");
 
 		return sd;
 	}

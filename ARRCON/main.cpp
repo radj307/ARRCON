@@ -95,8 +95,6 @@ inline void handle_args(const opt::ParamsAPI2& args, config::HostList& hosts, co
 	}
 }
 
-
-
 /**
  * @brief		Handler function for OS signals. Passed to sigaction/signal to intercept interrupts and shut down the socket correctly.
  * @param sig	The signal thrown to prompt the calling of this function.
@@ -210,10 +208,8 @@ int main(int argc, char** argv)
 		// Connect the socket
 		Global.socket = net::connect(host, port);
 
-		if (Global.connected = Global.socket != SOCKET_ERROR; !Global.connected) {
-			std::cerr << "Failed to connect to " << host << ':' << port << ", is the target reachable?\n";
-			throw make_exception("Socket error: ", net::lastError());
-		}
+		if (!(Global.connected = Global.socket != SOCKET_ERROR))
+			throw make_exception("Socket was set to invalid value ", static_cast<int>(SOCKET_ERROR), " but connect returned successfully.\tLast socket error code: ", net::lastError());
 
 		// auth & commands
 		if (rcon::authenticate(Global.socket, pass)) {
@@ -221,13 +217,13 @@ int main(int argc, char** argv)
 			if (mode::commandline(commands) == 0ull || Global.force_interactive)
 				mode::interactive(Global.socket); // if no commands were executed from the commandline or if the force interactive flag was set
 		}
-		else throw make_exception("Authentication with ", host, ':', port, ") failed because of an incorrect password.");
+		else throw make_exception("Authentication with ", host, ':', port, " failed because of an incorrect password.");
 
 		return EXIT_SUCCESS;
 	} catch (const std::exception& ex) { ///< catch exceptions
 		std::cerr << sys::term::error << ex.what() << std::endl;
 	} catch (...) { ///< catch all other exceptions
-		std::cerr << sys::term::error << "An unknown exception occurred!" << std::endl;
+		std::cerr << sys::term::crit << "An unknown exception occurred!" << std::endl;
 	}
 	return EXIT_FAILURE;
 }

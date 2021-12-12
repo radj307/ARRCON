@@ -38,8 +38,10 @@ namespace mode {
 	{
 		if (!Global.no_prompt)
 			std::cout << "Authentication Successful.\nUse <Ctrl + C> or type \"exit\" to exit.\n";
-		for (std::string command; Global.connected; ) {
-			std::cout << Global.custom_prompt;
+		while (Global.connected) {
+			(std::cout << Global.custom_prompt).flush().clear();
+
+			std::string command;
 			std::getline(std::cin, command);
 
 			if (str::tolower(command) == "exit")
