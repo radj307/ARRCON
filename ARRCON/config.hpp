@@ -96,7 +96,7 @@ namespace config {
 		HostList hosts{};
 		for (auto& [name, targetinfo] : hostfile) {
 			if (!targetinfo.empty())
-				hosts.insert_or_assign(name, HostInfo{ hostfile.getvs(name, "sHost").value_or(Global.DEFAULT_HOST), hostfile.getvs(name, "sPort").value_or(Global.DEFAULT_PORT), hostfile.getvs(name, "sPass").value_or(Global.DEFAULT_PASS) });
+				hosts.insert_or_assign(name, HostInfo{ str::strip_line(hostfile.getvs(name, "sHost").value_or(Global.DEFAULT_HOST), ";#", "\""), str::strip_line(hostfile.getvs(name, "sPort").value_or(Global.DEFAULT_PORT), "#;", "\""), str::strip_line(hostfile.getvs(name, "sPass").value_or(Global.DEFAULT_PASS), ";#", "\"") });
 		}
 		return hosts;
 	}
