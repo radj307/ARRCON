@@ -96,28 +96,6 @@ inline void handle_args(const opt::ParamsAPI2& args, config::HostList& hosts, co
 }
 
 /**
- * @brief		Handler function for OS signals. Passed to sigaction/signal to intercept interrupts and shut down the socket correctly.
- * @param sig	The signal thrown to prompt the calling of this function.
- */
-inline void sighandler(int sig)
-{
-	Global.connected = false;
-	std::cout << Global.palette.reset();
-	switch (sig) {
-	case SIGINT:
-		throw make_exception("Received SIGINT");
-	case SIGTERM:
-		throw make_exception("Received SIGTERM");
-	#ifdef OS_WIN
-	case SIGABRT_COMPAT: [[fallthrough]];
-	#endif
-	case SIGABRT:
-		throw make_exception("Received SIGABRT");
-	default:break;
-	}
-}
-
-/**
  * @brief			Reads the target file and returns a vector of command strings for each valid line.
  * @param filename	Target Filename
  * @returns			std::vector<std::string>
@@ -198,10 +176,6 @@ int main(int argc, char** argv)
 		if (Global.custom_prompt.empty())
 			Global.custom_prompt = (Global.no_prompt ? "" : str::stringify(Global.palette.set(UIElem::TERM_PROMPT_NAME), "RCON@", host, Global.palette.reset(UIElem::TERM_PROMPT_ARROW), '>', Global.palette.reset(), ' '));
 
-		signal(SIGINT, &sighandler);
-		signal(SIGTERM, &sighandler);
-		signal(SIGABRT, &sighandler);
-
 		// Register the cleanup function before connecting the socket
 		std::atexit(&net::cleanup);
 
@@ -219,11 +193,12 @@ int main(int argc, char** argv)
 		}
 		else throw make_exception("Authentication with ", host, ':', port, " failed because of an incorrect password.");
 
-		return EXIT_SUCCESS;
+		return 0;
 	} catch (const std::exception& ex) { ///< catch exceptions
 		std::cerr << sys::term::error << ex.what() << std::endl;
+		return -1;
 	} catch (...) { ///< catch all other exceptions
 		std::cerr << sys::term::crit << "An unknown exception occurred!" << std::endl;
+		return -2;
 	}
-	return EXIT_FAILURE;
 }

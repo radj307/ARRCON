@@ -7,11 +7,23 @@
 #include "globals.h"
 #include "rcon.hpp"
 
+#include <signal.h>				///< signal handling
+#include <unistd.h>
+
  /**
-  * @namespace	mode
-  * @brief		Contains all of the mode functions.
+  * @brief		Handler function for OS signals. Passed to sigaction/signal to intercept interrupts and shut down the socket correctly.
+  * @param sig	The signal thrown to prompt the calling of this function.
   */
+inline void sighandler(int sig) noexcept
+{
+	Global.connected = false;
+}
+/**
+ * @namespace	mode
+ * @brief		Contains all of the mode functions.
+ */
 namespace mode {
+
 	/**
 	 * @brief			Execute a list of commands.
 	 * @param commands	List of commands to execute, in order.
@@ -36,10 +48,17 @@ namespace mode {
 	 */
 	inline void interactive(const SOCKET& sd)
 	{
+		struct sigaction action;
+
+		memset(&action, 0, sizeof(action));
+		action.sa_handler = sighandler;
+
+		!sigaction(SIGINT, &action, 0); // initialize signal handler for loop
+
 		if (!Global.no_prompt)
 			std::cout << "Authentication Successful.\nUse <Ctrl + C> or type \"exit\" to exit.\n";
-		while (Global.connected) {
-			(std::cout << Global.custom_prompt).flush().clear();
+		while (Global.connected && std::cin.good()) {
+			std::cout << Global.custom_prompt;
 
 			std::string command;
 			std::getline(std::cin, command);
@@ -52,6 +71,7 @@ namespace mode {
 				std::this_thread::sleep_for(std::chrono::milliseconds(50));
 			}
 		}
+		(std::cout << Global.palette.reset()).flush();
 	}
 
 }

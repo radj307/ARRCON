@@ -11,6 +11,7 @@
 #include <cmath>
 #include <sys/socket.h>
 #include <chrono>
+#include <atomic>
 
 inline constexpr const auto
 VERSION{ "3.0.0" },
@@ -53,7 +54,7 @@ static struct {
 	std::string custom_prompt{};
 
 	/// @brief When true, the RCON socket is currently connected.
-	bool connected{ false };
+	volatile bool connected{ false };
 
 	/// @brief When true, support for minecraft bukkit colors is enabled, and the color mapped to UIElem::PACKET will have no effect.
 	bool enable_bukkit_color_support{ false };

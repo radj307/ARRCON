@@ -43,7 +43,6 @@
         "value": "x64",
         "strategy": "external"
       },
-      "cmakeExecutable": "X:\\Utilities\\cmake\\bin\\cmake.exe",
       "cacheVariables": {
         "ENABLE_TESTING": {
           "type": "BOOL",
