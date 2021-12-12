@@ -5,8 +5,8 @@
  */
 #pragma once
 #include "globals.h"
+#include <sysarch.h>
 
-#define USE_DEPRECATED_INI
 #include <INI.hpp>
 
 namespace config {
@@ -44,7 +44,7 @@ namespace config {
 	namespace _internal {
 		struct MakeHeader {
 			const std::string _str;
-			_WINCONSTEXPR MakeHeader(const std::string& str) : _str{ str } {}
+			_CONSTEXPR MakeHeader(const std::string& str) : _str{ str } {}
 			friend std::ostream& operator<<(std::ostream& os, const MakeHeader& h) { return os << '[' << h._str << ']' << '\n'; }
 		};
 	}
@@ -71,7 +71,7 @@ namespace config {
 			<< "iSelectTimeout = 500\n"
 			<< '\n';
 
-		return file::write(filename, ss, append);
+		return file::write(filename, ss.rdbuf(), append);
 	}
 
 	struct HostInfo {
@@ -79,9 +79,9 @@ namespace config {
 		friend std::ostream& operator<<(std::ostream& os, const HostInfo& hostinfo)
 		{
 			return (os
-				<< "hostname = " << hostinfo.hostname << '\n'
-				<< "port = " << hostinfo.port << '\n'
-				<< "password = " << hostinfo.password << '\n'
+				<< "sHost = " << hostinfo.hostname << '\n'
+				<< "sPort = " << hostinfo.port << '\n'
+				<< "sPass = " << hostinfo.password << '\n'
 				).flush();
 		}
 	};
@@ -99,7 +99,7 @@ namespace config {
 				return std::nullopt;
 			} };
 			if (!targetinfo.empty())
-				hosts.insert_or_assign(name, HostInfo{ getv("hostname").value_or(Global.DEFAULT_HOST), getv("port").value_or(Global.DEFAULT_PORT), getv("password").value_or(Global.DEFAULT_PASS) });
+				hosts.insert_or_assign(name, HostInfo{ getv("sHost").value_or(Global.DEFAULT_HOST), getv("sPort").value_or(Global.DEFAULT_PORT), getv("sPass").value_or(Global.DEFAULT_PASS) });
 		}
 		return hosts;
 	}

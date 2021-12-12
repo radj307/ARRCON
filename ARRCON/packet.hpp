@@ -5,6 +5,7 @@
  */
 #pragma once
 #include <Sequence.hpp>
+#include <color-values.h>
 
 #include "globals.h"
 #include <ostream>

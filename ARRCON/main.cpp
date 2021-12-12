@@ -179,8 +179,8 @@ int main(int argc, char** argv)
 		std::cout << sys::term::EnableANSI; // enable ANSI escape sequences on windows
 		const opt::ParamsAPI2 args{ argc, argv, 'H', "host", 'P', "port", 'p', "password", 'd', "delay", 'f', "file", "save-host" }; // parse arguments
 
-		env::PATH PATH{ args.arg0() };
-		const auto& [prog_path, prog_name] { PATH.resolve_split(args.arg0()) };
+		env::PATH PATH{ argv[0] };
+		const auto& [prog_path, prog_name] { PATH.resolve_split(argv[0]) };
 
 		config::HostList hosts;
 

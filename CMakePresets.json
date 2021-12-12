@@ -38,13 +38,17 @@
       "displayName": "Windows x64 Debug",
       "description": "Target Windows with the Visual Studio development environment.",
       "generator": "Visual Studio 17 2022",
-      "cmakeExecutable": "X:\\Utilities\\cmake\\bin\\cmake.exe",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
       "architecture": {
         "value": "x64",
         "strategy": "external"
       },
+      "cmakeExecutable": "X:\\Utilities\\cmake\\bin\\cmake.exe",
       "cacheVariables": {
+        "ENABLE_TESTING": {
+          "type": "BOOL",
+          "value": "OFF"
+        },
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
       },
@@ -52,20 +56,11 @@
     },
     {
       "name": "windows-release",
+      "inherits": "windows-default",
       "displayName": "Windows x64 Release",
-      "description": "Target Windows with the Visual Studio development environment.",
-      "generator": "Visual Studio 17 2022",
-      "cmakeExecutable": "X:\\Utilities\\cmake\\bin\\cmake.exe",
-      "binaryDir": "${sourceDir}/out/build/${presetName}",
-      "architecture": {
-        "value": "x64",
-        "strategy": "external"
-      },
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
-      },
-      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Windows" ] } }
+        "CMAKE_BUILD_TYPE": "MinSizeRel"
+      }
     }
   ]
 }
