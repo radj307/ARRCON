@@ -7,9 +7,7 @@ Supports running scripts & commands directly from the commandline, and/or an int
 # Installation
 No installation is required, simply download the executable and put it somewhere.  
 
-[_(Optional)_ Add location to your PATH](https://github.com/radj307/ARRCON/wiki/Adding-To-Path)
-
-# [Build From Source](https://github.com/radj307/ARRCON/wiki/Building-from-Source)
+### [Building From Source](https://github.com/radj307/ARRCON/wiki/Building-from-Source)
 
 # Usage
 
