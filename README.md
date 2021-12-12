@@ -5,7 +5,7 @@ Capable of handling packets up to 10kB in size, as well as multi-packet response
 Supports running scripts & commands directly from the commandline, and/or an interactive terminal session with ANSI color sequence support.
 
 # Installation
-No installation is required, simply download the executable and put it somewhere.  
+No installation is required, simply download the executable and put it somewhere on your path.  
 
 ### [Building From Source](https://github.com/radj307/ARRCON/wiki/Building-from-Source)
 
