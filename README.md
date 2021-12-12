@@ -9,6 +9,8 @@ No installation is required, simply download the executable and put it somewhere
 
 [_(Optional)_ Add location to your PATH](https://github.com/radj307/ARRCON/wiki/Adding-To-Path)
 
+# [Build From Source](https://github.com/radj307/ARRCON/wiki/Building-from-Source)
+
 # Usage
 
 Open a terminal in the location where you placed the executable, and run `arrcon --help` for usage instructions.  
