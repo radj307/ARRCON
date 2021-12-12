@@ -14,7 +14,7 @@
 #include <atomic>
 
 inline constexpr const auto
-VERSION{ "3.0.0" },
+VERSION{ "3.1.0" },
 DEFAULT_PROGRAM_NAME{ "ARRCON.exe" };
 
 /**
@@ -26,6 +26,8 @@ enum class UIElem : unsigned char {
 	TERM_PROMPT_ARROW,	// interactive mode prompt arrow '>'
 	PACKET,				// interactive mode response
 	COMMAND_ECHO,		// commandline mode command echo
+	HOST_NAME,			// list-hosts command (name)
+	HOST_INFO,			// list-hosts command (hostname/port)
 };
 
 inline constexpr const auto MAX_DELAY{ std::chrono::hours(24) };
@@ -37,9 +39,11 @@ static struct {
 		std::make_pair(UIElem::TERM_PROMPT_ARROW, color::green),
 		std::make_pair(UIElem::PACKET, color::white),
 		std::make_pair(UIElem::COMMAND_ECHO, color::green),
+		std::make_pair(UIElem::HOST_NAME, color::white),
+		std::make_pair(UIElem::HOST_INFO, color::light_gray),
 	};
 	std::string
-		DEFAULT_HOST{ "localhost" },
+		DEFAULT_HOST{ "127.0.0.1" },
 		DEFAULT_PORT{ "27015" },
 		DEFAULT_PASS{ "" };
 
@@ -69,7 +73,7 @@ static struct {
 	std::chrono::milliseconds select_timeout{ 500ll };
 
 #ifndef SOCKET_ERROR
-#define SOCKET_ERROR -1l
+#define SOCKET_ERROR -1
 #endif
 
 	/// @brief Global socket connected to the RCON server.

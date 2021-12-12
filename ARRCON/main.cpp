@@ -44,16 +44,47 @@ inline std::tuple<std::string, std::string, std::string> get_server_info(const o
  */
 inline void handle_args(const opt::ParamsAPI2& args, config::HostList& hosts, const config::HostInfo& target, const std::string& program_name, const std::string& ini_path, const std::string& hostfile_path)
 {
+	// Handle blocking args:
 	// help:
 	if (args.check_any<opt::Flag, opt::Option>('h', "help")) {
 		std::cout << Help(program_name);
 		std::exit(EXIT_SUCCESS);
 	}
 	// version: (mutually exclusive with help as it shows the version number as well)
-	else if (args.check_any<opt::Flag, opt::Option>('v', "version")) {
+	if (args.check_any<opt::Flag, opt::Option>('v', "version")) {
 		std::cout << DEFAULT_PROGRAM_NAME << " v" << VERSION << std::endl;
 		std::exit(EXIT_SUCCESS);
 	}
+	const auto do_list_hosts{ args.check<opt::Option>("list-hosts") };
+	// save-host
+	if (const auto save_host{ args.typegetv<opt::Option>("save-host") }; save_host.has_value()) {
+		if (config::save_hostinfo(hosts, save_host.value(), target).second)
+			std::cout << "Saved \"" << target.hostname << ':' << target.port << "\" as \"" << save_host.value() << "\"\n";
+		else std::cout << "Updated \"" << save_host.value() << "\" with target \"" << target.hostname << ':' << target.port << "\"\n";
+		config::write_hostfile(hosts, hostfile_path);
+		if (!do_list_hosts)
+			std::exit(EXIT_SUCCESS);
+	}
+	// disable colors:
+	if (const auto arg{ args.typegetv_any<opt::Option, opt::Flag>('n', "no-color") }; arg.has_value())
+		Global.palette.setActive(false);
+	if (do_list_hosts) {
+		if (hosts.empty()) {
+			std::cerr << sys::term::warn << "No hosts were found." << std::endl;
+			std::exit(1);
+		}
+		const auto longest_name{ [&hosts]() {
+			size_t longest{0ull};
+			for (auto& [name, _] : hosts)
+				if (const auto sz{ name.size() }; sz > longest)
+					longest = sz;
+			return longest + 2ull;
+		}() };
+		for (const auto& [name, info] : hosts)
+			std::cout << Global.palette.set(UIElem::HOST_NAME) << name << Global.palette.reset() << str::VIndent(longest_name, name.size()) << Global.palette.set(UIElem::HOST_INFO) << "( " << info.hostname << ':' << info.port << " )" << Global.palette.reset() << '\n';
+		std::exit(EXIT_SUCCESS);
+	}
+
 	// write-ini:
 	if (args.check_any<opt::Option>("write-ini")) {
 		if (!ini_path.empty() && config::write_default_config(ini_path)) {
@@ -62,15 +93,15 @@ inline void handle_args(const opt::ParamsAPI2& args, config::HostList& hosts, co
 		}
 		else throw make_exception("I/O operation failed: \""s, ini_path, "\" couldn't be written to."s);
 	}
+	// force interactive:
+	if (args.check_any<opt::Option, opt::Flag>('i', "interactive"))
+		Global.force_interactive = true;
 	// quiet:
 	if (args.check_any<opt::Option, opt::Flag>('q', "quiet"))
 		Global.quiet = true;
 	// no-prompt
 	if (args.check_any<opt::Option>("no-prompt"))
 		Global.no_prompt = true;
-	// force interactive:
-	if (args.check_any<opt::Option, opt::Flag>('i', "interactive"))
-		Global.force_interactive = true;
 	// command delay:
 	if (const auto arg{ args.typegetv_any<opt::Flag, opt::Option>('d', "delay") }; arg.has_value()) {
 		if (std::all_of(arg.value().begin(), arg.value().end(), isdigit)) {
@@ -80,19 +111,9 @@ inline void handle_args(const opt::ParamsAPI2& args, config::HostList& hosts, co
 		}
 		else throw make_exception("Invalid delay value given: \"", arg.value(), "\", expected an integer.");
 	}
-	// disable colors:
-	if (const auto arg{ args.typegetv_any<opt::Option, opt::Flag>('n', "no-color") }; arg.has_value())
-		Global.palette.setActive(false);
 	// scriptfiles:
 	for (auto& scriptfile : args.typegetv_all<opt::Option, opt::Flag>('f', "file"))
 		Global.scriptfiles.emplace_back(scriptfile);
-	// save-host
-	if (const auto arg{ args.typegetv<opt::Option>("save-host") }; arg.has_value()) {
-		if (config::save_hostinfo(hosts, arg.value(), target).second)
-			std::cout << "Saved \"" << target.hostname << ':' << target.port << "\" as \"" << arg.value() << "\"\n";
-		else std::cout << "Updated \"" << arg.value() << "\" with target \"" << target.hostname << ':' << target.port << "\"\n";
-		config::write_hostfile(hosts, hostfile_path);
-	}
 }
 
 /**
@@ -158,11 +179,11 @@ int main(int argc, char** argv)
 		env::PATH PATH{ argv[0] };
 		const auto& [prog_path, prog_name] { PATH.resolve_split(argv[0]) };
 
-		config::HostList hosts;
-
 		const auto ini_path{ (prog_path / prog_name).replace_extension(".ini").generic_string() };
 		if (file::exists(ini_path))
 			config::apply_config(ini_path);
+
+		config::HostList hosts;
 
 		const auto hostfile_path{ (prog_path / prog_name).replace_extension(".hosts").generic_string() };
 		if (file::exists(hostfile_path))

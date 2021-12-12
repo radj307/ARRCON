@@ -7,6 +7,8 @@
 #include "globals.h"
 #include <sysarch.h>
 
+#define INI_USE_EXPERIMENTAL
+#include <str.hpp>
 #include <INI.hpp>
 
 namespace config {
@@ -24,20 +26,20 @@ namespace config {
 		using namespace std::chrono_literals;
 		if (const auto ini{ read_config(filename) }; !ini.empty()) {
 			// Appearance:
-			Global.no_prompt = str::string_to_bool<bool>(ini.getv(HEADER_APPEARANCE, "bDisablePrompt").value_or(""));
+			Global.no_prompt = ini.checkv(HEADER_APPEARANCE, "bDisablePrompt", "true");
 			if (ini.checkv(HEADER_APPEARANCE, "bDisableColors", "true", false))
 				Global.palette.setActive(false);
-			Global.custom_prompt = ini.getv(HEADER_APPEARANCE, "sCustomPrompt").value_or("");
-			Global.enable_bukkit_color_support = str::string_to_bool<bool>(ini.getv(HEADER_APPEARANCE, "bEnableBukkitColors").value_or(""));
+			Global.custom_prompt = ini.getvs(HEADER_APPEARANCE, "sCustomPrompt").value_or("");
+			Global.enable_bukkit_color_support = str::string_to_bool<bool>(ini.getvs(HEADER_APPEARANCE, "bEnableBukkitColors").value_or(""));
 			// Timing:
 			const auto to_ms{ [](const std::optional<std::string>& str, const std::chrono::milliseconds& def) -> std::chrono::milliseconds { return ((str.has_value() && std::all_of(str.value().begin(), str.value().end(), isdigit)) ? std::chrono::milliseconds(str::stoi(str.value())) : def); } };
-			Global.command_delay = to_ms(ini.getv(HEADER_TIMING, "iCommandDelay"), 0ms);
-			Global.receive_delay = to_ms(ini.getv(HEADER_TIMING, "iReceiveDelay"), 10ms);
-			Global.select_timeout = to_ms(ini.getv(HEADER_TIMING, "iSelectTimeout"), 500ms);
+			Global.command_delay = to_ms(ini.getvs(HEADER_TIMING, "iCommandDelay"), 0ms);
+			Global.receive_delay = to_ms(ini.getvs(HEADER_TIMING, "iReceiveDelay"), 10ms);
+			Global.select_timeout = to_ms(ini.getvs(HEADER_TIMING, "iSelectTimeout"), 500ms);
 			// Target:
-			Global.DEFAULT_HOST = ini.getv(HEADER_TARGET, "sDefaultHost").value_or(Global.DEFAULT_HOST);
-			Global.DEFAULT_PORT = ini.getv(HEADER_TARGET, "sDefaultPort").value_or(Global.DEFAULT_PORT);
-			Global.DEFAULT_PASS = ini.getv(HEADER_TARGET, "sDefaultPass").value_or(Global.DEFAULT_PASS);
+			Global.DEFAULT_HOST = ini.getvs(HEADER_TARGET, "sDefaultHost").value_or(Global.DEFAULT_HOST);
+			Global.DEFAULT_PORT = ini.getvs(HEADER_TARGET, "sDefaultPort").value_or(Global.DEFAULT_PORT);
+			Global.DEFAULT_PASS = ini.getvs(HEADER_TARGET, "sDefaultPass").value_or(Global.DEFAULT_PASS);
 		}
 	}
 
@@ -93,13 +95,8 @@ namespace config {
 		const auto hostfile{ read_config(filename) };
 		HostList hosts{};
 		for (auto& [name, targetinfo] : hostfile) {
-			const auto getv{ [&targetinfo](const std::string& var_name) -> std::optional<std::string> {
-				if (const auto target{targetinfo.find(var_name)}; target != targetinfo.end())
-					return target->second;
-				return std::nullopt;
-			} };
 			if (!targetinfo.empty())
-				hosts.insert_or_assign(name, HostInfo{ getv("sHost").value_or(Global.DEFAULT_HOST), getv("sPort").value_or(Global.DEFAULT_PORT), getv("sPass").value_or(Global.DEFAULT_PASS) });
+				hosts.insert_or_assign(name, HostInfo{ hostfile.getvs(name, "sHost").value_or(Global.DEFAULT_HOST), hostfile.getvs(name, "sPort").value_or(Global.DEFAULT_PORT), hostfile.getvs(name, "sPass").value_or(Global.DEFAULT_PASS) });
 		}
 		return hosts;
 	}
@@ -122,9 +119,7 @@ namespace config {
 		for (auto& [name, hostinfo] : hostlist) {
 			os
 				<< '[' << name << "]\n"
-				<< "hostname = " << hostinfo.hostname << '\n'
-				<< "port = " << hostinfo.port << '\n'
-				<< "password = " << hostinfo.password << "\n\n";
+				<< hostinfo << '\n';
 		}
 		return os;
 	}

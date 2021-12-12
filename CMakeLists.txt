@@ -18,7 +18,7 @@ if (MSVC) # MSVC-specific requirements
 endif()
 
 set(TERMAPI_VERSION_3 ON)
-set( CMAKE_MESSAGE_LOG_LEVEL "STATUS" )
+set(CMAKE_MESSAGE_LOG_LEVEL "STATUS")
 add_subdirectory(307lib)		# 307lib dependency
 
 add_subdirectory ("ARRCON")		# ARRCON Project Executable

@@ -26,7 +26,8 @@ private:
 		{ "-n  --no-color"s, "Disable colorized console output."s },
 		{ "--no-prompt"s,"Hides the prompt in interactive mode."s},
 		{ "--write-ini"s, "(Over)write the configuration file with the default values & exit."s},
-		{ "--save-host <name>"s, "Save the current target to the .hosts config as <name>. You can recall it later with ARRCON <name>"s },
+		{ "--save-host <name>"s, "Save the current target to the .hosts config as <name> & exit."s },
+		{ "--list-hosts"s, "Display all detected hosts from the .hosts config & exit."s },
 	};
 	const size_t _longest_optname, _max_line_length;
 
