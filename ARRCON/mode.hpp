@@ -53,7 +53,7 @@ namespace mode {
 		memset(&action, 0, sizeof(action));
 		action.sa_handler = sighandler;
 
-		!sigaction(SIGINT, &action, 0); // initialize signal handler for loop
+		sigaction(SIGINT, &action, 0); // initialize signal handler for loop
 
 		if (!Global.no_prompt)
 			std::cout << "Authentication Successful.\nUse <Ctrl + C> or type \"exit\" to exit.\n";
