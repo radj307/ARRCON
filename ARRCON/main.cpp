@@ -2,6 +2,7 @@
 #include "config.hpp"			///< INI functions
 #include "Help.hpp"				///< CLI usage instructions
 
+#include <make_exception.hpp>		///< CLI option handler/wrapper
 #include <ParamsAPI2.hpp>		///< CLI option handler/wrapper
 #include <fileio.hpp>			///< file I/O functions
 #include <env.hpp>
