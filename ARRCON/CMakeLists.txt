@@ -12,10 +12,10 @@ set(HEADERS
 set(SRC
 	"main.cpp"
 )
-set(RC
-	"ARRCON.rc"
-)
 
 # Add source to this project's executable.
-add_executable (ARRCON ${HEADERS} ${SRC} ${RC})
-#set_target_properties(ARRCON PROPERTIES LINKER_LANGUAGE CXX)
+add_executable (ARRCON ${HEADERS} ${SRC} "ARRCON.rc")
+target_include_directories(ARRCON PUBLIC "${CMAKE_SOURCE_DIR}/307lib/${CMAKE_BUILD_TYPE}/include")
+target_link_directories(ARRCON PUBLIC "${CMAKE_SOURCE_DIR}/307lib/${CMAKE_BUILD_TYPE}/lib")
+
+target_link_libraries(ARRCON PUBLIC shared strlib TermAPI filelib optlib)

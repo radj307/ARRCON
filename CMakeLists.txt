@@ -17,10 +17,6 @@ if (MSVC) # MSVC-specific requirements
 	string(APPEND CMAKE_CXX_FLAGS " /Zc:__cplusplus")
 endif()
 
-set(TERMAPI_VERSION_3 ON)
-set(CMAKE_MESSAGE_LOG_LEVEL "STATUS")
-add_subdirectory(307lib)		# 307lib dependency
-
 add_subdirectory ("ARRCON")		# ARRCON Project Executable
 
 if (WIN32)
@@ -28,5 +24,3 @@ if (WIN32)
 	target_include_directories(libunistd PUBLIC "libunistd" "libunistd/unistd")
 	target_link_libraries(ARRCON PUBLIC libunistd)
 endif()
-
-target_link_libraries(ARRCON PUBLIC shared str-lib TermAPI file-lib opt-lib)

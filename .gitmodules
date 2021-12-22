@@ -1,7 +1,0 @@
-	
-[submodule "libunistd"]
-	path = libunistd
-	url = git://github.com/robinrowe/libunistd
-[submodule "307lib"]
-	path = 307lib
-	url = https://github.com/radj307/307lib.git
