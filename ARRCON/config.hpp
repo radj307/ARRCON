@@ -26,7 +26,7 @@ namespace config {
 		using namespace std::chrono_literals;
 		if (const auto ini{ read_config(filename) }; !ini.empty()) {
 			// Appearance:
-			Global.no_prompt = ini.checkv(HEADER_APPEARANCE, "bDisablePrompt", "true");
+			Global.no_prompt = ini.checkv(HEADER_APPEARANCE, "bDisablePrompt", true);
 			if (ini.checkv(HEADER_APPEARANCE, "bDisableColors", "true", false))
 				Global.palette.setActive(false);
 			Global.custom_prompt = ini.getvs(HEADER_APPEARANCE, "sCustomPrompt").value_or("");
@@ -46,7 +46,7 @@ namespace config {
 	namespace _internal {
 		struct MakeHeader {
 			const std::string _str;
-			_CONSTEXPR MakeHeader(const std::string& str) : _str{ str } {}
+			CONSTEXPR MakeHeader(const std::string& str) : _str{ str } {}
 			friend std::ostream& operator<<(std::ostream& os, const MakeHeader& h) { return os << '[' << h._str << ']' << '\n'; }
 		};
 	}

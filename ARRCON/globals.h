@@ -5,7 +5,7 @@
  */
 #pragma once
 #include <color-values.h>
-#include <ColorPalette.hpp>
+#include <palette.hpp>
 #include <make_exception.hpp>
 
 #include <cmath>
@@ -34,8 +34,8 @@ inline constexpr const auto MAX_DELAY{ std::chrono::hours(24) };
 
 static struct {
 	/// @brief Color palette
-	color::ColorPalette<UIElem> palette{
-		std::make_pair(UIElem::TERM_PROMPT_NAME, color::setcolor{ color::green, color::FormatFlag::BOLD }),
+	color::palette<UIElem> palette{
+		std::make_pair(UIElem::TERM_PROMPT_NAME, color::setcolor{ color::green, color::BOLD }),
 		std::make_pair(UIElem::TERM_PROMPT_ARROW, color::green),
 		std::make_pair(UIElem::PACKET, color::white),
 		std::make_pair(UIElem::COMMAND_ECHO, color::green),

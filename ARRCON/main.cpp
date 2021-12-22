@@ -70,7 +70,7 @@ inline void handle_args(const opt::ParamsAPI2& args, config::HostList& hosts, co
 		Global.palette.setActive(false);
 	if (do_list_hosts) {
 		if (hosts.empty()) {
-			std::cerr << sys::term::warn << "No hosts were found." << std::endl;
+			std::cerr << term::warn << "No hosts were found." << std::endl;
 			std::exit(1);
 		}
 		const auto longest_name{ [&hosts]() {
@@ -126,7 +126,7 @@ inline std::vector<std::string> read_script_file(std::string filename, const env
 	if (!file::exists(filename)) // if the filename doesn't exist, try to resolve it from the PATH
 		filename = pathvar.resolve(filename, { ".txt" }).generic_string();
 	if (!file::exists(filename)) // if the resolved filename still doesn't exist, throw
-		std::cerr << sys::term::warn << "Couldn't find file: \"" << filename << "\"\n";
+		std::cerr << term::warn << "Couldn't find file: \"" << filename << "\"\n";
 	// read the file, parse it if the stream didn't fail
 	else if (auto fss{ file::read(filename) }; !fss.fail()) {
 		std::vector<std::string> commands;
@@ -157,14 +157,14 @@ inline std::vector<std::string> get_commands(const opt::ParamsAPI2& args, const 
 	for (auto& file : Global.scriptfiles) {
 		if (const auto script_commands{ read_script_file(file, pathvar) }; !script_commands.empty()) {
 			if (!Global.quiet) // feedback
-				std::cout << sys::term::log << "Successfully read commands from \"" << file << "\"\n";
+				std::cout << term::log << "Successfully read commands from \"" << file << "\"\n";
 
 			commands.reserve(commands.size() + script_commands.size());
 
 			for (auto& command : script_commands)
 				commands.emplace_back(command);
 		}
-		else std::cerr << sys::term::warn << "Failed to read any commands from \"" << file << "\"\n";
+		else std::cerr << term::warn << "Failed to read any commands from \"" << file << "\"\n";
 	}
 	commands.shrink_to_fit();
 	return commands;
@@ -173,7 +173,7 @@ inline std::vector<std::string> get_commands(const opt::ParamsAPI2& args, const 
 int main(int argc, char** argv)
 {
 	try {
-		std::cout << sys::term::EnableANSI; // enable ANSI escape sequences on windows
+		std::cout << term::EnableANSI; // enable ANSI escape sequences on windows
 		const opt::ParamsAPI2 args{ argc, argv, 'H', "host", 'P', "port", 'p', "password", 'd', "delay", 'f', "file", "save-host" }; // parse arguments
 
 		env::PATH PATH{ argv[0] };
@@ -216,10 +216,10 @@ int main(int argc, char** argv)
 
 		return 0;
 	} catch (const std::exception& ex) { ///< catch exceptions
-		std::cerr << sys::term::error << ex.what() << std::endl;
+		std::cerr << term::error << ex.what() << std::endl;
 		return -1;
 	} catch (...) { ///< catch all other exceptions
-		std::cerr << sys::term::crit << "An unknown exception occurred!" << std::endl;
+		std::cerr << term::crit << "An unknown exception occurred!" << std::endl;
 		return -2;
 	}
 }

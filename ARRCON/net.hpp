@@ -195,15 +195,15 @@ namespace net {
 		if (int ret{ recv(sd, (char*)&psize, sizeof(int), 0) }; ret == 0)
 			throw std::exception("Connection Lost! Last Error: " + lastError());
 		else if (ret != sizeof(int)) {
-			std::cerr << sys::term::warn << "Received a corrupted packet! Code " << ret << '\n';
+			std::cerr << term::warn << "Received a corrupted packet! Code " << ret << '\n';
 			return{};
 		}
 
 		if (psize < packet::PSIZE_MIN) {
-			std::cerr << sys::term::warn << "Received unexpectedly small packet size: " << psize << std::endl;
+			std::cerr << term::warn << "Received unexpectedly small packet size: " << psize << std::endl;
 		}
 		else if (psize > packet::PSIZE_MAX) {
-			std::cerr << sys::term::warn << "Received unexpectedly large packet size: " << psize << std::endl;
+			std::cerr << term::warn << "Received unexpectedly large packet size: " << psize << std::endl;
 			flush(sd);
 		}
 

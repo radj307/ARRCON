@@ -7,6 +7,8 @@
 #include "globals.h"
 #include "rcon.hpp"
 
+#include <str.hpp>
+
 #include <signal.h>				///< signal handling
 #include <unistd.h>
 
