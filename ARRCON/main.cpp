@@ -52,7 +52,7 @@ inline void handle_args(const opt::ParamsAPI2& args, config::HostList& hosts, co
 	}
 	// version: (mutually exclusive with help as it shows the version number as well)
 	if (args.check_any<opt::Flag, opt::Option>('v', "version")) {
-		std::cout << DEFAULT_PROGRAM_NAME << " v" << VERSION << std::endl;
+		std::cout << DEFAULT_PROGRAM_NAME << " v" << ARRCON_VERSION << std::endl;
 		std::exit(EXIT_SUCCESS);
 	}
 	const auto do_list_hosts{ args.check<opt::Option>("list-hosts") };

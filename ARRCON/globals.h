@@ -4,6 +4,8 @@
  * @brief	Contains global variables used in other files.
  */
 #pragma once
+#include "version.h"
+
 #include <color-values.h>
 #include <palette.hpp>
 #include <make_exception.hpp>
@@ -14,7 +16,6 @@
 #include <atomic>
 
 inline constexpr const auto
-VERSION{ "3.1.0" },
 DEFAULT_PROGRAM_NAME{ "ARRCON.exe" };
 
 /**
