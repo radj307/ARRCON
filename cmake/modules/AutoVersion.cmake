@@ -21,6 +21,8 @@ function(parse_version_string _working_dir _out_major _out_minor _out_patch _out
 		OUTPUT_VARIABLE VERSION_TAG
 	)
 
+	message(STATUS "AutoVersion: \"git describe --tags\" returned \"${VERSION_TAG}\"")
+
 	if (VERSION_TAG STREQUAL "") # Don't use ${} expansion here, if statements work without them and this may cause a comparison failure
 		message(STATUS "No git tags found, skipping AutoVersioning.")
 		return()
