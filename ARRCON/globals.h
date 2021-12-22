@@ -33,6 +33,8 @@ enum class UIElem : unsigned char {
 
 inline constexpr const auto MAX_DELAY{ std::chrono::hours(24) };
 
+using SOCKET = unsigned __int64;
+
 static struct {
 	/// @brief Color palette
 	color::palette<UIElem> palette{
@@ -73,7 +75,7 @@ static struct {
 	/// @brief amount of time before the select() function times out.
 	std::chrono::milliseconds select_timeout{ 500ll };
 
-#ifndef SOCKET_ERROR
+#ifndef SOCKET_ERROR // For linux builds
 #define SOCKET_ERROR -1
 #endif
 
