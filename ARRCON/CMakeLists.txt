@@ -27,3 +27,9 @@ target_include_directories(ARRCON PUBLIC "${CMAKE_SOURCE_DIR}/307lib/${CMAKE_BUI
 target_link_directories(ARRCON PUBLIC "${CMAKE_SOURCE_DIR}/307lib/${CMAKE_BUILD_TYPE}/lib")
 
 target_link_libraries(ARRCON PUBLIC shared strlib TermAPI filelib optlib)
+
+install( # Installation target for the ARRCON executable.
+	TARGETS ARRCON
+	RUNTIME
+	DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"
+)
