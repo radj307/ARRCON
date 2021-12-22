@@ -38,7 +38,7 @@ using SOCKET = unsigned __int64;
 static struct {
 	/// @brief Color palette
 	color::palette<UIElem> palette{
-		std::make_pair(UIElem::TERM_PROMPT_NAME, color::setcolor{ color::green, color::BOLD }),
+		std::make_pair(UIElem::TERM_PROMPT_NAME, color::setcolor{ color::green, color::format::BOLD }),
 		std::make_pair(UIElem::TERM_PROMPT_ARROW, color::green),
 		std::make_pair(UIElem::PACKET, color::white),
 		std::make_pair(UIElem::COMMAND_ECHO, color::green),
