@@ -23,8 +23,10 @@ set(SRC
 
 # Add source to this project's executable.
 add_executable (ARRCON ${HEADERS} ${SRC} "ARRCON.rc")
-target_include_directories(ARRCON PUBLIC "${CMAKE_SOURCE_DIR}/307lib/${CMAKE_BUILD_TYPE}/include")
-target_link_directories(ARRCON PUBLIC "${CMAKE_SOURCE_DIR}/307lib/${CMAKE_BUILD_TYPE}/lib")
+if (307lib_USE_INSTALLATION)
+	target_include_directories(ARRCON PUBLIC "${307lib_PATH}/${CMAKE_BUILD_TYPE}/include")
+	target_link_directories(ARRCON PUBLIC "${307lib_PATH}/${CMAKE_BUILD_TYPE}/lib")
+endif()
 
 target_link_libraries(ARRCON PUBLIC shared strlib TermAPI filelib optlib)
 
