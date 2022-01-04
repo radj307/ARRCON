@@ -211,7 +211,7 @@ namespace packet {
 					switch (*ch) {
 					case -62: // discard first part of section sign when represented in ASCII
 						break;
-					case '§': // color codes
+					case -89: // '§' // second part of ASCII section sign
 						if (std::distance(ch, packet.body.end()) > 1ull)
 							os << mc_color::to_sequence(*++ch);
 						break;
