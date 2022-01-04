@@ -209,14 +209,11 @@ namespace packet {
 			if (Global.enable_bukkit_color_support) {
 				for (auto ch{ packet.body.begin() }; ch != packet.body.end(); ++ch) {
 					switch (*ch) {
-					case -62:
+					case -62: // discard first part of section sign when represented in ASCII
 						break;
-					case 0xC2: // first part of section sign
-						if (std::distance(ch, packet.body.end()) <= 2ull || *++ch != 0xA7) // second part of section sign
-							break;
-						[[fallthrough]];
-					case -89:
-						os << mc_color::to_sequence(*++ch);
+					case '§': // color codes
+						if (std::distance(ch, packet.body.end()) > 1ull)
+							os << mc_color::to_sequence(*++ch);
 						break;
 					default:
 						os << *ch;
