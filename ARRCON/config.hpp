@@ -65,7 +65,7 @@ namespace config {
 			<< "bDisablePrompt = false\n"
 			<< "bDisableColors = false\n"
 			<< "sCustomPrompt =\n"
-			<< "bEnableBukkitColors = false\n"
+			<< "bEnableBukkitColors = true\n"
 			<< '\n'
 			<< MakeHeader(HEADER_TIMING)
 			<< "iCommandDelay = 0\n"
