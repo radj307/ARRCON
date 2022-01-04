@@ -28,6 +28,7 @@ enum class UIElem : unsigned char {
 	PACKET,				// interactive mode response
 	COMMAND_ECHO,		// commandline mode command echo
 	HOST_NAME,			// list-hosts command (name)
+	HOST_NAME_HIGHLIGHT,// save-host command
 	HOST_INFO,			// list-hosts command (hostname/port)
 };
 
@@ -43,6 +44,7 @@ static struct {
 		std::make_pair(UIElem::PACKET, color::white),
 		std::make_pair(UIElem::COMMAND_ECHO, color::green),
 		std::make_pair(UIElem::HOST_NAME, color::white),
+		std::make_pair(UIElem::HOST_NAME_HIGHLIGHT, color::yellow),
 		std::make_pair(UIElem::HOST_INFO, color::light_gray),
 	};
 	std::string

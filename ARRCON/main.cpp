@@ -59,9 +59,17 @@ inline void handle_args(const opt::ParamsAPI2& args, config::HostList& hosts, co
 	const auto do_list_hosts{ args.check<opt::Option>("list-hosts") };
 	// save-host
 	if (const auto save_host{ args.typegetv<opt::Option>("save-host") }; save_host.has_value()) {
-		if (config::save_hostinfo(hosts, save_host.value(), target).second)
-			std::cout << "Saved \"" << target.hostname << ':' << target.port << "\" as \"" << save_host.value() << "\"\n";
-		else std::cout << "Updated \"" << save_host.value() << "\" with target \"" << target.hostname << ':' << target.port << "\"\n";
+		switch (config::save_hostinfo(hosts, save_host.value(), target)) {
+		case 0: // Host already exists, and has the same target
+			throw make_exception("Host ", Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT), save_host.value(), Global.palette.reset(), " is already set to ", target.hostname, ':', target.port, '\n');
+		case 1: // Host already exists, but with a different target
+			std::cout << term::msg << "Updated " << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT) << save_host.value() << Global.palette.reset() << ": " << target.hostname << ':' << target.port << '\n';
+			break;
+		case 2: // Added new host
+			std::cout << term::msg << "Added host: " << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT) << save_host.value() << Global.palette.reset() << " " << target.hostname << ':' << target.port << '\n';
+			break;
+		default:throw make_exception("Received an undefined return value while saving host!");
+		}
 		config::write_hostfile(hosts, hostfile_path);
 		if (!do_list_hosts)
 			std::exit(EXIT_SUCCESS);

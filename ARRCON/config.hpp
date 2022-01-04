@@ -86,6 +86,8 @@ namespace config {
 				<< "sPass = " << hostinfo.password << '\n'
 				).flush();
 		}
+		bool operator==(const HostInfo& o) const { return hostname == o.hostname && port == o.port && password == o.password; }
+		bool operator!=(auto&& o) const { return !operator==(std::forward<decltype(o)>(o)); }
 	};
 
 	using HostList = std::unordered_map<std::string, HostInfo>;
@@ -106,11 +108,23 @@ namespace config {
 	 * @param hostlist	A reference to the host list.
 	 * @param name		Name to save host info as.
 	 * @param info		Host info to save.
-	 * @returns			std::pair<iterator, bool>
+	 * @returns			char
+	 *\n				0		Host wasn't changed
+	 *\n				1		Host was updated
+	 *\n				2		Host was added
 	 */
-	inline auto save_hostinfo(HostList& hostlist, const std::string& name, const HostInfo& info)
+	inline char save_hostinfo(HostList& hostlist, const std::string& name, const HostInfo& info)
 	{
-		return hostlist.insert_or_assign(name, info);
+		if (const auto existing{ hostlist.find(name) }; existing != hostlist.end()) { // host already exists
+			if (existing->second == info)
+				return 0; // host info is already set to this target
+			// update host info with the given target
+			existing->second = info;
+			return 1;
+		}
+		// add new host
+		hostlist.insert(std::move(std::make_pair(name, info)));
+		return 2;
 	}
 
 	/// @brief HostList insertion operator used for writing it to a file.
