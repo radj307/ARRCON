@@ -17,43 +17,43 @@ namespace mc_color {
 		using namespace ANSI;
 		switch (ch) {
 		case '0': // black
-			return { make_sequence(ESC, CSI, color::black, END) };
+			return color::setcolor(color::black);
 		case '1': // dark blue
-			return { make_sequence(ESC, CSI, color::dark_blue, END) };
+			return color::setcolor(color::dark_blue);
 		case '2': // dark green
-			return { make_sequence(ESC, CSI, color::dark_green, END) };
+			return color::setcolor(color::dark_green);
 		case '3': // dark aqua
-			return { make_sequence(ESC, CSI, color::dark_cyan, END) };
+			return color::setcolor(color::dark_cyan);
 		case '4': // dark red
-			return { make_sequence(ESC, CSI, color::dark_red, END) };
+			return color::setcolor(color::dark_red);
 		case '5': // dark purple
-			return { make_sequence(ESC, CSI, color::dark_purple, END) };
+			return color::setcolor(color::dark_purple);
 		case '6': // gold
-			return { make_sequence(ESC, CSI, color::gold, END) };
+			return color::setcolor(color::gold);
 		case '7': // gray
-			return { make_sequence(ESC, CSI, color::gray, END) };
+			return color::setcolor(color::gray);
 		case '8': // dark gray
-			return { make_sequence(ESC, CSI, color::dark_gray, END) };
+			return color::setcolor(color::dark_gray);
 		case '9': // blue
-			return { make_sequence(ESC, CSI, color::blue, END) };
+			return color::setcolor(color::blue);
 		case 'a': // green
-			return { make_sequence(ESC, CSI, color::green, END) };
+			return color::setcolor(color::green);
 		case 'b': // aqua
-			return { make_sequence(ESC, CSI, color::cyan, END) };
+			return color::setcolor(color::cyan);
 		case 'c': // red
-			return { make_sequence(ESC, CSI, color::red, END) };
+			return color::setcolor(color::red);
 		case 'd': // light purple
-			return { make_sequence(ESC, CSI, color::light_purple, END) };
+			return color::setcolor(color::light_purple);
 		case 'e': // yellow
-			return { make_sequence(ESC, CSI, color::yellow, END) };
+			return color::setcolor(color::yellow);
 		case 'f': // white
-			return { make_sequence(ESC, CSI, color::white, END) };
+			return color::setcolor(color::white);
 		case 'r': // reset
-			return { make_sequence(ESC, CSI, '0', END) };
+			return color::reset;
 		case 'n': // underline
-			return { make_sequence(ESC, CSI, '4', END) };
+			return color::underline;
 		case 'l': // bold
-			return { make_sequence(ESC, CSI, '1', END) };
+			return color::bold;
 		case 'k': // obfuscated
 		case 'm': [[fallthrough]]; // strikethrough
 		case 'o': [[fallthrough]]; // italic
@@ -209,9 +209,14 @@ namespace packet {
 			if (Global.enable_bukkit_color_support) {
 				for (auto ch{ packet.body.begin() }; ch != packet.body.end(); ++ch) {
 					switch (*ch) {
-					case static_cast<char>(0xC2): // first part of section sign
-						if (*(ch += 1) == static_cast<char>(0xA7)) // second part of section sign
-							os << mc_color::to_sequence(*(ch += 1));
+					case -62:
+						break;
+					case 0xC2: // first part of section sign
+						if (std::distance(ch, packet.body.end()) <= 2ull || *++ch != 0xA7) // second part of section sign
+							break;
+						[[fallthrough]];
+					case -89:
+						os << mc_color::to_sequence(*++ch);
 						break;
 					default:
 						os << *ch;
