@@ -66,7 +66,7 @@ static struct {
 	volatile bool connected{ false };
 
 	/// @brief When true, support for minecraft bukkit colors is enabled, and the color mapped to UIElem::PACKET will have no effect.
-	bool enable_bukkit_color_support{ false };
+	bool enable_bukkit_color_support{ true };
 
 	/// @brief Delay between sending each command when using commandline mode.
 	std::chrono::milliseconds command_delay{ 0ll };
