@@ -14,8 +14,8 @@ struct Help {
 private:
 	const std::string _program_name;
 	const std::vector<std::pair<std::string, std::string>> _options{
-		{ "-H <Host>  --host <Host>"s, "RCON Server Address or saved hostname.	(Default: \""s + Global.DEFAULT_TARGET.hostname + "\")"s },
-		{ "-P <Port>  --port <Port>"s, "RCON Server Port.						(Default: \""s + Global.DEFAULT_TARGET.port + "\")"s },
+		{ "-H <Host>  --host <Host>"s, "RCON Server Address or saved hostname.  (Default: \""s + Global.DEFAULT_TARGET.hostname + "\")"s },
+		{ "-P <Port>  --port <Port>"s, "RCON Server Port.                       (Default: \""s + Global.DEFAULT_TARGET.port + "\")"s },
 		{ "-p <Password>  --pass <Pass>"s, "RCON Server Password." },
 		{ "-f <file>  --file <file>"s, "Load the specified file and run each line as a command."s },
 		{ "-h  --help"s, "Show the help display."s },
