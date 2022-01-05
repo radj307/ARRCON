@@ -27,10 +27,12 @@ namespace config {
 		if (const auto ini{ read_config(filename) }; !ini.empty()) {
 			// Appearance:
 			Global.no_prompt = ini.checkv(HEADER_APPEARANCE, "bDisablePrompt", true);
-			if (ini.checkv(HEADER_APPEARANCE, "bDisableColors", "true", false))
-				Global.palette.setActive(false);
-			Global.custom_prompt = ini.getvs(HEADER_APPEARANCE, "sCustomPrompt").value_or("");
 			Global.enable_bukkit_color_support = str::string_to_bool<bool>(ini.getvs(HEADER_APPEARANCE, "bEnableBukkitColors").value_or(""));
+			if (ini.checkv(HEADER_APPEARANCE, "bDisableColors", "true", false)) {
+				Global.palette.setActive(false);
+				Global.enable_bukkit_color_support = false;
+			}
+			Global.custom_prompt = ini.getvs(HEADER_APPEARANCE, "sCustomPrompt").value_or("");
 			// Timing:
 			const auto to_ms{ [](const std::optional<std::string>& str, const std::chrono::milliseconds& def) -> std::chrono::milliseconds { return ((str.has_value() && std::all_of(str.value().begin(), str.value().end(), isdigit)) ? std::chrono::milliseconds(str::stoi(str.value())) : def); } };
 			Global.command_delay = to_ms(ini.getvs(HEADER_TIMING, "iCommandDelay"), 0ms);
