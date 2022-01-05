@@ -36,6 +36,20 @@ inline constexpr const auto MAX_DELAY{ std::chrono::hours(24) };
 
 using SOCKET = unsigned __int64;
 
+struct HostInfo {
+	std::string hostname, port, password;
+	friend std::ostream& operator<<(std::ostream& os, const HostInfo& hostinfo)
+	{
+		return (os
+			<< "sHost = " << hostinfo.hostname << '\n'
+			<< "sPort = " << hostinfo.port << '\n'
+			<< "sPass = " << hostinfo.password << '\n'
+			).flush();
+	}
+	bool operator==(const HostInfo& o) const { return hostname == o.hostname && port == o.port && password == o.password; }
+	bool operator!=(auto&& o) const { return !operator==(std::forward<decltype(o)>(o)); }
+};
+
 static struct {
 	/// @brief Color palette
 	color::palette<UIElem> palette{
@@ -47,18 +61,18 @@ static struct {
 		std::make_pair(UIElem::HOST_NAME_HIGHLIGHT, color::yellow),
 		std::make_pair(UIElem::HOST_INFO, color::light_gray),
 	};
-	std::string
-		DEFAULT_HOST{ "127.0.0.1" },
-		DEFAULT_PORT{ "27015" },
-		DEFAULT_PASS{ "" };
+	const HostInfo DEFAULT_TARGET{
+		"localhost",
+		"27015",
+		""
+	};
+	HostInfo target{ DEFAULT_TARGET };
 
 	/// @brief When true, response packets are not printed to the terminal
 	bool quiet{ false };
 
 	/// @brief When true, hides the prompt in interactive mode.
 	bool no_prompt{ false };
-
-	std::optional<std::string> using_hostname;
 
 	std::string custom_prompt{};
 
@@ -93,10 +107,10 @@ static struct {
 
 /**
  * @brief		Convert a std::chrono millisecond duration to a timeval struct.
- * @param ms	Input duration in milliseconds.
+ * @param ms	Duration in milliseconds
  * @returns		timeval
  */
 inline timeval duration_to_timeval(const std::chrono::milliseconds& ms)
 {
-	return{ static_cast<long>(std::trunc(Global.select_timeout.count() / 1000ll)), static_cast<long>(Global.select_timeout.count()) };
+	return{ static_cast<long>(std::trunc(ms.count() / 1000ll)), static_cast<long>(ms.count()) };
 }

@@ -1,3 +1,4 @@
+#include "globals.h"
 #include "mode.hpp"				///< RCON client modes
 #include "config.hpp"			///< INI functions
 #include "Help.hpp"				///< CLI usage instructions
@@ -5,6 +6,7 @@
 #include <make_exception.hpp>		///< CLI option handler/wrapper
 #include <ParamsAPI2.hpp>		///< CLI option handler/wrapper
 #include <fileio.hpp>			///< file I/O functions
+#include <TermAPI.hpp>			///< file I/O functions
 #include <env.hpp>
 
 #include <signal.h>				///< signal handling
@@ -23,19 +25,23 @@
  *\n			1	RCON Port
  *\n			2	RCON Password
  */
-inline std::tuple<std::string, std::string, std::string> get_server_info(const opt::ParamsAPI2& args, const config::HostList& hostlist)
+inline HostInfo get_server_info(const opt::ParamsAPI2& args, const config::HostList& hostlist)
 {
-	if (const auto param{ args.typeget_any<opt::Parameter>() }; param.has_value()) {
-		if (const auto entry{ hostlist.find(param.value()) }; entry != hostlist.end()) {
-			Global.using_hostname = entry->first;
-			const auto [host, port, pass] { entry->second };
-			return{ args.typegetv<opt::Flag>('H').value_or(host), args.typegetv<opt::Flag>('P').value_or(port), args.typegetv<opt::Flag>('p').value_or(pass) };
+	const auto
+		host{ args.typegetv_any<opt::Flag, opt::Option>('H', "host") },
+		port{ args.typegetv_any<opt::Flag, opt::Option>('P', "port") },
+		pass{ args.typegetv_any<opt::Flag, opt::Option>('p', "pass") };
+
+	if (host.has_value()) { // check saved hosts first
+		if (const auto it{ hostlist.find(host.value()) }; it != hostlist.end()) {
+			return it->second;
 		}
 	}
+
 	return{
-		args.typegetv<opt::Flag>('H').value_or(Global.DEFAULT_HOST), // host
-		args.typegetv<opt::Flag>('P').value_or(Global.DEFAULT_PORT), // port
-		args.typegetv<opt::Flag>('p').value_or(Global.DEFAULT_PASS)  // password
+		host.value_or(Global.DEFAULT_TARGET.hostname),
+		port.value_or(Global.DEFAULT_TARGET.port), // port
+		pass.value_or(Global.DEFAULT_TARGET.password)  // password
 	};
 }
 
@@ -43,7 +49,7 @@ inline std::tuple<std::string, std::string, std::string> get_server_info(const o
  * @brief		Handle commandline arguments.
  * @param args	Arguments from main()
  */
-inline void handle_args(const opt::ParamsAPI2& args, config::HostList& hosts, const config::HostInfo& target, const std::string& program_name, const std::string& ini_path, const std::string& hostfile_path)
+inline void handle_args(const opt::ParamsAPI2& args, config::HostList& hosts, const HostInfo& target, const std::string& program_name, const std::string& ini_path, const std::string& hostfile_path)
 {
 	// Handle blocking args:
 	// help:
@@ -77,6 +83,7 @@ inline void handle_args(const opt::ParamsAPI2& args, config::HostList& hosts, co
 	// disable colors:
 	if (const auto arg{ args.typegetv_any<opt::Option, opt::Flag>('n', "no-color") }; arg.has_value())
 		Global.palette.setActive(false);
+	// list all hosts
 	if (do_list_hosts) {
 		if (hosts.empty()) {
 			std::cerr << term::warn << "No hosts were found." << std::endl;
@@ -158,10 +165,6 @@ inline std::vector<std::string> read_script_file(std::string filename, const env
 inline std::vector<std::string> get_commands(const opt::ParamsAPI2& args, const env::PATH& pathvar)
 {
 	std::vector<std::string> commands{ args.typegetv_all<opt::Parameter>() }; // Arg<std::string> is implicitly convertable to std::string
-	if (Global.using_hostname.has_value()) {
-		const auto pos{ std::find(commands.begin(), commands.end(), Global.using_hostname.value()) };
-		commands.erase(pos);
-	}
 	// iterate through all user-specified files
 	for (auto& file : Global.scriptfiles) {
 		if (const auto script_commands{ read_script_file(file, pathvar) }; !script_commands.empty()) {
@@ -179,11 +182,19 @@ inline std::vector<std::string> get_commands(const opt::ParamsAPI2& args, const 
 	return commands;
 }
 
+/// @brief	Emergency stop handler, should be passed to the std::atexit() function to allow a controlled shutdown of the socket.
+inline void cleanup(void)
+{
+	net::close_socket(Global.socket);
+	std::cout << Global.palette.reset();
+}
+
+
 int main(int argc, char** argv)
 {
 	try {
 		std::cout << term::EnableANSI; // enable ANSI escape sequences on windows
-		const opt::ParamsAPI2 args{ argc, argv, 'H', "host", 'P', "port", 'p', "password", 'd', "delay", 'f', "file", "save-host" }; // parse arguments
+		const opt::ParamsAPI2 args{ argc, argv, 'H', "host", 'P', "port", 'p', "pass", 'd', "delay", 'f', "file", "save-host" }; // parse arguments
 
 		env::PATH PATH{ argv[0] };
 		const auto& [prog_path, prog_name] { PATH.resolve_split(argv[0]) };
@@ -207,7 +218,7 @@ int main(int argc, char** argv)
 			Global.custom_prompt = (Global.no_prompt ? "" : str::stringify(Global.palette.set(UIElem::TERM_PROMPT_NAME), "RCON@", host, Global.palette.reset(UIElem::TERM_PROMPT_ARROW), '>', Global.palette.reset(), ' '));
 
 		// Register the cleanup function before connecting the socket
-		std::atexit(&net::cleanup);
+		std::atexit(&cleanup);
 
 		// Connect the socket
 		Global.socket = net::connect(host, port);

@@ -37,23 +37,16 @@ namespace config {
 			Global.receive_delay = to_ms(ini.getvs(HEADER_TIMING, "iReceiveDelay"), 10ms);
 			Global.select_timeout = to_ms(ini.getvs(HEADER_TIMING, "iSelectTimeout"), 500ms);
 			// Target:
-			Global.DEFAULT_HOST = ini.getvs(HEADER_TARGET, "sDefaultHost").value_or(Global.DEFAULT_HOST);
-			Global.DEFAULT_PORT = ini.getvs(HEADER_TARGET, "sDefaultPort").value_or(Global.DEFAULT_PORT);
-			Global.DEFAULT_PASS = ini.getvs(HEADER_TARGET, "sDefaultPass").value_or(Global.DEFAULT_PASS);
+			Global.target.hostname = ini.getvs(HEADER_TARGET, "sDefaultHost").value_or(Global.target.hostname);
+			Global.target.port = ini.getvs(HEADER_TARGET, "sDefaultPort").value_or(Global.target.port);
+			Global.target.password = ini.getvs(HEADER_TARGET, "sDefaultPass").value_or(Global.target.password);
 		}
 	}
+	
+	inline WINCONSTEXPR std::string MakeHeader(const std::string_view& name) { return { std::string{ " "s += name } + " "s }; }
 
-	namespace _internal {
-		struct MakeHeader {
-			const std::string _str;
-			CONSTEXPR MakeHeader(const std::string& str) : _str{ str } {}
-			friend std::ostream& operator<<(std::ostream& os, const MakeHeader& h) { return os << '[' << h._str << ']' << '\n'; }
-		};
-	}
-
-	inline auto write_default_config(const std::string& filename, const bool& append = false)
+	inline auto write_default_config(const std::string& filename)
 	{
-		using namespace _internal;
 		std::stringstream ss;
 		ss
 			<< MakeHeader(HEADER_TARGET)
@@ -72,23 +65,8 @@ namespace config {
 			<< "iReceiveDelay = 10\n"
 			<< "iSelectTimeout = 500\n"
 			<< '\n';
-
-		return file::write(filename, ss.rdbuf(), append);
+		return file::write(filename, std::move(ss), false);
 	}
-
-	struct HostInfo {
-		std::string hostname, port, password;
-		friend std::ostream& operator<<(std::ostream& os, const HostInfo& hostinfo)
-		{
-			return (os
-				<< "sHost = " << hostinfo.hostname << '\n'
-				<< "sPort = " << hostinfo.port << '\n'
-				<< "sPass = " << hostinfo.password << '\n'
-				).flush();
-		}
-		bool operator==(const HostInfo& o) const { return hostname == o.hostname && port == o.port && password == o.password; }
-		bool operator!=(auto&& o) const { return !operator==(std::forward<decltype(o)>(o)); }
-	};
 
 	using HostList = std::unordered_map<std::string, HostInfo>;
 
@@ -98,7 +76,7 @@ namespace config {
 		HostList hosts{};
 		for (auto& [name, targetinfo] : hostfile) {
 			if (!targetinfo.empty())
-				hosts.insert_or_assign(name, HostInfo{ str::strip_line(hostfile.getvs(name, "sHost").value_or(Global.DEFAULT_HOST), ";#", "\""), str::strip_line(hostfile.getvs(name, "sPort").value_or(Global.DEFAULT_PORT), "#;", "\""), str::strip_line(hostfile.getvs(name, "sPass").value_or(Global.DEFAULT_PASS), ";#", "\"") });
+				hosts.insert_or_assign(name, HostInfo{ str::strip_line(hostfile.getvs(name, "sHost").value_or(Global.DEFAULT_TARGET.hostname), ";#", "\""), str::strip_line(hostfile.getvs(name, "sPort").value_or(Global.DEFAULT_TARGET.port), "#;", "\""), str::strip_line(hostfile.getvs(name, "sPass").value_or(Global.DEFAULT_TARGET.password), ";#", "\"") });
 		}
 		return hosts;
 	}
@@ -146,6 +124,8 @@ namespace config {
 	 */
 	inline auto write_hostfile(const HostList& hostlist, const std::string& filename)
 	{
-		return file::write(filename, hostlist, false);
+		std::stringstream ss;
+		ss << hostlist;
+		return file::write(filename, std::move(ss), false);
 	}
 }
