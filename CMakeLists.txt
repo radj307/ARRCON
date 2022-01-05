@@ -6,7 +6,8 @@ if (MSVC) # MSVC-specific requirements
 	set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 	string(APPEND CMAKE_CXX_FLAGS " /Zc:__cplusplus")
 endif()
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake/modules")
+
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/307modules")
 
 option(307lib_USE_INSTALLATION "When true, uses an installed version of the 307lib library instead of a git submodule." OFF)
 if (307lib_USE_INSTALLATION)
