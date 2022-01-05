@@ -32,3 +32,4 @@ _ReSharper*/
 packages/
 out/
 /ARRCON/version.h
+/ARRCON/versioninfo.rc

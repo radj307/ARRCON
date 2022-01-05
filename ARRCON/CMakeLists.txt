@@ -21,8 +21,21 @@ set(SRC
 	"main.cpp"
 )
 
+include(VersioninfoMaker)
+CREATE_VERSION_RESOURCE("${CMAKE_CURRENT_SOURCE_DIR}" 
+	"${ARRCON_VERSION_MAJOR}"
+	"${ARRCON_VERSION_MINOR}"
+	"${ARRCON_VERSION_PATCH}"
+	"radj307"
+	"Commandline RCON Client"
+	"ARRCON"
+	"GPLv3 (GNU General Public License v3)"
+	"ARRCON.exe"
+	"ARRCON"
+)
+
 # Add source to this project's executable.
-add_executable (ARRCON ${SRC} "ARRCON.rc")
+add_executable (ARRCON ${SRC} "ARRCON.rc" "versioninfo.rc")
 target_sources(ARRCON PUBLIC ${HEADERS})
 if (307lib_USE_INSTALLATION)
 	target_include_directories(ARRCON PUBLIC "${307lib_PATH}/${CMAKE_BUILD_TYPE}/include")
