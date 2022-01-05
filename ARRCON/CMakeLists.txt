@@ -22,7 +22,8 @@ set(SRC
 )
 
 # Add source to this project's executable.
-add_executable (ARRCON ${HEADERS} ${SRC} "ARRCON.rc")
+add_executable (ARRCON ${SRC} "ARRCON.rc")
+target_sources(ARRCON PUBLIC ${HEADERS})
 if (307lib_USE_INSTALLATION)
 	target_include_directories(ARRCON PUBLIC "${307lib_PATH}/${CMAKE_BUILD_TYPE}/include")
 	target_link_directories(ARRCON PUBLIC "${307lib_PATH}/${CMAKE_BUILD_TYPE}/lib")
