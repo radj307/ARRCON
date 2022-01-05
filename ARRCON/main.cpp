@@ -3,7 +3,7 @@
 #include "config.hpp"			///< INI functions
 #include "Help.hpp"				///< CLI usage instructions
 
-#include <make_exception.hpp>		///< CLI option handler/wrapper
+#include <make_exception.hpp>
 #include <ParamsAPI2.hpp>		///< CLI option handler/wrapper
 #include <fileio.hpp>			///< file I/O functions
 #include <TermAPI.hpp>			///< file I/O functions
