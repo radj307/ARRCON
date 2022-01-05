@@ -2,3 +2,7 @@
 	path = 307lib
 	url = https://github.com/radj307/307lib
 	branch = main
+[submodule "307modules"]
+	path = 307modules
+	url = https://github.com/radj307/307modules
+	branch = main
