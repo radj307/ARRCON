@@ -35,7 +35,7 @@ namespace mode {
 	{
 		size_t count{ 0ull };
 		for (auto& cmd : commands) {
-			if (!Global.quiet)
+			if (!Global.quiet && !Global.no_prompt)
 				std::cout << Global.custom_prompt << Global.palette.set(UIElem::COMMAND_ECHO) << cmd << Global.palette.reset() << '\n';
 			count += !!rcon::command(Global.socket, cmd);
 			std::this_thread::sleep_for(Global.command_delay);

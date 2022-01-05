@@ -24,7 +24,7 @@ private:
 		{ "-q  --quiet"s, "Don't print server response packets."s },
 		{ "-d <ms>  --delay <ms>"s, "Time in milliseconds to wait between each command in commandline mode."s },
 		{ "-n  --no-color"s, "Disable colorized console output."s },
-		{ "--no-prompt"s,"Hides the prompt in interactive mode."s},
+		{ "-Q  --no-prompt"s,"Hides the prompt. In commandline mode, this also disables command echo."s},
 		{ "--write-ini"s, "(Over)write the configuration file with the default values & exit."s},
 		{ "--save-host <name>"s, "Save the current target to the .hosts config as <name> & exit."s },
 		{ "--list-hosts"s, "Display all detected hosts from the .hosts config & exit."s },

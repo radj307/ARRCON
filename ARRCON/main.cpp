@@ -116,7 +116,7 @@ inline void handle_args(const opt::ParamsAPI2& args, config::HostList& hosts, co
 	if (args.check_any<opt::Option, opt::Flag>('q', "quiet"))
 		Global.quiet = true;
 	// no-prompt
-	if (args.check_any<opt::Option>("no-prompt"))
+	if (args.check_any<opt::Flag, opt::Option>('Q', "no-prompt"))
 		Global.no_prompt = true;
 	// command delay:
 	if (const auto arg{ args.typegetv_any<opt::Flag, opt::Option>('d', "delay") }; arg.has_value()) {
