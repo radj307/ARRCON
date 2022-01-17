@@ -34,7 +34,14 @@ enum class UIElem : unsigned char {
 
 inline constexpr const auto MAX_DELAY{ std::chrono::hours(24) };
 
-using SOCKET = unsigned int;
+/// @brief	SOCKET type compatible with winsock & posix
+using SOCKET = unsigned long long;
+
+#ifndef OS_WIN
+#ifndef SOCKET_ERROR // Define SOCKET_ERROR macro
+#define SOCKET_ERROR -1
+#endif
+#endif // #ifndef OS_WIN
 
 struct HostInfo {
 	std::string hostname, port, password;
@@ -91,10 +98,6 @@ static struct {
 	/// @brief amount of time before the select() function times out.
 	std::chrono::milliseconds select_timeout{ 500ll };
 
-#ifndef SOCKET_ERROR // For linux builds
-#define SOCKET_ERROR -1
-#endif
-
 	/// @brief Global socket connected to the RCON server.
 	SOCKET socket{ static_cast<SOCKET>(SOCKET_ERROR) };
 
@@ -113,7 +116,7 @@ static struct {
  */
 inline timeval make_timeout(const std::chrono::milliseconds& ms)
 {
-	return{ static_cast<long>(static_cast<long double>(ms.count()) / 1000.0L)), static_cast<long>(ms.count() * 1000L) };
+	return{ static_cast<long>(static_cast<long double>(ms.count()) / 1000.0L), static_cast<long>(ms.count() * 1000L) };
 }
 #define SELECT(nfds, rd, wr, ex, timeout) select(nfds, rd, wr, ex, timeout)
 #else // POSIX
