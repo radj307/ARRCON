@@ -12,19 +12,19 @@ assignees: radj307
   - For your own safety, never directly include any identifiable information such as IP addresses, hostnames, or ports.
 --->
 
-### \# System Information
+### \# System Information  
 <!--- 
   OS:       Your operating system, architecture, etc. (If you're using Linux, include the distribution.)
   Version:  The version of ARRCON you're using. (You can find this by using the `ARRCON -v` command.)
-  Shell:    I only require this if you're using Windows because of its problematic handling of ANSI sequences. If you use a terminal emulator, include that as well.
+  Shell:    I only require this if you're using Windows because of its problematic handling of ANSI sequences. If you use a terminal emulator, include its name & a link to it as well.
             It is likely one of these:
             - Command Prompt   (cmd.exe)
             - PowerShell       (PowerShell.exe)
             - PowerShell Core  (pwsh.exe)
 --->
-- OS: 
-- Version: 
-- Shell (Windows-Only): 
+- OS:    
+- Version:    
+- Shell (Windows-Only):    
 
 ### \# Bug Description
 <!---
