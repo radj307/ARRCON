@@ -53,8 +53,11 @@ namespace rcon {
 		if (!Global.quiet)
 			std::cout << Global.palette.set(UIElem::PACKET) << p;
 
-		// init required vars for the select function
-		fd_set socket_set{ 1u, sd };
+		// create a file descriptor set for select()
+		fd_set socket_set;
+		FD_ZERO(&socket_set);
+		FD_SET(sd, &socket_set);
+
 		const auto timeout{ make_timeout(Global.select_timeout) };
 
 		// loop while 1 socket has pending data

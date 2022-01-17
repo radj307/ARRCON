@@ -178,7 +178,10 @@ namespace net {
 	 */
 	inline void flush(const SOCKET& sd, const bool& do_check_first = true)
 	{
-		fd_set set{ 1u, sd };
+		fd_set set;
+		FD_ZERO(&set);
+		FD_SET(sd, &set);
+
 		const auto timeout{ make_timeout(Global.select_timeout) };
 		if (do_check_first && SELECT(sd + 1ull, &set, nullptr, nullptr, &timeout) != 1)
 			return;
