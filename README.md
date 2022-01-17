@@ -1,6 +1,12 @@
 # ARRCON - Another RCON Client
 Commandline client application using the [Source RCON Protocol](https://developer.valvesoftware.com/wiki/Source_RCON_Protocol) written in C++.
 
+Currently Supported Platforms:
+ - __Windows__  
+   _(Tested on Windows 10 LTSC x64)_
+ - __Linux__  
+   _(Tested on Debian 11 & WSL Debian 11)_
+
 Capable of handling packets up to 10kB in size, as well as multi-packet responses.  
 Supports running scripts & commands directly from the commandline, and/or an interactive terminal session with ANSI color sequence support.
 
@@ -33,7 +39,7 @@ Options can be specified anywhere on the commandline, and must use a dash `-` de
 |`-p <Password>`              | Specify the RCON server's authentication password.
 |`-f <File>` `--file <file>`  | Load the specified file and run each line as a command. You can specify this argument multiple times to include multiple files.
 |`-h` `--help`                | Shows the help display, including a brief description of the program & option documentation, then exits.
-|`-v` `--version`             | Prints the current version number, then exits.
+|`-v` `--version`             | Prints the program name & current version number, then exits.  If the quiet option is specified, only the version number is printed.
 |`-i` `--interactive`         | Starts an interactive session after executing any commands specified on the commandline.
 |`-d <ms>` `--delay <ms>`     | Set the delay (in milliseconds) between sending each command packet when using commandline mode.
 |`-q` `--quiet`               | Prevents server response packets from being displayed, but does not silence errors or exception messages.
