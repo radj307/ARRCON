@@ -7,7 +7,7 @@ Supports running scripts & commands directly from the commandline, and/or an int
 # Installation
 No installation is required, simply download the executable and put it somewhere on your [path](https://github.com/radj307/ARRCON/wiki/Adding-To-Path).  
 
-### Alternatively, see [Build From Source](https://github.com/radj307/ARRCON/wiki/Building-from-Source) to build it yourself.
+Alternatively, see [Build From Source](https://github.com/radj307/ARRCON/wiki/Building-from-Source) to build it yourself.
 
 # Usage
 
@@ -89,6 +89,6 @@ sHost = 192.168.1.100
 sPort = 27015
 sPass = password
 ```
-To connect to the "myServer" target, you would use `ARRCON myServer`.  
+To connect to the "myServer" target, you would use `ARRCON -H myServer`.  
 
 If one of the keys is missing & not specified as an option, the corresponding default is used from the INI file if available.
