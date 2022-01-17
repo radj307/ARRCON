@@ -6,3 +6,7 @@
 	path = 307modules
 	url = https://github.com/radj307/307modules
 	branch = main
+[submodule "libunistd"]
+	path = libunistd
+	url = https://github.com/robinrowe/libunistd
+	branch = master
