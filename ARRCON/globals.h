@@ -15,8 +15,13 @@
 #include <chrono>
 #include <atomic>
 
-inline constexpr const auto
-DEFAULT_PROGRAM_NAME{ "ARRCON.exe" };
+inline constexpr const auto DEFAULT_PROGRAM_NAME{
+#ifdef OS_WIN
+	"ARRCON.exe" 
+#else
+	"ARRCON"
+#endif
+};
 
 /**
  * @enum	UIElem
