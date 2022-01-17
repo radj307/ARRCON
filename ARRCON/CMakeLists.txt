@@ -1,10 +1,5 @@
 ﻿# ARRCON/ARRCON
-cmake_minimum_required (VERSION 3.13)
-
-include(AutoVersion)
-GET_VERSION("${CMAKE_SOURCE_DIR}" ARRCON_VERSION_MAJOR ARRCON_VERSION_MINOR ARRCON_VERSION_PATCH ARRCON_VERSION_EXTRA)
-MAKE_VERSION(ARRCON_VERSION "${ARRCON_VERSION_MAJOR}" "${ARRCON_VERSION_MINOR}" "${ARRCON_VERSION_PATCH}")
-CREATE_VERSION_HEADER(ARRCON ${ARRCON_VERSION_MAJOR} ${ARRCON_VERSION_MINOR} ${ARRCON_VERSION_PATCH})
+cmake_minimum_required (VERSION 3.15)
 
 project("ARRCON" VERSION ${ARRCON_VERSION} LANGUAGES CXX)
 
@@ -16,26 +11,17 @@ set(HEADERS
 	"net.hpp"
 	"rcon.hpp"
 	"mode.hpp"
+	"version.h"
 )
 set(SRC
 	"main.cpp"
 )
 
-include(VersioninfoMaker)
-CREATE_VERSION_RESOURCE("${CMAKE_CURRENT_SOURCE_DIR}" 
-	"${ARRCON_VERSION_MAJOR}"
-	"${ARRCON_VERSION_MINOR}"
-	"${ARRCON_VERSION_PATCH}"
-	"radj307"
-	"Commandline RCON Client"
-	"ARRCON"
-	"GPLv3 (GNU General Public License v3)"
-	"ARRCON.exe"
-	"ARRCON"
-)
+include(ResourceMaker)
+CREATE_VERSION_HEADER("ARRCON" "${ARRCON_VERSION_MAJOR}" "${ARRCON_VERSION_MINOR}" "${ARRCON_VERSION_PATCH}")
 
 # Add source to this project's executable.
-add_executable (ARRCON ${SRC} "ARRCON.rc" "versioninfo.rc")
+add_executable (ARRCON ${SRC})
 target_sources(ARRCON PUBLIC ${HEADERS})
 if (307lib_USE_INSTALLATION)
 	target_include_directories(ARRCON PUBLIC "${307lib_PATH}/${CMAKE_BUILD_TYPE}/include")

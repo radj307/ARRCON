@@ -1,6 +1,6 @@
 /**
  * @file	net.hpp
- * @author	Tiiffi (Updated & modified for C++ by radj307)
+ * @author	Tiiffi  ;  Heavily modified & updated for C++20 by radj307.
  * @brief	Contains all of the raw networking functions used by the rcon namespace.
  *\n		These functions were originally created by Tiiffi for mcrcon: (https://github.com/Tiiffi/mcrcon)
  *\n		This is the original license:
@@ -30,10 +30,16 @@
 #include "packet.hpp"
 
 #include <TermAPI.hpp>
+#include <make_exception.hpp>
 
 #include <optional>
 #include <string>
 #include <sys/socket.h>
+#include <netdb.h>
+
+#ifndef OS_WIN
+#include <cstring>
+#endif
 
  /**
   * @namespace	net
@@ -173,14 +179,14 @@ namespace net {
 	inline void flush(const SOCKET& sd, const bool& do_check_first = true)
 	{
 		fd_set set{ 1u, sd };
-		const auto timeout{ duration_to_timeval(Global.select_timeout) };
-		if (do_check_first && select(NULL, &set, NULL, NULL, &timeout) != 1)
+		const auto timeout{ make_timeout(Global.select_timeout) };
+		if (do_check_first && SELECT(sd + 1ull, &set, nullptr, nullptr, &timeout) != 1)
 			return;
 		do {
 			if (recv(sd, std::unique_ptr<char>{}.get(), packet::PSIZE_MAX, 0) == 0)
 				throw make_exception("Connection Lost! Last Error: ", lastError());
 			std::this_thread::sleep_for(Global.receive_delay);
-		} while (select(NULL, &set, NULL, NULL, &timeout) == 1);
+		} while (SELECT(sd + 1ull, &set, nullptr, nullptr, &timeout) == 1);
 	}
 
 	/**
@@ -190,10 +196,10 @@ namespace net {
 	 */
 	inline packet::Packet recv_packet(const SOCKET& sd)
 	{
-		int psize{ NULL };
+		int psize{ 0 };
 
-		if (int ret{ recv(sd, (char*)&psize, sizeof(int), 0) }; ret == 0)
-			throw std::exception("Connection Lost! Last Error: " + lastError());
+		if (auto ret{ recv(sd, (char*)&psize, sizeof(int), 0) }; ret == 0)
+			throw make_exception("Connection Lost! Last Error: " + lastError());
 		else if (ret != sizeof(int)) {
 			std::cerr << term::warn << "Received a corrupted packet! Code " << ret << '\n';
 			return{};
@@ -207,10 +213,10 @@ namespace net {
 			flush(sd);
 		}
 
-		packet::serialized_packet spacket{ psize, NULL, NULL, { 0x00 } }; ///< create a serialized packet to receive data
+		packet::serialized_packet spacket{ psize, 0, 0, { 0x00 } }; ///< create a serialized packet to receive data
 
 		for (int received{ 0 }, ret{ 0 }; received < psize; received += ret) {
-			ret = recv(sd, (char*)&spacket + sizeof(int) + received, psize - received, 0);
+			ret = recv(sd, (char*)&spacket + sizeof(int) + received, static_cast<size_t>(psize) - received, 0);
 			if (ret == 0)
 				throw make_exception("Connection Lost! Last Error: ", lastError());
 		}

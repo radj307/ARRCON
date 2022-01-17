@@ -7,7 +7,7 @@
 #include <ParamsAPI2.hpp>		///< CLI option handler/wrapper
 #include <fileio.hpp>			///< file I/O functions
 #include <TermAPI.hpp>			///< file I/O functions
-#include <env.hpp>
+#include <envpath.hpp>
 
 #include <signal.h>				///< signal handling
 #include <unistd.h>

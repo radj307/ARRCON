@@ -55,14 +55,14 @@ namespace rcon {
 
 		// init required vars for the select function
 		fd_set socket_set{ 1u, sd };
-		const timeval timeout{ duration_to_timeval(Global.select_timeout) };
+		const auto timeout{ make_timeout(Global.select_timeout) };
 
 		// loop while 1 socket has pending data
-		for (size_t i{ 0ull }; select(NULL, &socket_set, NULL, NULL, &timeout) == 1; p = net::recv_packet(sd), ++i) {
+		for (size_t i{ 0ull }; SELECT(sd + 1ll, &socket_set, nullptr, nullptr, &timeout) == 1; p = net::recv_packet(sd), ++i) {
 			if (i == 0ull && net::send_packet(sd, { terminator_pid, packet::Type::SERVERDATA_RESPONSE_VALUE, "TERM" }))
 				wait_for_term = true;
 			if (wait_for_term && p.id == terminator_pid) {
-				if (select(NULL, &socket_set, NULL, NULL, &timeout) == 1)
+				if (SELECT(sd + 1ll, &socket_set, nullptr, nullptr, &timeout) == 1)
 					net::flush(sd, false); // flush any remaining packets
 				break;
 			}

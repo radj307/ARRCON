@@ -4,6 +4,7 @@
  * @brief	Contains the mode namespace.
  */
 #pragma once
+#include <sysarch.h>
 #include "globals.h"
 #include "rcon.hpp"
 
@@ -11,6 +12,9 @@
 
 #include <signal.h>				///< signal handling
 #include <unistd.h>
+#ifndef OS_WIN
+#include <cstring>
+#endif
 
  /**
   * @brief		Handler function for OS signals. Passed to sigaction/signal to intercept interrupts and shut down the socket correctly.

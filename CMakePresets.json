@@ -2,67 +2,144 @@
   "version": 2,
   "configurePresets": [
     {
-      "name": "linux-default",
-      "displayName": "Linux Debug",
-      "description": "Target the Windows Subsystem for Linux (WSL) or a remote Linux system.",
-      "generator": "Unix Makefiles",
+      "name": "default",
+      "hidden": true,
+      "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
-      "cmakeExecutable": "/usr/bin/cmake",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
       },
-      "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Linux" ] },
-        "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": { "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}" }
+      "warnings": {
+        "deprecated": true,
+        "unusedCli": true,
+        "uninitialized": true
       }
     },
+
     {
-      "name": "linux-release",
-      "displayName": "Linux Release",
-      "description": "Target the Windows Subsystem for Linux (WSL) or a remote Linux system.",
-      "generator": "Unix Makefiles",
-      "binaryDir": "${sourceDir}/out/build/${presetName}",
-      "cmakeExecutable": "/usr/bin/cmake",
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
-      },
-      "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Linux" ] },
-        "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": { "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}" }
-      }
-    },
-    {
-      "name": "windows-default",
-      "displayName": "Windows x64",
-      "description": "Target Windows with the Visual Studio development environment.",
-      "generator": "Visual Studio 17 2022",
-      "binaryDir": "${sourceDir}/out/build/${presetName}",
-      "architecture": {
-        "value": "x64",
-        "strategy": "external"
-      },
-      "cacheVariables": {
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
-      },
-      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Windows" ] } }
-    },
-    {
-      "name": "windows-debug",
-      "inherits": "windows-default",
-      "displayName": "Windows x64 Debug",
+      "name": "Debug",
+      "hidden": true,
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
-      "name": "windows-release",
-      "inherits": "windows-default",
-      "displayName": "Windows x64 Release",
+      "name": "RelWithDebInfo",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+      }
+    },
+    {
+      "name": "Release",
+      "hidden": true,
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
+    },
+    {
+      "name": "MinSizeRel",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "MinSizeRel"
+      }
+    },
+
+    {
+      "name": "linux-default",
+      "hidden": true,
+      "inherits": "default",
+      "displayName": "Linux",
+      "description": "Target the Windows Subsystem for Linux (WSL) or a remote Linux system.",
+      "generator": "Ninja",
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Linux" ] },
+        "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": { "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}" }
+      }
+    },
+    {
+      "name": "linux-debug",
+      "hidden": false,
+      "inherits": [ "linux-default", "Debug" ],
+      "displayName": "Linux Debug"
+    },
+    {
+      "name": "linux-release",
+      "hidden": false,
+      "inherits": [ "linux-default", "Release" ],
+      "displayName": "Linux Release"
+    },
+
+    {
+      "name": "macos-default",
+      "hidden": true,
+      "inherits": "default",
+      "displayName": "macOS",
+      "description": "Target a remote macOS system with Ninja",
+      "generator": "Ninja",
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "macOS" ] },
+        "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": { "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}" }
+      }
+    },
+    {
+      "name": "macos-debug",
+      "hidden": false,
+      "inherits": [ "macos-default", "Debug" ],
+      "displayName": "macOS Debug"
+    },
+    {
+      "name": "macos-release",
+      "hidden": false,
+      "inherits": [ "macos-default", "Release" ],
+      "displayName": "macOS Release"
+    },
+
+    {
+      "name": "windows-default",
+      "hidden": true,
+      "inherits": "default",
+      "displayName": "Windows x64",
+      "description": "Target Windows with the Visual Studio development environment.",
+      "generator": "Ninja",
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Windows" ] } }
+    },
+    {
+      "name": "windows-debug",
+      "hidden": false,
+      "inherits": [ "windows-default", "Debug" ],
+      "displayName": "Windows x64 Debug"
+    },
+    {
+      "name": "windows-release",
+      "hidden": false,
+      "inherits": [ "windows-default", "Release" ],
+      "displayName": "Windows x64 Release"
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "release-clean",
+      "hidden": true,
+      "cleanFirst": true,
+      "verbose": false,
+      "jobs": 4
+    },
+    {
+      "name": "linux-release",
+      "inherits": "release-clean",
+      "configurePreset": "linux-release",
+      "displayName": "Clean Release"
+    },
+    {
+      "name": "windows-x64-release",
+      "inherits": "release-clean",
+      "configurePreset": "windows-release",
+      "displayName": "Clean Release"
     }
   ]
 }

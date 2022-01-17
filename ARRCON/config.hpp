@@ -7,6 +7,8 @@
 #include "globals.h"
 #include <sysarch.h>
 
+#include <fileutil.hpp>
+
 #define INI_USE_EXPERIMENTAL
 #include <str.hpp>
 #include <INI.hpp>
@@ -67,7 +69,7 @@ namespace config {
 			<< "iReceiveDelay = 10\n"
 			<< "iSelectTimeout = 500\n"
 			<< '\n';
-		return file::write(filename, std::move(ss), false);
+		return file::write_to(filename, std::move(ss));
 	}
 
 	using HostList = std::unordered_map<std::string, HostInfo>;
@@ -128,6 +130,6 @@ namespace config {
 	{
 		std::stringstream ss;
 		ss << hostlist;
-		return file::write(filename, std::move(ss), false);
+		return file::write_to(filename, std::move(ss));
 	}
 }

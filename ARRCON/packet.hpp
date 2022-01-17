@@ -9,6 +9,8 @@
 
 #include "globals.h"
 #include <ostream>
+#include <limits.h>
+#include <string.h>
 
 
 namespace mc_color {
@@ -183,7 +185,11 @@ namespace packet {
 			s.size = size;
 			s.id = id;
 			s.type = type;
+			#ifdef OS_WIN
 			strncpy_s(s.body, body.c_str(), body.size());
+			#else
+			strncpy(s.body, body.c_str(), body.size());
+			#endif
 			return s;
 		}
 
