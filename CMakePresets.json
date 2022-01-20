@@ -20,7 +20,8 @@
       "name": "Debug",
       "hidden": true,
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug"
+        "CMAKE_BUILD_TYPE": "Debug",
+        "ARRCON_ENABLE_ADDITIONAL_RESOURCES": false
       }
     },
     {
@@ -34,7 +35,8 @@
       "name": "Release",
       "hidden": true,
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
+        "CMAKE_BUILD_TYPE": "Release",
+        "ARRCON_ENABLE_ADDITIONAL_RESOURCES": true
       }
     },
     {
