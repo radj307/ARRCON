@@ -8,6 +8,7 @@ endif()
 # Create project
 project("ARRCON" VERSION ${ARRCON_VERSION} LANGUAGES CXX)
 
+<<<<<<< Updated upstream
 include(ResourceMaker)
 
 file(REMOVE "${CMAKE_CURRENT_SOURCE_DIR}/version.h")
@@ -19,6 +20,9 @@ CREATE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/version.h"
 	"#define ARRCON_VERSION_PATCH ${ARRCON_VERSION_PATCH}\\n"
 )
 
+=======
+CREATE_VERSION_HEADER("${CMAKE_CURRENT_SOURCE_DIR}/version.h" "ARRCON" "${ARRCON_VERSION_MAJOR}" "${ARRCON_VERSION_MINOR}" "${ARRCON_VERSION_PATCH}")
+>>>>>>> Stashed changes
 set(HEADERS
 	"globals.h"
 	"config.hpp"
@@ -27,7 +31,7 @@ set(HEADERS
 	"net.hpp"
 	"rcon.hpp"
 	"mode.hpp"
-	"${CMAKE_CURRENT_BINARY_DIR}/version.h"
+	"${CMAKE_CURRENT_SOURCE_DIR}/version.h"
 )
 
 option(ARRCON_ENABLE_ADDITIONAL_RESOURCES "Enable resource file generation" OFF)
