@@ -8,7 +8,6 @@ endif()
 # Create project
 project("ARRCON" VERSION ${ARRCON_VERSION} LANGUAGES CXX)
 
-<<<<<<< Updated upstream
 include(ResourceMaker)
 
 file(REMOVE "${CMAKE_CURRENT_SOURCE_DIR}/version.h")
@@ -20,9 +19,7 @@ CREATE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/version.h"
 	"#define ARRCON_VERSION_PATCH ${ARRCON_VERSION_PATCH}\\n"
 )
 
-=======
 CREATE_VERSION_HEADER("${CMAKE_CURRENT_SOURCE_DIR}/version.h" "ARRCON" "${ARRCON_VERSION_MAJOR}" "${ARRCON_VERSION_MINOR}" "${ARRCON_VERSION_PATCH}")
->>>>>>> Stashed changes
 set(HEADERS
 	"globals.h"
 	"config.hpp"
