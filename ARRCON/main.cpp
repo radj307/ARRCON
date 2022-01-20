@@ -174,6 +174,7 @@ inline std::vector<std::string> get_commands(const opt::ParamsAPI2& args, const 
 
 int main(int argc, char** argv)
 {
+	bool color_error_messages{ false };
 	try {
 		std::cout << term::EnableANSI; // enable ANSI escape sequences on windows
 		const opt::ParamsAPI2 args{ argc, argv, 'H', "host", 'P', "port", 'p', "pass", 'd', "delay", 'f', "file", "save-host" }; // parse arguments
@@ -213,6 +214,9 @@ int main(int argc, char** argv)
 		const auto& [host, port, pass] { get_target_info(args, hosts) };
 		handle_args(args, hosts, { host, port, pass }, ini_path, hostfile_path);
 
+		if (Global.palette.isActive())
+			color_error_messages = true;
+
 		// get the commands to execute on the server
 		const auto commands{ get_commands(args, PATH) };
 
@@ -241,10 +245,10 @@ int main(int argc, char** argv)
 
 		return 0;
 	} catch (const std::exception& ex) { ///< catch exceptions
-		std::cerr << (Global.palette.isActive() ? term::error : term::placeholder) << ex.what() << std::endl;
+		std::cerr << (color_error_messages ? term::error : "[ERROR]\t") << ex.what() << std::endl;
 		return -1;
 	} catch (...) { ///< catch all other exceptions
-		std::cerr << (Global.palette.isActive() ? term::crit : term::placeholder) << "An unknown exception occurred!" << std::endl;
-		return -2;
+		std::cerr << (color_error_messages ? term::crit : "[CRIT]\t") << "An unknown exception occurred!" << std::endl;
+		return -1;
 	}
 }
