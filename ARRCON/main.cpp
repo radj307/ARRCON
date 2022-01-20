@@ -4,7 +4,7 @@
 #include "Help.hpp"				///< CLI usage instructions
 
 #include <make_exception.hpp>
-#include <ArgumentRedux.hpp>	///< CLI option handler/wrapper
+#include <ParamsAPI2.hpp>
 #include <fileio.hpp>			///< file I/O functions
 #include <TermAPI.hpp>			///< file I/O functions
 #include <envpath.hpp>
@@ -26,7 +26,7 @@
  *\n			1	RCON Port
  *\n			2	RCON Password
  */
-inline HostInfo get_target_info(const opt::ParamsAPI3& args, const config::HostList& hostlist)
+inline HostInfo get_target_info(const opt::ParamsAPI2& args, const config::HostList& hostlist)
 {
 	const auto
 		host{ args.typegetv_any<opt::Flag, opt::Option>('H', "host") },
@@ -50,7 +50,7 @@ inline HostInfo get_target_info(const opt::ParamsAPI3& args, const config::HostL
  * @brief		Handle commandline arguments.
  * @param args	Arguments from main()
  */
-inline void handle_args(const opt::ParamsAPI3& args, config::HostList& hosts, const HostInfo& target, const std::filesystem::path& ini_path, const std::filesystem::path& hostfile_path)
+inline void handle_args(const opt::ParamsAPI2& args, config::HostList& hosts, const HostInfo& target, const std::filesystem::path& ini_path, const std::filesystem::path& hostfile_path)
 {
 	const auto do_list_hosts{ args.check<opt::Option>("list-hosts") };
 	// save-host
@@ -153,7 +153,7 @@ inline std::vector<std::string> read_script_file(std::string filename, const env
  * @param args	All commandline arguments.
  * @returns		std::vector<std::string>
  */
-inline std::vector<std::string> get_commands(const opt::ParamsAPI3& args, const env::PATH& pathvar)
+inline std::vector<std::string> get_commands(const opt::ParamsAPI2& args, const env::PATH& pathvar)
 {
 	std::vector<std::string> commands{ args.typegetv_all<opt::Parameter>() }; // Arg<std::string> is implicitly convertable to std::string
 	// iterate through all user-specified files
@@ -173,15 +173,15 @@ inline std::vector<std::string> get_commands(const opt::ParamsAPI3& args, const 
 	return commands;
 }
 
-int main(int argc, char** argv)
+int main(const int argc, char** argv)
 {
 	bool color_error_messages{ false };
 	try {
 		std::cout << term::EnableANSI; // enable ANSI escape sequences on windows
-		if (hasPending(0)) { // check for piped input from STDIN
+		opt::ParamsAPI2 args{ argc, argv, 'H', "host", 'P', "port", 'p', "pass", 'd', "delay", 'f', "file", "save-host" }; // parse arguments
 
-		}
-		const opt::ParamsAPI3 args{ argc, argv, 'H', "host", 'P', "port", 'p', "pass", 'd', "delay", 'f', "file", "save-host" }; // parse arguments
+		for (auto&& it : CaptureSTDIN())
+			args.emplace_back(std::move(it));
 
 		// Initialize the PATH variable & locate the program using argv[0]
 		env::PATH PATH{ argv[0] };
