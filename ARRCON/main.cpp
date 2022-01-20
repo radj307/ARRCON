@@ -25,7 +25,7 @@
  *\n			1	RCON Port
  *\n			2	RCON Password
  */
-inline HostInfo get_server_info(const opt::ParamsAPI2& args, const config::HostList& hostlist)
+inline HostInfo get_target_info(const opt::ParamsAPI2& args, const config::HostList& hostlist)
 {
 	const auto
 		host{ args.typegetv_any<opt::Flag, opt::Option>('H', "host") },
@@ -178,6 +178,7 @@ int main(int argc, char** argv)
 		std::cout << term::EnableANSI; // enable ANSI escape sequences on windows
 		const opt::ParamsAPI2 args{ argc, argv, 'H', "host", 'P', "port", 'p', "pass", 'd', "delay", 'f', "file", "save-host" }; // parse arguments
 
+		// Initialize the PATH variable & locate the program using argv[0]
 		env::PATH PATH{ argv[0] };
 		const auto& [myDir, myName] { PATH.resolve_split(argv[0]) };
 
@@ -231,23 +232,24 @@ int main(int argc, char** argv)
 		// Connect the socket
 		Global.socket = net::connect(host, port);
 
+		// set & check if the socket was connected successfully
 		if (!(Global.connected = (Global.socket != SOCKET_ERROR)))
-			throw make_exception("Socket was set to invalid value ", Global.socket, " but connect returned successfully.\tLast socket error code: ", net::getLastSocketErrorMessage());
+			throw make_exception("Socket \'", Global.socket, "\' is invalid, but no exceptions were thrown!\tLast socket error: (", LAST_SOCKET_ERROR_CODE(), ") ", net::getLastSocketErrorMessage());
 
-		// auth & commands
+		// authenticate with the server, run queued commands, and open an interactive session if necessary.
 		if (rcon::authenticate(Global.socket, pass)) {
 			// authentication succeeded, run commands
 			if (mode::commandline(commands) == 0ull || Global.force_interactive)
 				mode::interactive(Global.socket); // if no commands were executed from the commandline or if the force interactive flag was set
 		}
-		else throw make_exception("Authentication with ", host, ':', port, " failed because of an incorrect password.");
+		else throw make_exception("Authentication failure:  Incorrect password for ", host, ':', port);
 
 		return 0;
 	} catch (const std::exception& ex) { ///< catch exceptions
-		std::cerr << term::error << ex.what() << std::endl;
+		std::cerr << (Global.palette.isActive() ? term::error : term::placeholder) << ex.what() << std::endl;
 		return -1;
 	} catch (...) { ///< catch all other exceptions
-		std::cerr << term::crit << "An unknown exception occurred!" << std::endl;
+		std::cerr << (Global.palette.isActive() ? term::crit : term::placeholder) << "An unknown exception occurred!" << std::endl;
 		return -2;
 	}
 }
