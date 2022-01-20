@@ -33,3 +33,4 @@ packages/
 out/
 /ARRCON/version.h
 /ARRCON/versioninfo.rc
+/ARRCON/ARRCON.rc
