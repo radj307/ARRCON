@@ -36,11 +36,11 @@ public:
 	friend std::ostream& operator<<(std::ostream& os, const Help& help)
 	{
 		const auto tabSize{ help._longest_optname + 2ull };
-		os << help._program_name << ((help._program_name != DEFAULT_PROGRAM_NAME) ? "("s + DEFAULT_PROGRAM_NAME + ") "s : " ") << "v" << ARRCON_VERSION << '\n'
-			<< "CLI Application that allows communicating with servers using the Source RCON Protocol.\n"
+		os << help._program_name << ((help._program_name != std::string_view(DEFAULT_PROGRAM_NAME)) ? "("s + DEFAULT_PROGRAM_NAME + ") "s : " ") << "v" << ARRCON_VERSION << '\n'
+			<< "CLI RCON Server Administration Utility.\n"
 			<< '\n'
 			<< "USAGE:\n"
-			<< "  " << help._program_name << " [OPTIONS] [CONFIG HOSTNAME] [COMMANDS]\n"
+			<< "  " << help._program_name.generic_string() << " [OPTIONS] [COMMANDS]\n"
 			<< '\n'
 			<< "OPTIONS:\n";
 		for (auto& [optname, desc] : help._options)

@@ -49,14 +49,15 @@ namespace config {
 		// Timing Header:
 		using namespace std::chrono_literals;
 		const auto to_ms{ [](const std::optional<std::string>& str, const std::chrono::milliseconds& def) -> std::chrono::milliseconds { return ((str.has_value() && std::all_of(str.value().begin(), str.value().end(), isdigit)) ? std::chrono::milliseconds(str::stoi(str.value())) : def); } };
-		Global.command_delay = to_ms(ini.getvs(header::TIMING, "iCommandDelay"), 0ms);
-		Global.receive_delay = to_ms(ini.getvs(header::TIMING, "iReceiveDelay"), 10ms);
-		Global.select_timeout = to_ms(ini.getvs(header::TIMING, "iSelectTimeout"), 500ms);
+		Global.command_delay = to_ms(ini.getvs(header::TIMING, "iCommandDelay"), Global.command_delay);
+		Global.receive_delay = to_ms(ini.getvs(header::TIMING, "iReceiveDelay"), Global.receive_delay);
+		Global.select_timeout = to_ms(ini.getvs(header::TIMING, "iSelectTimeout"), Global.select_timeout);
 
 		// Target Header:
 		Global.target.hostname = ini.getvs(header::TARGET, "sDefaultHost").value_or(Global.target.hostname);
 		Global.target.port = ini.getvs(header::TARGET, "sDefaultPort").value_or(Global.target.port);
 		Global.target.password = ini.getvs(header::TARGET, "sDefaultPass").value_or(Global.target.password);
+		Global.allow_no_args = ini.checkv(header::TARGET, "bAllowNoArgs", true);
 
 		return true;
 	}
@@ -79,6 +80,7 @@ namespace config {
 				<< "sDefaultHost = \"localhost\"\n"
 				<< "sDefaultPort = \"27015\"\n"
 				<< "sDefaultPass = \"\"\n"
+				<< "bAllowNoArgs = false\n"
 				<< '\n'
 				<< '[' << header::APPEARANCE << ']' << '\n'
 				<< "bDisablePrompt = false\n"
@@ -98,6 +100,7 @@ namespace config {
 				<< "sDefaultHost = \"" << Global.target.hostname << "\"\n"
 				<< "sDefaultPort = \"" << Global.target.port << "\"\n"
 				<< "sDefaultPass = \"" << Global.target.password << "\"\n"
+				<< "bAllowNoArgs = " << Global.allow_no_args << '\n'
 				<< '\n'
 				<< '[' << header::APPEARANCE << ']' << '\n'
 				<< "bDisablePrompt = " << Global.no_prompt << '\n'

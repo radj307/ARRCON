@@ -86,36 +86,39 @@ static struct {
 	};
 	HostInfo target{ DEFAULT_TARGET }; // active target
 
-	/// @brief When true, response packets are not printed to the terminal
+	/// @brief	When true, response packets are not printed to the terminal
 	bool quiet{ false };
 
-	/// @brief When true, hides the prompt in interactive mode.
+	/// @brief	When true, hides the prompt in interactive mode.
 	bool no_prompt{ false };
+
+	/// @brief	When true & no arguments are specified, try to connect to the default target.
+	bool allow_no_args{ false };
 
 	std::string custom_prompt{};
 
-	/// @brief When true, the RCON socket is currently connected.
+	/// @brief	When true, the RCON socket is currently connected.
 	bool connected{ false };
 
-	/// @brief When true, support for minecraft bukkit colors is enabled, and the color mapped to UIElem::PACKET will have no effect.
+	/// @brief	When true, support for minecraft bukkit colors is enabled, and the color mapped to UIElem::PACKET will have no effect.
 	bool enable_bukkit_color_support{ true };
 
-	/// @brief Delay between sending each command when using commandline mode.
+	/// @brief	Delay between sending each command when using commandline mode.
 	std::chrono::milliseconds command_delay{ 0ll };
 
-	/// @brief Delay between receive calls. Changing this may break or fix multi-packet response handling. (Default is 10)
+	/// @brief	Delay between receive calls. Changing this may break or fix multi-packet response handling. (Default is 10)
 	std::chrono::milliseconds receive_delay{ 10ll };
 
-	/// @brief amount of time before the select() function times out.
+	/// @brief	Amount of time before the select() function times out.
 	std::chrono::milliseconds select_timeout{ 500ll };
 
-	/// @brief Global socket connected to the RCON server.
+	/// @brief	Global socket connected to the RCON server.
 	SOCKET socket{ static_cast<SOCKET>(SOCKET_ERROR) };
 
-	/// @brief When true, interactive mode is started after running any commands specified on the commandline.
+	/// @brief	When true, interactive mode is started after running any commands specified on the commandline.
 	bool force_interactive{ false };
 
-	/// @brief When entries are present, the user specified at least one [-f|--file] option.
+	/// @brief	When entries are present, the user specified at least one [-f|--file] option.
 	std::vector<std::string> scriptfiles{};
 } Global;
 
