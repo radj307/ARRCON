@@ -12,7 +12,7 @@
   */
 struct Help {
 private:
-	const std::string _program_name;
+	const std::filesystem::path _program_name;
 	const std::vector<std::pair<std::string, std::string>> _options{
 		{ "-H <Host>  --host <Host>"s, "RCON Server Address or saved hostname.  (Default: \""s + Global.DEFAULT_TARGET.hostname + "\")"s },
 		{ "-P <Port>  --port <Port>"s, "RCON Server Port.                       (Default: \""s + Global.DEFAULT_TARGET.port + "\")"s },
@@ -32,7 +32,7 @@ private:
 	const size_t _longest_optname, _max_line_length;
 
 public:
-	Help(const std::string& program_name, const size_t& max_line_sz = 120ull) : _program_name{ program_name }, _longest_optname{ [this]() { size_t longest{0ull}; for (auto& [optname, desc] : _options) if (const auto sz{optname.size()}; sz > longest) longest = sz; return longest; }() }, _max_line_length{ max_line_sz } {}
+	Help(const std::filesystem::path& program_name, const size_t& max_line_sz = 120ull) : _program_name{ program_name }, _longest_optname{ [this]() { size_t longest{0ull}; for (auto& [optname, desc] : _options) if (const auto sz{optname.size()}; sz > longest) longest = sz; return longest; }() }, _max_line_length{ max_line_sz } {}
 	friend std::ostream& operator<<(std::ostream& os, const Help& help)
 	{
 		const auto tabSize{ help._longest_optname + 2ull };

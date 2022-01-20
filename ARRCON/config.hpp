@@ -149,12 +149,12 @@ namespace config {
 	 * @param filename	Target filename to write to.
 	 * @returns			bool
 	 */
-	inline auto save_hostfile(const HostList& hostlist, const std::string& filename)
+	inline auto save_hostfile(const HostList& hostlist, const std::filesystem::path& path)
 	{
 		#pragma warning (disable:26800) // use of a moved-from object: ss
 		std::stringstream ss;
 		ss << hostlist;
-		return file::write_to(filename, std::move(ss));
+		return file::write_to(path, std::move(ss));
 		#pragma warning (default:26800) // use of a moved-from object: ss
 	}
 

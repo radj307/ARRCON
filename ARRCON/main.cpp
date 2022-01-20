@@ -49,21 +49,8 @@ inline HostInfo get_server_info(const opt::ParamsAPI2& args, const config::HostL
  * @brief		Handle commandline arguments.
  * @param args	Arguments from main()
  */
-inline void handle_args(const opt::ParamsAPI2& args, config::HostList& hosts, const HostInfo& target, const std::string& program_name, const std::string& ini_path, const std::string& hostfile_path)
+inline void handle_args(const opt::ParamsAPI2& args, config::HostList& hosts, const HostInfo& target, const std::filesystem::path& ini_path, const std::filesystem::path& hostfile_path)
 {
-	// Handle blocking args:
-	// help:
-	if (args.check_any<opt::Flag, opt::Option>('h', "help")) {
-		std::cout << Help(program_name);
-		std::exit(EXIT_SUCCESS);
-	}
-	// version: (mutually exclusive with help as it shows the version number as well)
-	if (args.check_any<opt::Flag, opt::Option>('v', "version")) {
-		if (!args.check_any<opt::Flag, opt::Option>('q', "quiet"))
-			std::cout << DEFAULT_PROGRAM_NAME << ' ';
-		std::cout << 'v' << ARRCON_VERSION << std::endl;
-		std::exit(EXIT_SUCCESS);
-	}
 	const auto do_list_hosts{ args.check<opt::Option>("list-hosts") };
 	// save-host
 	if (const auto save_host{ args.typegetv<opt::Option>("save-host") }; save_host.has_value()) {
@@ -185,14 +172,6 @@ inline std::vector<std::string> get_commands(const opt::ParamsAPI2& args, const 
 	return commands;
 }
 
-/// @brief	Emergency stop handler, should be passed to the std::atexit() function to allow a controlled shutdown of the socket.
-inline void cleanup(void)
-{
-	net::close_socket(Global.socket);
-	std::cout << Global.palette.reset();
-}
-
-
 int main(int argc, char** argv)
 {
 	try {
@@ -200,28 +179,54 @@ int main(int argc, char** argv)
 		const opt::ParamsAPI2 args{ argc, argv, 'H', "host", 'P', "port", 'p', "pass", 'd', "delay", 'f', "file", "save-host" }; // parse arguments
 
 		env::PATH PATH{ argv[0] };
-		const auto& [prog_path, prog_name] { PATH.resolve_split(argv[0]) };
+		const auto& [myDir, myName] { PATH.resolve_split(argv[0]) };
 
-		const auto ini_path{ (prog_path / prog_name).replace_extension(".ini").generic_string() };
+		// Handle blocking args:
+		// help:
+		if (args.check_any<opt::Flag, opt::Option>('h', "help")) {
+			std::cout << Help(myName);
+			return 0;
+		}
+		// version: (mutually exclusive with help as it shows the version number as well)
+		if (args.check_any<opt::Flag, opt::Option>('v', "version")) {
+			if (!args.check_any<opt::Flag, opt::Option>('q', "quiet")) {
+				std::cout << myName << ' ';
+				if (myName != DEFAULT_PROGRAM_NAME)
+					std::cout << '(' << DEFAULT_PROGRAM_NAME << ") ";
+				std::cout << 'v';
+			}
+			std::cout << ARRCON_VERSION << std::endl;
+			return 0;
+		}
+
+		// Get the INI file's path
+		const auto ini_path{ (myDir / myName).replace_extension(".ini") };
+
+		// Read the INI if it exists
 		if (file::exists(ini_path))
 			config::load_ini(ini_path);
 
+		// Initialize the hostlist
 		config::HostList hosts;
 
-		const auto hostfile_path{ (prog_path / prog_name).replace_extension(".hosts").generic_string() };
-		if (file::exists(hostfile_path))
+		const auto hostfile_path{ (myDir / myName).replace_extension(".hosts") };
+		if (file::exists(hostfile_path)) // load the hostfile if it exists
 			hosts = config::load_hostfile(hostfile_path);
 
-		const auto& [host, port, pass] { get_server_info(args, hosts) };
-		handle_args(args, hosts, { host, port, pass }, prog_name.generic_string(), ini_path, hostfile_path);
+		// get the target server's connection information
+		const auto& [host, port, pass] { get_target_info(args, hosts) };
+		handle_args(args, hosts, { host, port, pass }, ini_path, hostfile_path);
 
+		// get the commands to execute on the server
 		const auto commands{ get_commands(args, PATH) };
 
+		// If no custom prompt is set, use the default one
 		if (Global.custom_prompt.empty())
 			Global.custom_prompt = (Global.no_prompt ? "" : str::stringify(Global.palette.set(UIElem::TERM_PROMPT_NAME), "RCON@", host, Global.palette.reset(UIElem::TERM_PROMPT_ARROW), '>', Global.palette.reset(), ' '));
 
+
 		// Register the cleanup function before connecting the socket
-		std::atexit(&cleanup);
+		std::atexit(&net::cleanup);
 
 		// Connect the socket
 		Global.socket = net::connect(host, port);
