@@ -53,7 +53,7 @@ public:
 			<< "\t\t\tYou can also specify files using \"-f <file>\" or \"--file <file>\".\n"
 			<< "\t\t\tEach line will be executed as a command in commandline mode.\n"
 			<< "\t\t\tScript commands are executed in - order, after any commands passed as arguments.\n"
-			<< "\t\t\tYou can specify multiple files per command.\n"
+			<< "\t\t\tYou can specify multiple files per command."
 			;
 		return os.flush();
 	}

@@ -182,20 +182,15 @@ int main(int argc, char** argv)
 		env::PATH PATH{ argv[0] };
 		const auto& [myDir, myName] { PATH.resolve_split(argv[0]) };
 
-		// Handle blocking args:
 		// help:
 		if (args.check_any<opt::Flag, opt::Option>('h', "help")) {
-			std::cout << Help(myName);
+			std::cout << Help(myName) << std::endl;
 			return 0;
 		}
 		// version: (mutually exclusive with help as it shows the version number as well)
 		if (args.check_any<opt::Flag, opt::Option>('v', "version")) {
-			if (!args.check_any<opt::Flag, opt::Option>('q', "quiet")) {
-				std::cout << myName << ' ';
-				if (myName != DEFAULT_PROGRAM_NAME)
-					std::cout << '(' << DEFAULT_PROGRAM_NAME << ") ";
-				std::cout << 'v';
-			}
+			if (!args.check_any<opt::Flag, opt::Option>('q', "quiet"))
+				std::cout << DEFAULT_PROGRAM_NAME << ' ';
 			std::cout << ARRCON_VERSION << std::endl;
 			return 0;
 		}
