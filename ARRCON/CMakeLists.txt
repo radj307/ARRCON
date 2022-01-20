@@ -57,8 +57,8 @@ endif()
 target_sources(ARRCON PUBLIC ${HEADERS})
 
 # Check if user has 307lib as a submodule or as an installation, include necessary directories if using an installation
-option(307lib_USE_INSTALLATION_NOT_COPY OFF "Use an installed version of the 307lib library, instead of the git submodule version. This is faster to compile.")
-if (307lib_USE_INSTALLATION_NOT_COPY)
+option(ARRCON_USE_307lib_INSTALLATION OFF "Use an installed version of the 307lib library, instead of the git submodule version. This is faster to compile.")
+if (ARRCON_USE_307lib_INSTALLATION)
 	target_include_directories(ARRCON PUBLIC "${307lib_PATH}/${CMAKE_BUILD_TYPE}/include")
 	target_link_directories(ARRCON PUBLIC "${307lib_PATH}/${CMAKE_BUILD_TYPE}/lib")
 endif()
