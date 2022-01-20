@@ -180,8 +180,10 @@ int main(const int argc, char** argv)
 		std::cout << term::EnableANSI; // enable ANSI escape sequences on windows
 		opt::ParamsAPI2 args{ argc, argv, 'H', "host", 'P', "port", 'p', "pass", 'd', "delay", 'f', "file", "save-host" }; // parse arguments
 
+		#ifndef OS_WIN
 		for (auto&& it : CaptureSTDIN())
 			args.emplace_back(std::move(it));
+		#endif
 
 		// Initialize the PATH variable & locate the program using argv[0]
 		env::PATH PATH{ argv[0] };
