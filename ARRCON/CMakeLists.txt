@@ -22,21 +22,21 @@ set(HEADERS
 )
 
 # Create resource files
-include(ResourceMaker)
-CREATE_VERSION_RESOURCE(
-	"${CMAKE_CURRENT_BINARY_DIR}/ARRCON.rc"
-	"${ARRCON_VERSION_MAJOR}"
-	"${ARRCON_VERSION_MINOR}"
-	"${ARRCON_VERSION_PATCH}"
-	"radj307"
-	"Commandline client for communicating with servers using the Source RCON Protocol."
-	"ARRCON"
-	"GPLv3"
-	"ARRCON"
-	"ARRCON"
-)
 if (WIN32)
-	APPEND_ICON_RESOURCE("${CMAKE_CURRENT_BINARY_DIR}/ARRCON.rc" "${CMAKE_CURRENT_SOURCE_DIR}/ARRCON.ico")
+	include(ResourceMaker)
+	CREATE_VERSION_RESOURCE(
+		"${CMAKE_CURRENT_SOURCE_DIR}/ARRCON.rc"
+		"${ARRCON_VERSION_MAJOR}"
+		"${ARRCON_VERSION_MINOR}"
+		"${ARRCON_VERSION_PATCH}"
+		"radj307"
+		"Commandline client for communicating with servers using the Source RCON Protocol."
+		"ARRCON"
+		"GPLv3"
+		"ARRCON"
+		"ARRCON"
+	)
+	APPEND_ICON_RESOURCE("${CMAKE_CURRENT_SOURCE_DIR}/ARRCON.rc" "${CMAKE_CURRENT_SOURCE_DIR}/ARRCON.ico")
 endif()
 
 # Create executable
