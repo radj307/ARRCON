@@ -23,6 +23,7 @@
 inline void sighandler(int sig) noexcept
 {
 	Global.connected = false;
+	printf("\n");
 }
 
 /**
