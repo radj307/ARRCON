@@ -1,22 +1,26 @@
-# ARRCON - Another RCON Client
-Commandline client application using the [Source RCON Protocol](https://developer.valvesoftware.com/wiki/Source_RCON_Protocol) written in C++.
+# ARRCON - Another __RCON__ Client
+Remote console client that is compatible with any game using the Source Rcon Protocol, based on [mcrcon](https://github.com/Tiiffi/mcrcon) by Tiiffi.  
 
-Currently Supported Platforms:
- - __Windows__  
-   _(Tested on Windows 10 LTSC x64)_
- - __Linux__  
-   _(Tested on Debian 11 & WSL Debian 11)_
+### Features
+  - Works for any game using the [Source RCON Protocol](https://developer.valvesoftware.com/wiki/Source_RCON_Protocol).
+  - Supports Minecraft Bukkit terminal colors using the section sign `§`.
+  - Can be used as a one-off from the commandline, or in an interactive shell.
+  - Supports saving targets as a given name. 
+  - Handles large packets without issue.
+  - Handles multi-packet responses, and allows a configurable delay to account for network latency.
+  - Cross-Platform:
+    - Windows
+    - Linux
+    - _Should be compatible with macOS, see [here](https://github.com/radj307/ARRCON/wiki/Building-from-Source)_
 
-Capable of handling packets up to 10kB in size, as well as multi-packet responses.  
-Supports running scripts & commands directly from the commandline, and/or an interactive terminal session with ANSI color sequence support.
 
 # Installation
 No installation is required, simply download the executable and put it somewhere on your [path](https://github.com/radj307/ARRCON/wiki/Adding-To-Path).  
 
 Alternatively, see [Build From Source](https://github.com/radj307/ARRCON/wiki/Building-from-Source) to build it yourself.
 
-# Usage
 
+# Usage
 Open a terminal in the location where you placed the executable, and run `arrcon --help` for usage instructions.  
 Additional documentation is available below, but it may be out of date.  
 
