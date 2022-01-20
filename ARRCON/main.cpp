@@ -67,7 +67,7 @@ inline void handle_args(const opt::ParamsAPI2& args, config::HostList& hosts, co
 	const auto do_list_hosts{ args.check<opt::Option>("list-hosts") };
 	// save-host
 	if (const auto save_host{ args.typegetv<opt::Option>("save-host") }; save_host.has_value()) {
-		switch (config::save_hostinfo(hosts, save_host.value(), target)) {
+		switch (config::add_host_to(hosts, save_host.value(), target)) {
 		case 0: // Host already exists, and has the same target
 			throw make_exception("Host ", Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT), save_host.value(), Global.palette.reset(), " is already set to ", target.hostname, ':', target.port, '\n');
 		case 1: // Host already exists, but with a different target
@@ -76,9 +76,10 @@ inline void handle_args(const opt::ParamsAPI2& args, config::HostList& hosts, co
 		case 2: // Added new host
 			std::cout << term::msg << "Added host: " << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT) << save_host.value() << Global.palette.reset() << " " << target.hostname << ':' << target.port << '\n';
 			break;
-		default:throw make_exception("Received an undefined return value while saving host!");
+		default:
+			throw make_exception("Received an undefined return value while saving host!");
 		}
-		config::write_hostfile(hosts, hostfile_path);
+		config::save_hostfile(hosts, hostfile_path);
 		if (!do_list_hosts)
 			std::exit(EXIT_SUCCESS);
 	}
@@ -105,7 +106,7 @@ inline void handle_args(const opt::ParamsAPI2& args, config::HostList& hosts, co
 
 	// write-ini:
 	if (args.check_any<opt::Option>("write-ini")) {
-		if (!ini_path.empty() && config::write_default_config(ini_path)) {
+		if (!ini_path.empty() && config::save_ini(ini_path)) {
 			std::cout << "Successfully wrote to config: \"" << ini_path << '\"' << std::endl;
 			std::exit(EXIT_SUCCESS);
 		}
@@ -203,13 +204,13 @@ int main(int argc, char** argv)
 
 		const auto ini_path{ (prog_path / prog_name).replace_extension(".ini").generic_string() };
 		if (file::exists(ini_path))
-			config::apply_config(ini_path);
+			config::load_ini(ini_path);
 
 		config::HostList hosts;
 
 		const auto hostfile_path{ (prog_path / prog_name).replace_extension(".hosts").generic_string() };
 		if (file::exists(hostfile_path))
-			hosts = config::read_hostfile(hostfile_path);
+			hosts = config::load_hostfile(hostfile_path);
 
 		const auto& [host, port, pass] { get_server_info(args, hosts) };
 		handle_args(args, hosts, { host, port, pass }, prog_name.generic_string(), ini_path, hostfile_path);
@@ -225,8 +226,8 @@ int main(int argc, char** argv)
 		// Connect the socket
 		Global.socket = net::connect(host, port);
 
-		if (!(Global.connected = Global.socket != SOCKET_ERROR))
-			throw make_exception("Socket was set to invalid value ", static_cast<int>(SOCKET_ERROR), " but connect returned successfully.\tLast socket error code: ", net::lastError());
+		if (!(Global.connected = (Global.socket != SOCKET_ERROR)))
+			throw make_exception("Socket was set to invalid value ", Global.socket, " but connect returned successfully.\tLast socket error code: ", net::getLastSocketErrorMessage());
 
 		// auth & commands
 		if (rcon::authenticate(Global.socket, pass)) {

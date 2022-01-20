@@ -15,6 +15,7 @@
 #include <chrono>
 #include <atomic>
 
+/// @brief	The default program name on each platform.
 inline constexpr const auto DEFAULT_PROGRAM_NAME{
 #ifdef OS_WIN
 	"ARRCON.exe" 
@@ -37,6 +38,7 @@ enum class UIElem : unsigned char {
 	HOST_INFO,			// list-hosts command (hostname/port)
 };
 
+/// @brief	Upper limit on the maximum possible delay value
 inline constexpr const auto MAX_DELAY{ std::chrono::hours(24) };
 
 /// @brief	SOCKET type compatible with winsock & posix
@@ -48,6 +50,10 @@ using SOCKET = unsigned long long;
 #endif
 #endif // #ifndef OS_WIN
 
+/**
+ * @struct	HostInfo
+ * @brief	Contains the connection info for a single target.
+ */
 struct HostInfo {
 	std::string hostname, port, password;
 	friend std::ostream& operator<<(std::ostream& os, const HostInfo& hostinfo)
@@ -73,12 +79,12 @@ static struct {
 		std::make_pair(UIElem::HOST_NAME_HIGHLIGHT, color::yellow),
 		std::make_pair(UIElem::HOST_INFO, color::light_gray),
 	};
-	const HostInfo DEFAULT_TARGET{
+	const HostInfo DEFAULT_TARGET{ // default target
 		"localhost",
 		"27015",
 		""
 	};
-	HostInfo target{ DEFAULT_TARGET };
+	HostInfo target{ DEFAULT_TARGET }; // active target
 
 	/// @brief When true, response packets are not printed to the terminal
 	bool quiet{ false };
@@ -113,6 +119,7 @@ static struct {
 	std::vector<std::string> scriptfiles{};
 } Global;
 
+// Use platform-specific select function
 #ifdef OS_WIN
 /**
  * @brief		Convert a std::chrono millisecond duration to a timeval struct.

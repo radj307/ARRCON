@@ -24,9 +24,10 @@ set(HEADERS
 	"globals.h"
 	"config.hpp"
 	"Help.hpp"
-	"packet.hpp"
-	"net.hpp"
-	"rcon.hpp"
+	"network/packet.hpp"
+	"network/net.hpp"
+	"network/rcon.hpp"
+	"packet-color.hpp"
 	"mode.hpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/version.h"
 )

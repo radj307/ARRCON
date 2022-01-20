@@ -58,8 +58,6 @@ namespace net {
 		int rc{ 0 };
 		if (rc = WSAStartup(WINSOCK_VERSION, &wsaData); rc != 0 || LOBYTE(wsaData.wVersion) != LOBYTE(WINSOCK_VERSION) || HIBYTE(wsaData.wVersion) != HIBYTE(WINSOCK_VERSION))
 			throw std::exception("WSAStartup failed with error code " + rc);
-	#else
-
 	#endif
 	}
 
@@ -75,24 +73,41 @@ namespace net {
 	#endif
 	}
 
-	/// @brief	Emergency stop handler, should be passed to the std::atexit() function to allow a controlled shutdown of the socket.
+	/// @brief	Emergency stop handler, should be passed to the std::atexit() function to allow a controlled shutdown of the socket in the event of an interrupt.
 	inline void cleanup(void)
 	{
-		net::close_socket(Global.socket);
+		close_socket(Global.socket);
 		std::cout << Global.palette.reset();
 	}
 
-	/**
-	 * @brief	Retrieve the last reported socket error code.
-	 * @returns	int
-	 */
-	inline int lastError()
-	{
 	#ifdef OS_WIN
-		return WSAGetLastError();
+	#define LAST_SOCKET_ERROR() (WSAGetLastError())
 	#else
-		return -1;
+	#define LAST_SOCKET_ERROR() (errno)
 	#endif
+
+	/**
+	 * @brief	Get the error message associated with the last reported socket error from LAST_SOCKET_ERROR().
+	 * @returns	std::string
+	 */
+	inline std::string getLastSocketErrorMessage()
+	{
+		#ifdef OS_WIN
+		constexpr const unsigned BUFFER_SIZE{ 256u };
+		char msg[BUFFER_SIZE];
+		FormatMessage(
+			FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+			0,
+			LAST_SOCKET_ERROR(),
+			0,
+			msg,
+			BUFFER_SIZE,
+			0
+		);
+		return{ msg };
+		#else
+		return{ strerror(LAST_SOCKET_ERROR()) };
+		#endif
 	}
 
 	/**
@@ -118,7 +133,7 @@ namespace net {
 
 		int ret = getaddrinfo(host.c_str(), port.c_str(), &hints, &server_info);
 		if (ret != 0)
-			throw make_exception("Name resolution of \"", host, ':', port, "\" failed with error code ", lastError(), '!');
+			throw make_exception("Name resolution of \"", host, ':', port, "\" failed with error code ", LAST_SOCKET_ERROR(), '!');
 
 		// Go through the hosts and try to connect
 		for (p = server_info; p != NULL; p = p->ai_next) {
@@ -187,7 +202,7 @@ namespace net {
 			return;
 		do {
 			if (recv(sd, std::unique_ptr<char>{}.get(), packet::PSIZE_MAX, 0) == 0)
-				throw make_exception("Connection Lost! Last Error: ", lastError());
+				throw make_exception("Connection Lost! Last Error: ", LAST_SOCKET_ERROR());
 			std::this_thread::sleep_for(Global.receive_delay);
 		} while (SELECT(sd + 1ull, &set, nullptr, nullptr, &timeout) == 1);
 	}
@@ -202,7 +217,7 @@ namespace net {
 		int psize{ 0 };
 
 		if (auto ret{ recv(sd, (char*)&psize, sizeof(int), 0) }; ret == 0)
-			throw make_exception("Connection Lost! Last Error: " + lastError());
+			throw make_exception("Connection Lost! Last Error: ", LAST_SOCKET_ERROR());
 		else if (ret != sizeof(int)) {
 			std::cerr << term::warn << "Received a corrupted packet! Code " << ret << '\n';
 			return{};
@@ -221,7 +236,7 @@ namespace net {
 		for (int received{ 0 }, ret{ 0 }; received < psize; received += ret) {
 			ret = recv(sd, (char*)&spacket + sizeof(int) + received, static_cast<size_t>(psize) - received, 0);
 			if (ret == 0)
-				throw make_exception("Connection Lost! Last Error: ", lastError());
+				throw make_exception("Connection Lost! Last Error: ", LAST_SOCKET_ERROR());
 		}
 
 		return { spacket };

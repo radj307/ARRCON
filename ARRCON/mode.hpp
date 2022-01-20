@@ -6,13 +6,13 @@
 #pragma once
 #include <sysarch.h>
 #include "globals.h"
-#include "rcon.hpp"
+#include "network/rcon.hpp"
 
 #include <str.hpp>
 
-#include <signal.h>				///< signal handling
+#include <signal.h>	///< signal handling
 #include <unistd.h>
-#ifndef OS_WIN
+#ifndef OS_WIN // include <cstring> on POSIX
 #include <cstring>
 #endif
 
@@ -24,6 +24,7 @@ inline void sighandler(int sig) noexcept
 {
 	Global.connected = false;
 }
+
 /**
  * @namespace	mode
  * @brief		Contains all of the mode functions.
@@ -54,13 +55,15 @@ namespace mode {
 	 */
 	inline void interactive(const SOCKET& sd)
 	{
+		// Register the interrupt handler:
 		struct sigaction action;
 
 		memset(&action, 0, sizeof(action));
 		action.sa_handler = sighandler;
 
-		sigaction(SIGINT, &action, 0); // initialize signal handler for loop
+		sigaction(SIGINT, &action, 0);
 
+		// Begin interactive session:
 		if (!Global.no_prompt)
 			std::cout << "Authentication Successful.\nUse <Ctrl + C> or type \"exit\" to exit.\n";
 		while (Global.connected && std::cin.good()) {
@@ -77,6 +80,7 @@ namespace mode {
 				std::this_thread::sleep_for(std::chrono::milliseconds(50));
 			}
 		}
+		// Flush & reset colors once done.
 		(std::cout << Global.palette.reset()).flush();
 	}
 

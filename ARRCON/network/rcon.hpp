@@ -1,15 +1,12 @@
 /**
  * @file	rcon.hpp
  * @author	radj307
- * @brief	Contains the rcon namespace.
- *\n		__Functions:__
- *\n		- authenticate
- *\n			Used to authenticate with the connected RCON server.
- *\n		- command
- *\n			Used to send a command to the connected RCON server.
+ * @brief	This header expands on the functions offered by net.hpp and provides specializations for the Source RCON Protocol.
+ *\n		Contains the _authenticate()_ & _command()_ functions.
  */
 #pragma once
 #include "net.hpp"
+#include "../packet-color.hpp"
 
  /**
   * @namespace	rcon
