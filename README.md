@@ -5,7 +5,7 @@ Remote console client that is compatible with any game using the Source Rcon Pro
   - Works for any game using the [Source RCON Protocol](https://developer.valvesoftware.com/wiki/Source_RCON_Protocol).
   - Supports Minecraft Bukkit terminal colors using the section sign `§`.
   - Can be used as a one-off from the commandline, or in an interactive shell.
-  - Supports saving targets as a given name. 
+  - Supports saving a server's hostname/IP, Port, and Password in a config file similar to OpenSSH.
   - Handles large packets without issue.
   - Handles multi-packet responses, and allows a configurable delay to account for network latency.
   - Cross-Platform:
