@@ -200,8 +200,11 @@ int main(const int argc, char** argv)
 			std::cout << ARRCON_VERSION << std::endl;
 			return 0;
 		}
-		const auto v{ std::filesystem::path(myName).replace_extension().generic_string() += "_CONFIG_DIR"};
-		const auto cfg_dir{ config::getDirPath(myDir, myName) };
+
+		// Get the name of the associated environment variable.
+		const auto envVarName{ std::filesystem::path(myName).replace_extension().generic_string() += "_CONFIG_DIR"};
+		// get the config file path.
+		const auto cfg_dir{ config::getDirPath(myDir, envVarName) };
 
 		// Get the INI file's path
 		std::filesystem::path ini_path{ (cfg_dir / myName).replace_extension(".ini") };

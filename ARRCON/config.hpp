@@ -20,9 +20,9 @@ namespace config {
 	 * @param program_dir	The directory where the program is located.
 	 * @returns				std::filesystem::path
 	 */
-	inline std::filesystem::path getDirPath(const std::filesystem::path& program_dir, std::filesystem::path program_name)
+	inline std::filesystem::path getDirPath(const std::filesystem::path& program_dir, const std::string_view& env_var_name)
 	{
-		if (const auto v{ env::getvar(program_name.replace_extension().generic_string() += "_CONFIG_DIR") }; v.has_value())
+		if (const auto v{ env::getvar(env_var_name) }; v.has_value())
 			return{ v.value() };
 
 		#ifdef OS_WIN
