@@ -21,7 +21,7 @@ Alternatively, see [Build From Source](https://github.com/radj307/ARRCON/wiki/Bu
 
 
 # Usage
-Open a terminal in the location where you placed the executable, and run `arrcon --help` for usage instructions.  
+Open a terminal in the location where you placed the executable, and run `ARRCON --help` for usage instructions.  
 Additional documentation is available below, but it may be out of date.  
 
 ## Modes
