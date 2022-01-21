@@ -202,7 +202,7 @@ int main(const int argc, char** argv)
 		}
 
 		// Get the name of the associated environment variable.
-		const auto envVarName{ str::toupper(std::filesystem::path(myName).replace_extension().generic_string()) += "_CONFIG_DIR"};
+		const auto envVarName{ str::toupper(std::filesystem::path(myName).replace_extension().generic_string()) + "_CONFIG_DIR"};
 		// get the config file path.
 		const auto cfg_dir{ config::getDirPath(myDir, envVarName) };
 
