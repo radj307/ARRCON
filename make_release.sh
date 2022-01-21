@@ -15,8 +15,15 @@ VER="$(./ARRCON -vq)"
 zip -T9 "ARRCON-$VER-Windows.zip" "ARRCON.exe"
 zip -T9 "ARRCON-$VER-Linux.zip" "ARRCON"
 
+# If the release directory already exists, delete it
+if [ -d "../../Release" ]
+then
+	rm -rf "../../Release"
+fi
+
 # Create a release directory to store output
 mkdir -p "../../Release"
+
 # Move all zip files from install to release dir
 mv ./*.zip "../../Release"
 
