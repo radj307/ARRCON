@@ -95,10 +95,10 @@ inline void handle_args(const opt::ParamsAPI2& args, config::HostList& hosts, co
 	// write-ini:
 	if (args.check_any<opt::Option>("write-ini")) {
 		if (!ini_path.empty() && config::save_ini(ini_path)) {
-			std::cout << "Successfully wrote to config: \"" << ini_path << '\"' << std::endl;
+			std::cout << "Successfully wrote to config: " << ini_path << std::endl;
 			std::exit(EXIT_SUCCESS);
 		}
-		else throw make_exception("I/O operation failed: \""s, ini_path, "\" couldn't be written to."s);
+		else throw make_exception("I/O operation failed: ", ini_path, " couldn't be written to.");
 	}
 	// force interactive:
 	if (args.check_any<opt::Option, opt::Flag>('i', "interactive"))
@@ -203,7 +203,13 @@ int main(const int argc, char** argv)
 		}
 
 		// Get the INI file's path
-		const auto ini_path{ (myDir / myName).replace_extension(".ini") };
+		std::filesystem::path ini_path;
+
+		#ifdef OS_WIN
+		ini_path = (myDir / myName).replace_extension(".ini");
+		#else
+		ini_path = (std::filesystem::path("/etc/") / myName).replace_extension(".ini");
+		#endif
 
 		// Read the INI if it exists
 		if (file::exists(ini_path))
