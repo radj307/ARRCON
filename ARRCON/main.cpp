@@ -7,7 +7,6 @@
 #include <ParamsAPI2.hpp>
 #include <fileio.hpp>			///< file I/O functions
 #include <TermAPI.hpp>			///< file I/O functions
-#include <envpath.hpp>
 #include <CaptureSTDIN.hpp>
 
 #include <signal.h>				///< signal handling
@@ -201,15 +200,11 @@ int main(const int argc, char** argv)
 			std::cout << ARRCON_VERSION << std::endl;
 			return 0;
 		}
+		const auto v{ std::filesystem::path(myName).replace_extension().generic_string() += "_CONFIG_DIR"};
+		const auto cfg_dir{ config::getDirPath(myDir, myName) };
 
 		// Get the INI file's path
-		std::filesystem::path ini_path;
-
-		#ifdef OS_WIN
-		ini_path = (myDir / myName).replace_extension(".ini");
-		#else
-		ini_path = (std::filesystem::path("/etc/") / myName).replace_extension(".ini");
-		#endif
+		std::filesystem::path ini_path{ (cfg_dir / myName).replace_extension(".ini") };
 
 		// Read the INI if it exists
 		if (file::exists(ini_path))
@@ -223,7 +218,7 @@ int main(const int argc, char** argv)
 		// Initialize the hostlist
 		config::HostList hosts;
 
-		const auto hostfile_path{ (myDir / myName).replace_extension(".hosts") };
+		const auto hostfile_path{ (cfg_dir / myName).replace_extension(".hosts") };
 		if (file::exists(hostfile_path)) // load the hostfile if it exists
 			hosts = config::load_hostfile(hostfile_path);
 

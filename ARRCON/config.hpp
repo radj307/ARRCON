@@ -9,11 +9,29 @@
 #include <sysarch.h>
 
 #include <fileutil.hpp>
+#include <envpath.hpp>
 
 #include <str.hpp>
 #include <INI.hpp>
 
 namespace config {
+	/**
+	 * @brief				Retrieve the path to the directory where config files are located, depending on the current Operating System.
+	 * @param program_dir	The directory where the program is located.
+	 * @returns				std::filesystem::path
+	 */
+	inline std::filesystem::path getDirPath(const std::filesystem::path& program_dir, std::filesystem::path program_name)
+	{
+		if (const auto v{ env::getvar(program_name.replace_extension().generic_string() += "_CONFIG_DIR") }; v.has_value())
+			return{ v.value() };
+
+		#ifdef OS_WIN
+		return program_dir;
+		#else
+		return std::filesystem::path("/usr/local/etc/");
+		#endif
+	}
+
 	/**
 	 * @namespace	header
 	 * @brief		Contains constant definitions for the headers in the INI
