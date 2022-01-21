@@ -57,9 +57,15 @@ For example, to connect to _MyHostname:27015_ using _myPassword_ as the password
 
 
 # Config Files
-Config files must be located next to the `.exe`
+ARRCON will look for configuration files in the following locations, stopping at the first one that it finds:
+1. An Environment Variable named `ARRCON_CONFIG_DIR`.  
+  ___Note: The name is dependent on the uppercase name of the executable, keep this in mind if you want to rename it!___  
+  For example, if you renamed the executable `rcon` or `rcon.exe`, then it would check for `RCON_CONFIG_DIR`
+2. Depending on your operating system, the default directory is:  
+  __Windows:__ The directory where `ARRCON.exe` is located.  
+  __Linux:__ `/usr/local/etc`  
 
-All config files use INI syntax, and must have the same file*name* as the executable, and either a `.ini` or `.hosts` extension.  
+All config files use INI syntax, and must have the same *filename* as the executable, and either a `.ini` or `.hosts` extension.  
 By default this is `ARRCON.ini` & `ARRCON.hosts` respectively.
 
 ## INI Configuration File
@@ -71,6 +77,7 @@ This is the default INI file, with comments to explain what each setting does.
 sDefaultHost =                ; Defines the default hostname/IP, unless a hostname/IP was specified on the commandline.
 sDefaultPort =                ; Defines the default port, unless a port was specified on the commandline.
 sDefaultPass =                ; Defines the default password, unless a password was specified on the commandline.
+bAllowNoArgs = false          ; If no arguments are specified and this is false, the help display is shown and the program will exit before connecting to the above target.
 
 [appearance]
 bDisablePrompt = false        ; When true, this is the equivalent of always specifying the --no-prompt option.
@@ -99,6 +106,5 @@ sHost = 192.168.1.100
 sPort = 27015
 sPass = password
 ```
-To connect to the "myServer" target, you would use `ARRCON -H myServer`.  
-
-If one of the keys is missing & not specified as an option, the corresponding default is used from the INI file if available.
+You can then use the `-H`|`--host` option to recall the saved target.  
+Using `ARRCON -H myServer` would now be equivalent to `ARRCON -H 192.168.1.100 -P 27015 -p password`
