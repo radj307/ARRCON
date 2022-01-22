@@ -36,7 +36,6 @@
       "hidden": true,
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${CMAKE_BUILD_TYPE}",
         "ARRCON_ENABLE_ADDITIONAL_RESOURCES": true
       }
     },
@@ -44,8 +43,7 @@
       "name": "MinSizeRel",
       "hidden": true,
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "MinSizeRel",
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${CMAKE_BUILD_TYPE}"
+        "CMAKE_BUILD_TYPE": "MinSizeRel"
       }
     },
 
@@ -126,33 +124,6 @@
     }
   ],
   "buildPresets": [
-
-    {
-      "name": "release",
-      "hidden": true,
-      "cleanFirst": false,
-      "verbose": false,
-      "jobs": 4
-    },
-    {
-      "name": "linux-release",
-      "inherits": "release",
-      "configurePreset": "linux-release",
-      "displayName": "Release"
-    },
-    {
-      "name": "macos-release",
-      "inherits": "release",
-      "configurePreset": "macos-release",
-      "displayName": "Release"
-    },
-    {
-      "name": "windows-release",
-      "inherits": "release",
-      "configurePreset": "windows-release",
-      "displayName": "Release"
-    },
-
     {
       "name": "release-clean",
       "hidden": true,
@@ -161,19 +132,13 @@
       "jobs": 4
     },
     {
-      "name": "linux-clean-release",
+      "name": "linux-release",
       "inherits": "release-clean",
       "configurePreset": "linux-release",
       "displayName": "Clean Release"
     },
     {
-      "name": "macos-clean-release",
-      "inherits": "release-clean",
-      "configurePreset": "macos-release",
-      "displayName": "Clean Release"
-    },
-    {
-      "name": "windows-x64-clean-release",
+      "name": "windows-x64-release",
       "inherits": "release-clean",
       "configurePreset": "windows-release",
       "displayName": "Clean Release"

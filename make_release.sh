@@ -3,29 +3,35 @@
 # Get script directory
 MYDIR="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-ZIP_ARGS="-T9"
-
-# CD to installation dir
-cd "$MYDIR/out/install/bin"
-
-# Get ARRCON version number
-VER="$(./ARRCON -vq)"
-
-# Create zip files
-zip -T9 "ARRCON-$VER-Windows.zip" "ARRCON.exe"
-zip -T9 "ARRCON-$VER-Linux.zip" "ARRCON"
 
 # If the release directory already exists, delete it
-if [ -d "../../Release" ]
+if [ -d "$MYDIR/out/Release" ]
 then
-	rm -rf "../../Release"
+	rm -rf "$MYDIR/out/Release"
 fi
-
 # Create a release directory to store output
-mkdir -p "../../Release"
+mkdir -p "$MYDIR/out/Release"
 
-# Move all zip files from install to release dir
-mv ./*.zip "../../Release"
+
+LINUX_DIR="linux-release/bin"
+WINDOWS_DIR="windows-release/bin"
+
+
+# MAKE LINUX RELEASE
+
+cd "$MYDIR/out/install/$LINUX_DIR"
+VER="$(./ARRCON -vq)" # Set VER variable to the current version
+zip -T9 "ARRCON-$VER-Linux.zip" "ARRCON"
+mv ./*.zip "$MYDIR/out/Release"
+
+
+# MAKE WINDOWS RELEASE
+
+cd "$MYDIR/out/install/$WINDOWS_DIR"
+zip -T9 "ARRCON-$VER-Windows.zip" "ARRCON.exe"
+mv ./*.zip "$MYDIR/out/Release"
+
+# DONE
 
 echo "Created Release Archives for ARRCON Version $VER"
 echo "See output directory: $MYDIR/out/Release"
