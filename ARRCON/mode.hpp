@@ -65,15 +65,19 @@ namespace mode {
 		sigaction(SIGINT, &action, 0);
 
 		// Begin interactive session:
-		if (!Global.no_prompt)
-			std::cout << "Authentication Successful.\nUse <Ctrl + C> or type \"exit\" to exit.\n";
+		if (!Global.no_prompt) {
+			std::cout << "Authentication Successful.\nUse <Ctrl + C> ";
+			if (Global.allow_exit)
+				std::cout << "or type \"exit\" ";
+			std::cout << "to exit.\n";
+		}
 		while (Global.connected && std::cin.good()) {
 			std::cout << Global.custom_prompt;
 
 			std::string command;
 			std::getline(std::cin, command);
 
-			if (str::tolower(command) == "exit")
+			if (Global.allow_exit && str::tolower(command) == "exit")
 				break;
 
 			if (Global.connected && !command.empty()) {

@@ -38,9 +38,6 @@ enum class UIElem : unsigned char {
 	HOST_INFO,			// list-hosts command (hostname/port)
 };
 
-/// @brief	Upper limit on the maximum possible delay value
-inline constexpr const auto MAX_DELAY{ std::chrono::hours(24) };
-
 /// @brief	SOCKET type compatible with winsock & posix
 using SOCKET = unsigned long long;
 
@@ -71,7 +68,7 @@ struct HostInfo {
 static struct {
 	/// @brief Color palette
 	color::palette<UIElem> palette{
-		std::make_pair(UIElem::TERM_PROMPT_NAME, color::setcolor{ color::green, color::format::BOLD }),
+		std::make_pair(UIElem::TERM_PROMPT_NAME, color::green),
 		std::make_pair(UIElem::TERM_PROMPT_ARROW, color::green),
 		std::make_pair(UIElem::PACKET, color::white),
 		std::make_pair(UIElem::COMMAND_ECHO, color::green),
@@ -92,8 +89,17 @@ static struct {
 	/// @brief	When true, hides the prompt in interactive mode.
 	bool no_prompt{ false };
 
+	/// @brief	When true, disables ANSI color escape sequences
+	bool no_color{ false };
+
 	/// @brief	When true & no arguments are specified, try to connect to the default target.
 	bool allow_no_args{ false };
+
+	/// @brief	When true, the user can type "exit" in interactive mode to exit. Otherwise, they must use CTRL+C
+	bool allow_exit{ true };
+
+	/// @brief	The name of the environment variable to check for the config directory
+	std::string EnvVar_CONFIG_DIR{ std::string(DEFAULT_PROGRAM_NAME) + "_CONFIG_DIR" };
 
 	std::string custom_prompt{};
 

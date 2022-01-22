@@ -37,7 +37,7 @@ namespace config {
 	 * @brief		Contains constant definitions for the headers in the INI
 	 */
 	namespace header {
-		inline constexpr const auto APPEARANCE{ "appearance" }, TIMING{ "timing" }, TARGET{ "target" };
+		inline constexpr const auto APPEARANCE{ "appearance" }, TIMING{ "timing" }, TARGET{ "target" }, MISCELLANEOUS{"miscellaneous"};
 	}
 
 	/**
@@ -77,6 +77,9 @@ namespace config {
 		Global.target.password = ini.getvs(header::TARGET, "sDefaultPass").value_or(Global.target.password);
 		Global.allow_no_args = ini.checkv(header::TARGET, "bAllowNoArgs", true);
 
+		// Miscellaneous Header:
+		Global.allow_exit = ini.checkv(header::MISCELLANEOUS, "bInteractiveAllowExit", true);
+
 		return true;
 	}
 
@@ -110,6 +113,9 @@ namespace config {
 				<< "iCommandDelay = 0\n"
 				<< "iReceiveDelay = 10\n"
 				<< "iSelectTimeout = 500\n"
+				<< '\n'
+				<< '[' << header::MISCELLANEOUS << ']' << '\n'
+				<< "bInteractiveAllowExit = true\n"
 				<< '\n';
 		}
 		else { // use current settings
@@ -122,7 +128,7 @@ namespace config {
 				<< '\n'
 				<< '[' << header::APPEARANCE << ']' << '\n'
 				<< "bDisablePrompt = " << Global.no_prompt << '\n'
-				<< "bDisableColors = " << Global.palette.isActive() << '\n'
+				<< "bDisableColors = " << Global.no_color << '\n'
 				<< "sCustomPrompt = \"" << Global.custom_prompt << "\"\n"
 				<< "bEnableBukkitColors = " << Global.enable_bukkit_color_support << '\n'
 				<< '\n'
@@ -130,6 +136,9 @@ namespace config {
 				<< "iCommandDelay = " << Global.command_delay.count() << '\n'
 				<< "iReceiveDelay = " << Global.receive_delay.count() << '\n'
 				<< "iSelectTimeout = " << Global.select_timeout.count() << '\n'
+				<< '\n'
+				<< '[' << header::MISCELLANEOUS << ']' << '\n'
+				<< "bInteractiveAllowExit = " << Global.allow_exit << '\n'
 				<< '\n';
 		}
 		return file::write_to(path, std::move(ss));
@@ -154,13 +163,32 @@ namespace config {
 	 */
 	inline HostList load_hostfile(const std::filesystem::path& path) noexcept(false)
 	{
-		const file::INI hostfile(path);
 		HostList hosts{};
-		hosts.reserve(hostfile.countHeaders());
-		for (auto& [name, targetinfo] : hostfile) {
-			if (!targetinfo.empty())
-				hosts.insert_or_assign(name, HostInfo{ str::strip_line(hostfile.getvs(name, "sHost").value_or(Global.DEFAULT_TARGET.hostname), ";#", "\""), str::strip_line(hostfile.getvs(name, "sPort").value_or(Global.DEFAULT_TARGET.port), "#;", "\""), str::strip_line(hostfile.getvs(name, "sPass").value_or(Global.DEFAULT_TARGET.password), ";#", "\"") });
-		}
+
+		const auto& get_target_info{ 
+			[](const file::ini::INIContainer::SectionContent& sec) -> HostInfo {
+				HostInfo info;
+				for (const auto& [key, val] : sec) {
+					if (key == "sHost")
+						info.hostname = file::ini::to_string(val, false);
+					else if (key == "sPort")
+						info.port = file::ini::to_string(val, false);
+					else if (key == "sPass")
+						info.password = file::ini::to_string(val, false);
+				}
+				if (info.hostname.empty()) // fill in missing hostname
+					info.hostname = (Global.target.hostname.empty() ? Global.DEFAULT_TARGET.hostname : Global.target.hostname);
+				if (info.port.empty()) // fill in missing port
+					info.port = (Global.target.port.empty() ? Global.DEFAULT_TARGET.port : Global.target.port);
+				if (info.password.empty()) // fill in missing password
+					info.password = (Global.target.password.empty() ? Global.DEFAULT_TARGET.password : Global.target.password);
+				return info;
+			}
+		};
+
+		for (const auto& [hostname, section] : file::INI{ path })
+			hosts.insert_or_assign(hostname, get_target_info(section));
+
 		return hosts;
 	}
 
@@ -180,7 +208,7 @@ namespace config {
 	}
 
 	/**
-	 * @brief			Insert a given target into the hostlist
+	 * @brief			Insert an entry into the given hostlist.
 	 * @param hostlist	A reference to the host list.
 	 * @param name		Name to save host info as.
 	 * @param info		Host info to save.
@@ -201,5 +229,18 @@ namespace config {
 		// add new host
 		hostlist.insert(std::move(std::make_pair(name, info)));
 		return 2;
+	}
+
+	/**
+	 * @brief			Remove an entry from the given hostlist.
+	 * @param hostlist	A reference to the hostlist.
+	 * @param name		The name of the target entry to remove.
+	 * @returns			bool
+	 *\n				true	Successfully removed the given target from the hostlist.
+	 *\n				false	Specified name doesn't exist.
+	 */
+	inline bool remove_host_from(HostList& hostlist, const std::string& name)
+	{
+		return hostlist.erase(name) == 1ull;
 	}
 }

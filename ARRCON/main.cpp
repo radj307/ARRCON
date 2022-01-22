@@ -7,7 +7,7 @@
 #include <ParamsAPI2.hpp>
 #include <fileio.hpp>			///< file I/O functions
 #include <TermAPI.hpp>			///< file I/O functions
-#include <CaptureSTDIN.hpp>
+#include <hasPendingDataSTDIN.h>
 
 #include <signal.h>				///< signal handling
 #include <unistd.h>
@@ -16,6 +16,23 @@
 #undef read
 #undef write
 
+struct permission_except final : public except {
+	permission_except(auto&& message) : except(std::forward<decltype(message)>(message)) {}
+	void update_message(const std::filesystem::path& path)
+	{
+		message = str::stringify(
+			"File Permissions Error:  ", message, " at location ", path, '\n',
+			"        Suggested Solutions:\n",
+			"        1.  Change the config directory by setting the \"", Global.EnvVar_CONFIG_DIR, "\" environment variable.\n",
+			"        2.  Change the permissions of the target directory/file to allow read/write with the current elevation level.\n"
+			#ifdef OS_WIN
+			"        3.  Close the terminal, and re-open it as an administrator.\n"
+			#else
+			"        3.  Re-run the command with sudo.\n"
+			#endif
+		);
+	}
+};
 
 /**
  * @brief		Retrieve the user's specified connection target.
@@ -33,9 +50,11 @@ inline HostInfo get_target_info(const opt::ParamsAPI2& args, const config::HostL
 		pass{ args.typegetv_any<opt::Flag, opt::Option>('p', "pass") };
 
 	if (host.has_value()) { // check saved hosts first
-		if (const auto it{ hostlist.find(host.value()) }; it != hostlist.end()) {
+		const auto it{ std::find_if(hostlist.begin(), hostlist.end(), [&host](auto&& kvpr) {
+			return kvpr.first == host.value();
+		}) };
+		if (it != hostlist.end())
 			return it->second;
-		}
 	}
 
 	return{
@@ -52,8 +71,27 @@ inline HostInfo get_target_info(const opt::ParamsAPI2& args, const config::HostL
 inline void handle_args(const opt::ParamsAPI2& args, config::HostList& hosts, const HostInfo& target, const std::filesystem::path& ini_path, const std::filesystem::path& hostfile_path)
 {
 	const auto do_list_hosts{ args.check<opt::Option>("list-hosts") };
+	// remove-host
+	if (const auto remove_hosts{ args.typegetv_all<opt::Option>("remove-host") }; !remove_hosts.empty()) {
+		for (const auto& name : remove_hosts) {
+			if (config::remove_host_from(hosts, name)) // removed target successfully
+				std::cout << term::get_msg(!Global.no_color) << "Removed " << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT) << name << Global.palette.reset() << std::endl;
+			else
+				std::cerr << term::get_error(!Global.no_color) << "Hostname \"" << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT) << name << Global.palette.reset() << " doesn't exist!" << std::endl;
+		}
+
+		if (config::save_hostfile(hosts, hostfile_path)) // print a success message or throw failure exception
+			std::cout << term::get_msg(!Global.no_color) << "Saved modified hostlist to " << hostfile_path << std::endl;
+		else {
+			auto exception{ make_custom_exception<permission_except>("Failed to write modified hostfile to disk!") };
+			exception.update_message(hostfile_path);
+			throw exception;
+		}
+
+		if (!do_list_hosts) std::exit(EXIT_SUCCESS);
+	}
 	// save-host
-	if (const auto save_host{ args.typegetv<opt::Option>("save-host") }; save_host.has_value()) {
+	else if (const auto save_host{ args.typegetv<opt::Option>("save-host") }; save_host.has_value()) {
 		switch (config::add_host_to(hosts, save_host.value(), target)) {
 		case 0: // Host already exists, and has the same target
 			throw make_exception("Host ", Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT), save_host.value(), Global.palette.reset(), " is already set to ", target.hostname, ':', target.port, '\n');
@@ -61,22 +99,26 @@ inline void handle_args(const opt::ParamsAPI2& args, config::HostList& hosts, co
 			std::cout << term::msg << "Updated " << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT) << save_host.value() << Global.palette.reset() << ": " << target.hostname << ':' << target.port << '\n';
 			break;
 		case 2: // Added new host
-			std::cout << term::msg << "Added host: " << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT) << save_host.value() << Global.palette.reset() << " " << target.hostname << ':' << target.port << '\n';
+			std::cout << term::get_msg(!Global.no_color) << "Added host: " << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT) << save_host.value() << Global.palette.reset() << " " << target.hostname << ':' << target.port << '\n';
 			break;
 		default:
 			throw make_exception("Received an undefined return value while saving host!");
 		}
-		config::save_hostfile(hosts, hostfile_path);
-		if (!do_list_hosts)
-			std::exit(EXIT_SUCCESS);
+
+		if (config::save_hostfile(hosts, hostfile_path)) // print a success message or throw failure exception
+			std::cout << term::get_msg(!Global.no_color) << "Saved modified hostlist to " << hostfile_path << std::endl;
+		else {
+			auto exception{ make_custom_exception<permission_except>("Failed to write modified hostfile to disk!") };
+			exception.update_message(hostfile_path);
+			throw exception;
+		}
+
+		if (!do_list_hosts) std::exit(EXIT_SUCCESS);
 	}
-	// disable colors:
-	if (const auto arg{ args.typegetv_any<opt::Option, opt::Flag>('n', "no-color") }; arg.has_value())
-		Global.palette.setActive(false);
 	// list all hosts
 	if (do_list_hosts) {
 		if (hosts.empty()) {
-			std::cerr << term::warn << "No hosts were found." << std::endl;
+			std::cerr << term::get_warn(!Global.no_color) << "No hosts were found." << std::endl;
 			std::exit(1);
 		}
 		const auto longest_name{ [&hosts]() {
@@ -94,10 +136,14 @@ inline void handle_args(const opt::ParamsAPI2& args, config::HostList& hosts, co
 	// write-ini:
 	if (args.check_any<opt::Option>("write-ini")) {
 		if (!ini_path.empty() && config::save_ini(ini_path)) {
-			std::cout << "Successfully wrote to config: " << ini_path << std::endl;
+			std::cout << term::get_msg(!Global.no_color) << "Successfully wrote config: " << ini_path << std::endl;
 			std::exit(EXIT_SUCCESS);
 		}
-		else throw make_exception("I/O operation failed: ", ini_path, " couldn't be written to.");
+		else {
+			auto exception{ make_custom_exception<permission_except>("Failed to write INI file to disk!") };
+			exception.update_message(ini_path);
+			throw exception;
+		}
 	}
 	// force interactive:
 	if (args.check_any<opt::Option, opt::Flag>('i', "interactive"))
@@ -110,11 +156,8 @@ inline void handle_args(const opt::ParamsAPI2& args, config::HostList& hosts, co
 		Global.no_prompt = true;
 	// command delay:
 	if (const auto arg{ args.typegetv_any<opt::Flag, opt::Option>('d', "delay") }; arg.has_value()) {
-		if (std::all_of(arg.value().begin(), arg.value().end(), isdigit)) {
-			if (const auto t{ std::chrono::milliseconds(std::abs(str::stoll(arg.value()))) }; t <= MAX_DELAY)
-				Global.command_delay = t;
-			else throw make_exception("Cannot set a delay value longer than ", std::to_string(MAX_DELAY.count()), " hours!");
-		}
+		if (std::all_of(arg.value().begin(), arg.value().end(), isdigit))
+			Global.command_delay = std::chrono::milliseconds(std::abs(str::stoll(arg.value())));
 		else throw make_exception("Invalid delay value given: \"", arg.value(), "\", expected an integer.");
 	}
 	// scriptfiles:
@@ -155,18 +198,28 @@ inline std::vector<std::string> read_script_file(std::string filename, const env
 inline std::vector<std::string> get_commands(const opt::ParamsAPI2& args, const env::PATH& pathvar)
 {
 	std::vector<std::string> commands{ args.typegetv_all<opt::Parameter>() }; // Arg<std::string> is implicitly convertable to std::string
-	// iterate through all user-specified files
+
+	// Check for piped data
+	if (hasPendingDataSTDIN()) {
+		for (std::string ln{}; str::getline(std::cin, ln, '\n'); ln.clear()) {
+			ln = str::strip_line(ln); // remove preceeding & trailing whitespace
+			if (!ln.empty())
+				commands.emplace_back(ln); // read all available lines from STDIN into the commands list
+		}
+	}
+
+	// read all user-specified files
 	for (auto& file : Global.scriptfiles) {
 		if (const auto script_commands{ read_script_file(file, pathvar) }; !script_commands.empty()) {
 			if (!Global.quiet) // feedback
-				std::cout << term::log << "Successfully read commands from \"" << file << "\"\n";
+				std::cout << term::get_log(!Global.no_color) << "Successfully read commands from \"" << file << "\"\n";
 
 			commands.reserve(commands.size() + script_commands.size());
 
 			for (auto& command : script_commands)
 				commands.emplace_back(command);
 		}
-		else std::cerr << term::warn << "Failed to read any commands from \"" << file << "\"\n";
+		else std::cerr << term::get_warn(!Global.no_color) << "Failed to read any commands from \"" << file << "\"\n";
 	}
 	commands.shrink_to_fit();
 	return commands;
@@ -174,19 +227,18 @@ inline std::vector<std::string> get_commands(const opt::ParamsAPI2& args, const 
 
 int main(const int argc, char** argv)
 {
-	bool color_error_messages{ false };
 	try {
 		std::cout << term::EnableANSI; // enable ANSI escape sequences on windows
-		opt::ParamsAPI2 args{ argc, argv, 'H', "host", 'P', "port", 'p', "pass", 'd', "delay", 'f', "file", "save-host" }; // parse arguments
+		const opt::ParamsAPI2 args{ argc, argv, 'H', "host", 'P', "port", 'p', "pass", 'd', "delay", 'f', "file", "save-host", "remove-host" }; // parse arguments
 
-		#ifndef OS_WIN
-		for (auto&& it : CaptureSTDIN())
-			args.emplace_back(std::move(it));
-		#endif
+		// check for disable colors argument:
+		if (const auto arg{ args.typegetv_any<opt::Option, opt::Flag>('n', "no-color") }; arg.has_value())
+			Global.palette.setActive(Global.no_color = false);
 
 		// Initialize the PATH variable & locate the program using argv[0]
 		env::PATH PATH{ argv[0] };
 		const auto& [myDir, myName] { PATH.resolve_split(argv[0]) };
+		Global.EnvVar_CONFIG_DIR = str::toupper(std::filesystem::path(myName).replace_extension().generic_string()) + "_CONFIG_DIR";
 
 		// help:
 		if (args.check_any<opt::Flag, opt::Option>('h', "help")) {
@@ -201,10 +253,8 @@ int main(const int argc, char** argv)
 			return 0;
 		}
 
-		// Get the name of the associated environment variable.
-		const auto envVarName{ str::toupper(std::filesystem::path(myName).replace_extension().generic_string()) + "_CONFIG_DIR"};
 		// get the config file path.
-		const auto cfg_dir{ config::getDirPath(myDir, envVarName) };
+		const auto cfg_dir{ config::getDirPath(myDir, Global.EnvVar_CONFIG_DIR) };
 
 		// Get the INI file's path
 		std::filesystem::path ini_path{ (cfg_dir / myName).replace_extension(".ini") };
@@ -228,9 +278,6 @@ int main(const int argc, char** argv)
 		// get the target server's connection information
 		const auto& [host, port, pass] { get_target_info(args, hosts) };
 		handle_args(args, hosts, { host, port, pass }, ini_path, hostfile_path);
-
-		if (Global.palette.isActive())
-			color_error_messages = true;
 
 		// get the commands to execute on the server
 		const auto commands{ get_commands(args, PATH) };
@@ -260,10 +307,10 @@ int main(const int argc, char** argv)
 
 		return 0;
 	} catch (const std::exception& ex) { ///< catch exceptions
-		std::cerr << (color_error_messages ? term::error : "[ERROR]\t") << ex.what() << std::endl;
+		std::cerr << term::get_error(!Global.no_color) << ex.what() << std::endl;
 		return -1;
 	} catch (...) { ///< catch all other exceptions
-		std::cerr << (color_error_messages ? term::crit : "[CRIT]\t") << "An unknown exception occurred!" << std::endl;
+		std::cerr << term::get_crit(!Global.no_color) << "An unknown exception occurred!" << std::endl;
 		return -1;
 	}
 }
