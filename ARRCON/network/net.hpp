@@ -222,15 +222,15 @@ namespace net {
 		if (auto ret{ recv(sd, (char*)&psize, sizeof(int), 0) }; ret == 0)
 			throw make_exception("Connection Lost! Last Error: (", LAST_SOCKET_ERROR_CODE(), ") ", getLastSocketErrorMessage());
 		else if (ret != sizeof(int)) {
-			std::cerr << term::warn << "Received a corrupted packet! Code " << ret << '\n';
+			std::cerr << term::get_warn(!Global.no_color) << "Received a corrupted packet! Code " << ret << '\n';
 			return{};
 		}
 
 		if (psize < packet::PSIZE_MIN) {
-			std::cerr << term::warn << "Received unexpectedly small packet size: " << psize << std::endl;
+			std::cerr << term::get_warn(!Global.no_color) << "Received unexpectedly small packet size: " << psize << std::endl;
 		}
 		else if (psize > packet::PSIZE_MAX) {
-			std::cerr << term::warn << "Received unexpectedly large packet size: " << psize << std::endl;
+			std::cerr << term::get_warn(!Global.no_color) << "Received unexpectedly large packet size: " << psize << std::endl;
 			flush(sd);
 		}
 
@@ -238,7 +238,7 @@ namespace net {
 
 		for (int received{ 0 }, ret{ 0 }; received < psize; received += ret) {
 			ret = recv(sd, (char*)&spacket + sizeof(int) + received, static_cast<size_t>(psize) - received, 0);
-			if (ret == 0)
+			if (ret == 0) // nothing received
 				throw make_exception("Connection Lost! Last Error: (", LAST_SOCKET_ERROR_CODE(), ") ", getLastSocketErrorMessage());
 		}
 
