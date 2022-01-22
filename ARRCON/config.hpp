@@ -78,7 +78,7 @@ namespace config {
 		Global.allow_no_args = ini.checkv(header::TARGET, "bAllowNoArgs", true);
 
 		// Miscellaneous Header:
-		Global.allow_exit = ini.checkv(header::MISCELLANEOUS, "bInteractiveAllowExit", true);
+		Global.allow_exit = ini.checkv(header::MISCELLANEOUS, "bInteractiveAllowExitKeyword", true);
 
 		return true;
 	}
@@ -115,7 +115,7 @@ namespace config {
 				<< "iSelectTimeout = 500\n"
 				<< '\n'
 				<< '[' << header::MISCELLANEOUS << ']' << '\n'
-				<< "bInteractiveAllowExit = true\n"
+				<< "bInteractiveAllowExitKeyword = true\n"
 				<< '\n';
 		}
 		else { // use current settings
@@ -138,7 +138,7 @@ namespace config {
 				<< "iSelectTimeout = " << Global.select_timeout.count() << '\n'
 				<< '\n'
 				<< '[' << header::MISCELLANEOUS << ']' << '\n'
-				<< "bInteractiveAllowExit = " << Global.allow_exit << '\n'
+				<< "bInteractiveAllowExitKeyword = " << Global.allow_exit << '\n'
 				<< '\n';
 		}
 		return file::write_to(path, std::move(ss));
