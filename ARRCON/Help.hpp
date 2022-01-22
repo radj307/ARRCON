@@ -27,6 +27,7 @@ private:
 		{ "-Q  --no-prompt"s,"Hides the prompt. In commandline mode, this also disables command echo."s},
 		{ "--write-ini"s, "(Over)write the configuration file with the default values & exit."s},
 		{ "--save-host <name>"s, "Save the current target to the .hosts config as <name> & exit."s },
+		{ "--remove-host <name>"s, "Delete the target specified by <name> from the .hosts config & exit."s },
 		{ "--list-hosts"s, "Display all detected hosts from the .hosts config & exit."s },
 	};
 	const size_t _longest_optname, _max_line_length;
