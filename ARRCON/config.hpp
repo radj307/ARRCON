@@ -97,6 +97,7 @@ namespace config {
 
 		// Miscellaneous Header:
 		Global.allow_exit = ini.checkv(header::MISCELLANEOUS, "bInteractiveAllowExitKeyword", true);
+		Global.forward_exit_keyword = ini.checkv(header::MISCELLANEOUS, "bForwardExitKeywordToServer", true);
 
 		return true;
 	}
@@ -134,6 +135,7 @@ namespace config {
 				<< '\n'
 				<< '[' << header::MISCELLANEOUS << ']' << '\n'
 				<< "bInteractiveAllowExitKeyword = true\n"
+				<< "bForwardExitKeywordToServer = false\n"
 				<< '\n';
 		}
 		else { // use current settings
@@ -157,6 +159,7 @@ namespace config {
 				<< '\n'
 				<< '[' << header::MISCELLANEOUS << ']' << '\n'
 				<< "bInteractiveAllowExitKeyword = " << Global.allow_exit << '\n'
+				<< "bForwardExitKeywordToServer = " << Global.forward_exit_keyword << '\n'
 				<< '\n';
 		}
 		return file::write_to(path, std::move(ss));

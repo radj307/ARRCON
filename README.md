@@ -36,21 +36,23 @@ There are 2 modes:
 
 ## Options
 Options can be specified anywhere on the commandline, and must use a dash `-` delimiter.  
-| Commandline Option / Flag   | Description                                              |
-|-----------------------------|:---                                                      |
-|`-H <Address>`               | Specify the RCON server's IP address or hostname.
-|`-P <Port>`                  | Specify the RCON server's port number.
-|`-p <Password>`              | Specify the RCON server's authentication password.
-|`-f <File>` `--file <file>`  | Load the specified file and run each line as a command. You can specify this argument multiple times to include multiple files.
-|`-h` `--help`                | Shows the help display, including a brief description of the program & option documentation, then exits.
-|`-v` `--version`             | Prints the program name & current version number, then exits.  If the quiet option is specified, only the version number is printed.
-|`-i` `--interactive`         | Starts an interactive session after executing any commands specified on the commandline.
-|`-d <ms>` `--delay <ms>`     | Set the delay (in milliseconds) between sending each command packet when using commandline mode.
-|`-q` `--quiet`               | Prevents server response packets from being displayed, but does not silence errors or exception messages.
-|`-n` `--no-color`            | Disables colorized terminal output.
-| `--no-prompt`               | Hides the prompt (Default prompt is "RCON@HOST> ").
-| `--write-ini`               | (Over)Writes the default `.ini` configuration file.
-| `--save-host <name>`        | Save the current target to the `.hosts` config as `<name>`. You can recall it later with `ARRCON <name>`
+| Commandline Option / Flag   | Description                                                                                                                          |
+|-----------------------------|:-------------------------------------------------------------------------------------------------------------------------------------|
+|`-H <Address>`               | Specify the RCON server's IP address or hostname.                                                                                    |
+|`-P <Port>`                  | Specify the RCON server's port number.                                                                                               |
+|`-p <Password>`              | Specify the RCON server's authentication password.                                                                                   |
+|`-f <File>` `--file <file>`  | Load the specified file and run each line as a command. You can specify this argument multiple times to include multiple files.      |
+|`-h` `--help`                | Shows the help display, including a brief description of the program & option documentation, then exits.                             |
+|`-v` `--version`             | Prints the program name & current version number, then exits.  If the quiet option is specified, only the version number is printed. |
+|`-i` `--interactive`         | Starts an interactive session after executing any commands specified on the commandline.                                             |
+|`-d <ms>` `--delay <ms>`     | Set the delay (in milliseconds) between sending each command packet when using commandline mode.                                     |
+|`-q` `--quiet`               | Prevents server response packets from being displayed, but does not silence errors or exception messages.                            |
+|`-n` `--no-color`            | Disables colorized terminal output.                                                                                                  |
+| `--no-prompt`               | Hides the prompt (Default prompt is "RCON@HOST> ").                                                                                  |
+| `--write-ini`               | (Over)Writes the default `.ini` configuration file.                                                                                  |
+| `--save-host <name>`        | Save the current target to the `.hosts` config as `<name>` and exit. You can recall it later with `ARRCON -H <name>`                 |
+| `--remove-host <name>`      | Remove the target specified by `<name>` from the `.hosts` config, and if there are no saved hosts remaining, remove the file.        |
+| `--list-hosts`              | Prints a list of all saved hosts and exits. This option can be used with `--save-host`\|`--remove-host` before exiting.              |
 
 For example, to connect to _MyHostname:27015_ using _myPassword_ as the password, send the _help_ command, then start an interactive session:  
 `ARRCON -i -H MyHostname -P 27015 -p myPassword help`  
@@ -89,6 +91,9 @@ bEnableBukkitColors = false   ; Enables support for Bukkit's color syntax. This 
 iCommandDelay = 0             ; The delay in milliseconds between sending each command when using commandline/scriptfile mode.
 iReceiveDelay = 10            ; The time in milliseconds to wait after receiving packets. Raise this if multi-packet responses aren't fully received. 
 iSelectTimeout = 500          ; The max amount of time to wait for packets before timing out. Raise this if your network is slow.
+
+[miscellaneous]
+bInteractiveAllowExitKeyword = true ; Setting this to false will prevent the "exit" keyword from closing the connection in Interactive mode. <Ctrl + C> will be the only way to exit.
 ```
 
 ## Host Configuration File
