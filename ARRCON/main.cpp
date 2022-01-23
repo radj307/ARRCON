@@ -73,40 +73,55 @@ inline void handle_args(const opt::ParamsAPI2& args, config::HostList& hosts, co
 	const auto do_list_hosts{ args.check<opt::Option>("list-hosts") };
 	// remove-host
 	if (const auto remove_hosts{ args.typegetv_all<opt::Option>("remove-host") }; !remove_hosts.empty()) {
+		std::stringstream message_buffer; // save the messages in a buffer to prevent misleading messages in the event of a file writing error
 		for (const auto& name : remove_hosts) {
 			if (config::remove_host_from(hosts, name)) // removed target successfully
-				std::cout << term::get_msg(!Global.no_color) << "Removed " << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT) << name << Global.palette.reset() << std::endl;
+				message_buffer << term::get_msg(!Global.no_color) << "Removed " << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT) << name << Global.palette.reset() << '\n';
 			else
-				std::cerr << term::get_error(!Global.no_color) << "Hostname \"" << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT) << name << Global.palette.reset() << " doesn't exist!" << std::endl;
+				message_buffer << term::get_error(!Global.no_color) << "Hostname \"" << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT) << name << Global.palette.reset() << " doesn't exist!" << '\n';
 		}
 
-		if (config::save_hostfile(hosts, hostfile_path)) // print a success message or throw failure exception
-			std::cout << term::get_msg(!Global.no_color) << "Saved modified hostlist to " << hostfile_path << std::endl;
+		// if the hosts file is empty, delete it
+		if (hosts.empty()) {
+			if (std::filesystem::remove(hostfile_path))
+				std::cout << message_buffer.rdbuf() << term::get_msg(!Global.no_color) << "Deleted the hostfile as there are no remaining entries." << std::endl;
+			else {
+				auto exception{ make_custom_exception<permission_except>("Failed to remove empty hostfile!") };
+				exception.update_message(hostfile_path);
+				throw exception;
+			}
+			std::exit(EXIT_SUCCESS); // host list is empty, ignore do_list_hosts as nothing will happen
+		} // otherwise, save the modified hosts file.
 		else {
-			auto exception{ make_custom_exception<permission_except>("Failed to write modified hostfile to disk!") };
-			exception.update_message(hostfile_path);
-			throw exception;
+			if (config::save_hostfile(hosts, hostfile_path)) // print a success message or throw failure exception
+				std::cout << message_buffer.rdbuf() << term::get_msg(!Global.no_color) << "Saved modified hostlist to " << hostfile_path << std::endl;
+			else {
+				auto exception{ make_custom_exception<permission_except>("Failed to write modified hostfile to disk!") };
+				exception.update_message(hostfile_path);
+				throw exception;
+			}
+			if (!do_list_hosts) std::exit(EXIT_SUCCESS);
 		}
 
-		if (!do_list_hosts) std::exit(EXIT_SUCCESS);
 	}
 	// save-host
 	else if (const auto save_host{ args.typegetv<opt::Option>("save-host") }; save_host.has_value()) {
+		std::stringstream message_buffer; // save the messages in a buffer to prevent misleading messages in the event of a file writing error
 		switch (config::add_host_to(hosts, save_host.value(), target)) {
 		case 0: // Host already exists, and has the same target
 			throw make_exception("Host ", Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT), save_host.value(), Global.palette.reset(), " is already set to ", target.hostname, ':', target.port, '\n');
 		case 1: // Host already exists, but with a different target
-			std::cout << term::msg << "Updated " << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT) << save_host.value() << Global.palette.reset() << ": " << target.hostname << ':' << target.port << '\n';
+			message_buffer << term::get_msg(!Global.no_color) << "Updated " << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT) << save_host.value() << Global.palette.reset() << ": " << target.hostname << ':' << target.port << '\n';
 			break;
 		case 2: // Added new host
-			std::cout << term::get_msg(!Global.no_color) << "Added host: " << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT) << save_host.value() << Global.palette.reset() << " " << target.hostname << ':' << target.port << '\n';
+			message_buffer << term::get_msg(!Global.no_color) << "Added host: " << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT) << save_host.value() << Global.palette.reset() << " " << target.hostname << ':' << target.port << '\n';
 			break;
 		default:
 			throw make_exception("Received an undefined return value while saving host!");
 		}
 
 		if (config::save_hostfile(hosts, hostfile_path)) // print a success message or throw failure exception
-			std::cout << term::get_msg(!Global.no_color) << "Saved modified hostlist to " << hostfile_path << std::endl;
+			std::cout << message_buffer.rdbuf() << term::get_msg(!Global.no_color) << "Saved modified hostlist to " << hostfile_path << std::endl;
 		else {
 			auto exception{ make_custom_exception<permission_except>("Failed to write modified hostfile to disk!") };
 			exception.update_message(hostfile_path);
