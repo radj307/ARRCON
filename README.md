@@ -91,6 +91,9 @@ bEnableBukkitColors = false   ; Enables support for Bukkit's color syntax. This 
 iCommandDelay = 0             ; The delay in milliseconds between sending each command when using commandline/scriptfile mode.
 iReceiveDelay = 10            ; The time in milliseconds to wait after receiving packets. Raise this if multi-packet responses aren't fully received. 
 iSelectTimeout = 500          ; The max amount of time to wait for packets before timing out. Raise this if your network is slow.
+
+[miscellaneous]
+bInteractiveAllowExitKeyword = true ; Setting this to false will prevent the "exit" keyword from closing the connection in Interactive mode. <Ctrl + C> will be the only way to exit.
 ```
 
 ## Host Configuration File
