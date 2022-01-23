@@ -35,6 +35,8 @@ namespace rcon {
 	 * @param sd		Socket to use.
 	 * @param command	Command string to send.
 	 * @returns			bool
+	 *\n				true	Received the "terminator" packet indicating that the message was received correctly.
+	 *\n				false	Didn't receive the "terminator" packet, indicating that something went wrong, or the current timeout is too short.
 	 */
 	inline bool command(const SOCKET& sd, const std::string& command)
 	{
@@ -57,7 +59,7 @@ namespace rcon {
 
 		const auto timeout{ make_timeout(Global.select_timeout) };
 
-		// loop while 1 socket has pending data
+		// loop while socket has pending data
 		for (size_t i{ 0ull }; SELECT(sd + 1ll, &socket_set, nullptr, nullptr, &timeout) == 1; p = net::recv_packet(sd), ++i) {
 			if (i == 0ull && net::send_packet(sd, { terminator_pid, packet::Type::SERVERDATA_RESPONSE_VALUE, "TERM" }))
 				wait_for_term = true;

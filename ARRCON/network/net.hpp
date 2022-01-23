@@ -166,6 +166,8 @@ namespace net {
 	 * @param sd		Socket to use.
 	 * @param packet	Packet to send to the server.
 	 * @returns			bool
+	 *\n				true	Successfully sent packet
+	 *\n				false	An error occurred while sending the packet.
 	 */
 	inline bool send_packet(const SOCKET& sd, const packet::Packet& packet)
 	{

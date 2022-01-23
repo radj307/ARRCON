@@ -16,9 +16,12 @@
 
 namespace config {
 	/**
-	 * @brief				Retrieve the path to the directory where config files are located, depending on the current Operating System.
+	 * @brief				Retrieve the path to the directory where config files are located, depending on the current Operating System & whether or not the given environment variable name is set.
 	 * @param program_dir	The directory where the program is located.
 	 * @returns				std::filesystem::path
+	 *\n					This can be the value of the ${env_var_name} environment variable, or the default path for the current OS.
+	 *\n					Windows:	${program_dir}
+	 *\n					Linux:		`~/.config/ARRCON`
 	 */
 	inline std::filesystem::path getDirPath(const std::filesystem::path& program_dir, const std::string_view& env_var_name)
 	{
