@@ -22,7 +22,7 @@
   */
 inline void sighandler(int sig) noexcept
 {
-	Global.connected = false;
+	Global.connected.store(false);
 	printf("\n");
 }
 
@@ -76,17 +76,13 @@ namespace mode {
 			std::string command;
 			std::getline(std::cin, command);
 
-			if (Global.allow_exit && !Global.forward_exit_keyword && command == "exit")
-				break; // check break if forward exit argument is false
+			if (Global.allow_exit && str::tolower(command) == "exit")
+				break;
 
-			if (Global.connected && !command.empty()) {
-				if (!rcon::command(sd, command) && !Global.quiet)
-					std::cout << '\n' << "[no response]" << '\n';
-				std::this_thread::sleep_for(std::chrono::milliseconds(50));
+			if (Global.connected.load() && !command.empty()) {
+				rcon::command(sd, command);
+				//std::this_thread::sleep_for(std::chrono::milliseconds(50));
 			}
-
-			if (Global.allow_exit && Global.forward_exit_keyword && command == "exit")
-				break; // check break if forward exit argument is true
 		}
 		// Flush & reset colors once done.
 		(std::cout << Global.palette.reset()).flush();
