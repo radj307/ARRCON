@@ -98,6 +98,9 @@ static struct {
 	/// @brief	When true, the user can type "exit" in interactive mode to exit. Otherwise, they must use CTRL+C
 	bool allow_exit{ true };
 
+	/// @brief	When true, the exit command is forwarded to the server before quitting. Otherwise, quits before sending the command.
+	bool forward_exit_keyword{ false };
+
 	/// @brief	The name of the environment variable to check for the config directory
 	std::string EnvVar_CONFIG_DIR{ std::string(DEFAULT_PROGRAM_NAME) + "_CONFIG_DIR" };
 
