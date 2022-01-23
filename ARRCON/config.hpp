@@ -30,7 +30,7 @@ namespace config {
 			// check if value is valid
 			if (bool contains_filename{ path.has_filename() }, not_absolute{ !path.is_absolute() }, doesnt_exist{ !std::filesystem::exists(path) }; contains_filename || not_absolute || doesnt_exist)
 				throw make_exception(
-					"getDirPath() failed:  ", env_var_name, " (", v.value(), ") is invalid!\n",
+					"getDirPath() failed:  ", env_var_name, "=\"", v.value(), "\" is invalid!\n",
 					(contains_filename ? "        Path contains a filename.\n" : ""),
 					(not_absolute ? "        Path isn't absolute.\n" : ""),
 					(doesnt_exist ? "        Path doesn't exist.\n" : ""),
@@ -97,7 +97,6 @@ namespace config {
 
 		// Miscellaneous Header:
 		Global.allow_exit = ini.checkv(header::MISCELLANEOUS, "bInteractiveAllowExitKeyword", true);
-		Global.forward_exit_keyword = ini.checkv(header::MISCELLANEOUS, "bForwardExitKeywordToServer", true);
 
 		return true;
 	}
@@ -135,7 +134,6 @@ namespace config {
 				<< '\n'
 				<< '[' << header::MISCELLANEOUS << ']' << '\n'
 				<< "bInteractiveAllowExitKeyword = true\n"
-				<< "bForwardExitKeywordToServer = false\n"
 				<< '\n';
 		}
 		else { // use current settings
@@ -159,7 +157,6 @@ namespace config {
 				<< '\n'
 				<< '[' << header::MISCELLANEOUS << ']' << '\n'
 				<< "bInteractiveAllowExitKeyword = " << Global.allow_exit << '\n'
-				<< "bForwardExitKeywordToServer = " << Global.forward_exit_keyword << '\n'
 				<< '\n';
 		}
 		return file::write_to(path, std::move(ss));

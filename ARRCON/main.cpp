@@ -2,6 +2,7 @@
 #include "mode.hpp"				///< RCON client modes
 #include "config.hpp"			///< INI functions
 #include "Help.hpp"				///< CLI usage instructions
+#include "exceptions.hpp"
 
 #include <make_exception.hpp>
 #include <ParamsAPI2.hpp>
@@ -12,27 +13,8 @@
 #include <signal.h>				///< signal handling
 #include <unistd.h>
 
-// undefine unistd macros for fileio.hpp compat
 #undef read
 #undef write
-
-struct permission_except final : public except {
-	permission_except(auto&& message) : except(std::forward<decltype(message)>(message)) {}
-	void update_message(const std::filesystem::path& path)
-	{
-		message = str::stringify(
-			"File Permissions Error:  ", message, " at location ", path, '\n',
-			"        Suggested Solutions:\n",
-			"        1.  Change the config directory by setting the \"", Global.EnvVar_CONFIG_DIR, "\" environment variable.\n",
-			"        2.  Change the permissions of the target directory/file to allow read/write with the current elevation level.\n"
-			#ifdef OS_WIN
-			"        3.  Close the terminal, and re-open it as an administrator.\n"
-			#else
-			"        3.  Re-run the command with sudo.\n"
-			#endif
-		);
-	}
-};
 
 /**
  * @brief		Retrieve the user's specified connection target.
@@ -64,15 +46,9 @@ inline HostInfo get_target_info(const opt::ParamsAPI2& args, const config::HostL
 	};
 }
 
-/**
- * @brief		Handle commandline arguments.
- * @param args	Arguments from main()
- */
-inline void handle_args(const opt::ParamsAPI2& args, config::HostList& hosts, const HostInfo& target, const std::filesystem::path& ini_path, const std::filesystem::path& hostfile_path)
+inline void handle_hostfile_arguments(const opt::ParamsAPI2& args, config::HostList& hosts, const HostInfo& target, const std::filesystem::path& hostfile_path)
 {
-	// quiet:
-	if (args.check_any<opt::Option, opt::Flag>('q', "quiet"))
-		Global.quiet = true;
+
 	const auto do_list_hosts{ args.check<opt::Option>("list-hosts") };
 	// remove-host
 	if (const auto remove_hosts{ args.typegetv_all<opt::Option>("remove-host") }; !remove_hosts.empty()) {
@@ -88,21 +64,15 @@ inline void handle_args(const opt::ParamsAPI2& args, config::HostList& hosts, co
 		if (hosts.empty()) {
 			if (std::filesystem::remove(hostfile_path))
 				std::cout << message_buffer.rdbuf() << term::get_msg(!Global.no_color) << "Deleted the hostfile as there are no remaining entries." << std::endl;
-			else {
-				auto exception{ make_custom_exception<permission_except>("Failed to remove empty hostfile!") };
-				exception.update_message(hostfile_path);
-				throw exception;
-			}
+			else
+				throw permission_exception("handle_hostfile_arguments()", hostfile_path, "Failed to delete empty Hostfile!");
 			std::exit(EXIT_SUCCESS); // host list is empty, ignore do_list_hosts as nothing will happen
 		} // otherwise, save the modified hosts file.
 		else {
 			if (config::save_hostfile(hosts, hostfile_path)) // print a success message or throw failure exception
 				std::cout << message_buffer.rdbuf() << term::get_msg(!Global.no_color) << "Saved modified hostlist to " << hostfile_path << std::endl;
-			else {
-				auto exception{ make_custom_exception<permission_except>("Failed to write modified hostfile to disk!") };
-				exception.update_message(hostfile_path);
-				throw exception;
-			}
+			else
+				throw permission_exception("handle_hostfile_arguments()", hostfile_path, "Failed to write modified Hostfile to disk!");
 			if (!do_list_hosts) std::exit(EXIT_SUCCESS);
 		}
 
@@ -125,11 +95,8 @@ inline void handle_args(const opt::ParamsAPI2& args, config::HostList& hosts, co
 
 		if (config::save_hostfile(hosts, hostfile_path)) // print a success message or throw failure exception
 			std::cout << message_buffer.rdbuf() << term::get_msg(!Global.no_color) << "Saved modified hostlist to " << hostfile_path << std::endl;
-		else {
-			auto exception{ make_custom_exception<permission_except>("Failed to write modified hostfile to disk!") };
-			exception.update_message(hostfile_path);
-			throw exception;
-		}
+		else
+			throw permission_exception("handle_hostfile_arguments()", hostfile_path, "Failed to write modified Hostfile to disk!");
 
 		if (!do_list_hosts) std::exit(EXIT_SUCCESS);
 	}
@@ -150,18 +117,22 @@ inline void handle_args(const opt::ParamsAPI2& args, config::HostList& hosts, co
 			std::cout << Global.palette.set(UIElem::HOST_NAME) << name << Global.palette.reset() << str::VIndent(longest_name, name.size()) << Global.palette.set(UIElem::HOST_INFO) << "( " << info.hostname << ':' << info.port << " )" << Global.palette.reset() << '\n';
 		std::exit(EXIT_SUCCESS);
 	}
+}
 
+/**
+ * @brief		Handle commandline arguments.
+ * @param args	Arguments from main()
+ */
+inline void handle_arguments(const opt::ParamsAPI2& args, const HostInfo& target, const std::filesystem::path& ini_path)
+{
 	// write-ini:
 	if (args.check_any<opt::Option>("write-ini")) {
 		if (!ini_path.empty() && config::save_ini(ini_path)) {
 			std::cout << term::get_msg(!Global.no_color) << "Successfully wrote config: " << ini_path << std::endl;
 			std::exit(EXIT_SUCCESS);
 		}
-		else {
-			auto exception{ make_custom_exception<permission_except>("Failed to write INI file to disk!") };
-			exception.update_message(ini_path);
-			throw exception;
-		}
+		else
+			throw permission_exception("handle_arguments()", ini_path, "Failed to open INI for writing!");
 	}
 	// force interactive:
 	if (args.check_any<opt::Option, opt::Flag>('i', "interactive"))
@@ -255,18 +226,20 @@ int main(const int argc, char** argv)
 		const auto& [myDir, myName] { PATH.resolve_split(argv[0]) };
 		Global.EnvVar_CONFIG_DIR = str::toupper(std::filesystem::path(myName).replace_extension().generic_string()) + "_CONFIG_DIR";
 
-		// help:
+		// Argument:  [-h|--help]
 		if (args.check_any<opt::Flag, opt::Option>('h', "help")) {
 			std::cout << Help(myName) << std::endl;
 			return 0;
 		}
-		// version: (mutually exclusive with help as it shows the version number as well)
+		// Argument:  [-v|--version] (mutually exclusive with help as it shows the version number as well)
 		if (args.check_any<opt::Flag, opt::Option>('v', "version")) {
 			if (!args.check_any<opt::Flag, opt::Option>('q', "quiet"))
 				std::cout << DEFAULT_PROGRAM_NAME << ' ';
 			std::cout << ARRCON_VERSION << std::endl;
 			return 0;
 		}
+		// Argument:  [-q|--quiet]
+		Global.quiet = args.check_any<opt::Option, opt::Flag>('q', "quiet");
 
 		// get the config file path.
 		const auto cfg_dir{ config::getDirPath(myDir, Global.EnvVar_CONFIG_DIR) };
@@ -280,7 +253,14 @@ int main(const int argc, char** argv)
 
 		if (args.empty() && !Global.allow_no_args) {
 			std::cerr << Help(myName) << std::endl << std::endl;
-			throw make_exception("No arguments were specified!\n\t\t(You can disable this error by setting \"bAllowNoArgs = true\" in the INI)");
+			throw make_exception(
+				"No arguments were specified!\n",
+				"        Function Name:        main()\n",
+				"        Suggested Solutions:\n",
+				"        1.  Set ", Global.palette.set(UIElem::INI_KEY_HIGHLIGHT), "bAllowNoArgs = true", Global.palette.reset(), " in the INI config file.\n",
+				"        2.  Specify a target to connect to with the [-H|--host], [-P|--port], & [-p|--password] options.\n",
+				"        3.  Read the help display above for command assistance.\n"
+			);
 		}
 
 		// Initialize the hostlist
@@ -291,34 +271,43 @@ int main(const int argc, char** argv)
 			hosts = config::load_hostfile(hostfile_path);
 
 		// get the target server's connection information
-		const auto& [host, port, pass] { get_target_info(args, hosts) };
-		handle_args(args, hosts, { host, port, pass }, ini_path, hostfile_path);
+		const auto& hostinfo{ get_target_info(args, hosts) };
+		handle_arguments(args, hostinfo, ini_path);
+		handle_hostfile_arguments(args, hosts, hostinfo, hostfile_path);
 
 		// get the commands to execute on the server
 		const auto commands{ get_commands(args, PATH) };
 
 		// If no custom prompt is set, use the default one
 		if (Global.custom_prompt.empty())
-			Global.custom_prompt = (Global.no_prompt ? "" : str::stringify(Global.palette.set(UIElem::TERM_PROMPT_NAME), "RCON@", host, Global.palette.reset(UIElem::TERM_PROMPT_ARROW), '>', Global.palette.reset(), ' '));
+			Global.custom_prompt = (Global.no_prompt ? "" : str::stringify(Global.palette.set(UIElem::TERM_PROMPT_NAME), "RCON@", hostinfo.hostname, Global.palette.reset(UIElem::TERM_PROMPT_ARROW), '>', Global.palette.reset(), ' '));
 
 
 		// Register the cleanup function before connecting the socket
 		std::atexit(&net::cleanup);
 
 		// Connect the socket
-		Global.socket = net::connect(host, port);
+		Global.socket = net::connect(hostinfo.hostname, hostinfo.port);
 
 		// set & check if the socket was connected successfully
 		if (!(Global.connected = (Global.socket != SOCKET_ERROR)))
-			throw make_exception("Socket \'", Global.socket, "\' is invalid, but no exceptions were thrown!\tLast socket error: (", LAST_SOCKET_ERROR_CODE(), ") ", net::getLastSocketErrorMessage());
+			throw connection_exception("main()", "Socket descriptor was set to (" + std::to_string(Global.socket) + ") after successfully initializing the connection.", hostinfo.hostname, hostinfo.port, LAST_SOCKET_ERROR_CODE(), net::getLastSocketErrorMessage());
 
 		// authenticate with the server, run queued commands, and open an interactive session if necessary.
-		if (rcon::authenticate(Global.socket, pass)) {
+		if (rcon::authenticate(Global.socket, hostinfo.password)) {
 			// authentication succeeded, run commands
 			if (mode::commandline(commands) == 0ull || Global.force_interactive)
 				mode::interactive(Global.socket); // if no commands were executed from the commandline or if the force interactive flag was set
 		}
-		else throw make_exception("Authentication failure:  Incorrect password for ", host, ':', port);
+		else {
+			throw make_exception("Authentication failure:  Incorrect Password!\n",
+				"        Target Hostname/IP:  ", hostinfo.hostname, '\n',
+				"        Target Port:         ", hostinfo.port, '\n',
+				"        Suggested Solutions:\n",
+				"        1.  Verify that you're using the right password.\n",
+				"        2.  Verify that this is the correct target."
+			);
+		}
 
 		return 0;
 	} catch (const std::exception& ex) { ///< catch exceptions

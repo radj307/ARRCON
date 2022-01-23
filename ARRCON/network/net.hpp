@@ -28,8 +28,8 @@
  */
 #pragma once
 #include "packet.hpp"
+#include "../exceptions.hpp"
 
-#include <TermAPI.hpp>
 #include <make_exception.hpp>
 
 #include <optional>
@@ -112,7 +112,7 @@ namespace net {
 	{
 		if (Global.connected)
 			close_socket(Global.socket);
-		std::cout << Global.palette.reset();
+		std::cout << color::reset_all;
 	}
 
 	/**
@@ -137,9 +137,10 @@ namespace net {
 
 		net::init();
 
-		int ret = getaddrinfo(host.c_str(), port.c_str(), &hints, &server_info);
+		int ret{ getaddrinfo(host.c_str(), port.c_str(), &hints, &server_info) };
+
 		if (ret != 0)
-			throw make_exception("Name resolution of \"", host, ':', port, "\" failed with error: (", LAST_SOCKET_ERROR_CODE(), ") ", getLastSocketErrorMessage());
+			throw connection_exception("net::connect()", "Name resolution failed!", host, port, LAST_SOCKET_ERROR_CODE(), getLastSocketErrorMessage());
 
 		// Go through the hosts and try to connect
 		for (p = server_info; p != NULL; p = p->ai_next) {
@@ -159,7 +160,7 @@ namespace net {
 		freeaddrinfo(server_info); // release address info memory
 
 		if (p == NULL)
-			throw make_exception("Failed to connect to ", host, ':', port, "!");
+			throw connection_exception("net::connect()", "Connection Failed.", host, port, LAST_SOCKET_ERROR_CODE(), getLastSocketErrorMessage());
 
 		return sd;
 	}
@@ -210,7 +211,7 @@ namespace net {
 			return;
 		do {
 			if (recv(sd, std::unique_ptr<char>{}.get(), packet::PSIZE_MAX, 0) == 0)
-				throw make_exception("Connection Lost! Last Error: (", LAST_SOCKET_ERROR_CODE(), ") ", getLastSocketErrorMessage());
+				throw socket_exception("net::flush()", "Connection Lost!", LAST_SOCKET_ERROR_CODE(), getLastSocketErrorMessage());
 			std::this_thread::sleep_for(Global.receive_delay);
 		} while (SELECT(sd + 1ull, &set, nullptr, nullptr, &timeout) == 1);
 	}
@@ -225,20 +226,17 @@ namespace net {
 		int psize{ 0 };
 
 		if (auto ret{ recv(sd, (char*)&psize, sizeof(int), 0) }; ret == 0)
-			throw make_exception("Connection Lost! Last Error: (", LAST_SOCKET_ERROR_CODE(), ") ", getLastSocketErrorMessage());
-		else if (ret == -1) { // throw if -1
-			std::cerr << "Connection Closed." << std::endl;
-			std::exit(EXIT_SUCCESS);
-		}
+			throw socket_exception("net::recv_packet()", "Connection Lost!", LAST_SOCKET_ERROR_CODE(), getLastSocketErrorMessage());
+		else if (ret == -1)
+			throw socket_exception("net::recv_packet()", "Connection closed by server.");
 		else if (ret != sizeof(int))
-			throw make_exception("Received a corrupted packet! Receive returned: ", ret, "! Last Socket Error: (", LAST_SOCKET_ERROR_CODE(), ") ", getLastSocketErrorMessage());
+			throw socket_exception("net::recv_packet()", "Received a corrupted packet!", LAST_SOCKET_ERROR_CODE(), getLastSocketErrorMessage());
 
-		if (psize < packet::PSIZE_MIN) {
-			std::cerr << term::get_warn(!Global.no_color) << "Received unexpectedly small packet size: " << psize << std::endl;
-		}
+		if (psize < packet::PSIZE_MIN)
+			std::cerr << print_warning("Received unexpectedly small packet size: ", psize) << std::endl;
 		else if (psize > packet::PSIZE_MAX) {
-			std::cerr << term::get_warn(!Global.no_color) << "Received unexpectedly large packet size: " << psize << std::endl;
-			flush(sd);
+			std::cerr << print_warning("Received unexpectedly large packet size: ", psize) << std::endl;
+			flush(sd); // flush the remaining data
 		}
 
 		packet::serialized_packet spacket{ psize, 0, 0, { 0x00 } }; ///< create a serialized packet to receive data
@@ -246,7 +244,7 @@ namespace net {
 		for (int received{ 0 }, ret{ 0 }; received < psize; received += ret) {
 			ret = recv(sd, (char*)&spacket + sizeof(int) + received, static_cast<size_t>(psize) - received, 0);
 			if (ret == 0) // nothing received
-				throw make_exception("Connection Lost! Last Error: (", LAST_SOCKET_ERROR_CODE(), ") ", getLastSocketErrorMessage());
+				throw socket_exception("net::recv_packet()", "Connection Lost!", LAST_SOCKET_ERROR_CODE(), getLastSocketErrorMessage());
 		}
 
 		return { spacket };

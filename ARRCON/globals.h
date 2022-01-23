@@ -24,20 +24,6 @@ inline constexpr const auto DEFAULT_PROGRAM_NAME{
 #endif
 };
 
-/**
- * @enum	UIElem
- * @brief	Defines various UI elements, used by the color palette to select appropriate colors.
- */
-enum class UIElem : unsigned char {
-	TERM_PROMPT_NAME,	// interactive mode prompt name
-	TERM_PROMPT_ARROW,	// interactive mode prompt arrow '>'
-	PACKET,				// interactive mode response
-	COMMAND_ECHO,		// commandline mode command echo
-	HOST_NAME,			// list-hosts command (name)
-	HOST_NAME_HIGHLIGHT,// save-host command
-	HOST_INFO,			// list-hosts command (hostname/port)
-};
-
 /// @brief	SOCKET type compatible with winsock & posix
 using SOCKET = unsigned long long;
 
@@ -46,6 +32,8 @@ using SOCKET = unsigned long long;
 #define SOCKET_ERROR -1
 #endif
 #endif // #ifndef OS_WIN
+
+#define ISSUE_REPORT_URL "https://github.com/radj307/ARRCON/issues"
 
 /**
  * @struct	HostInfo
@@ -65,6 +53,21 @@ struct HostInfo {
 	bool operator!=(auto&& o) const { return !operator==(std::forward<decltype(o)>(o)); }
 };
 
+/**
+ * @enum	UIElem
+ * @brief	Defines various UI elements, used by the color palette to select appropriate colors.
+ */
+enum class UIElem : unsigned char {
+	TERM_PROMPT_NAME,	// interactive mode prompt name
+	TERM_PROMPT_ARROW,	// interactive mode prompt arrow '>'
+	PACKET,				// interactive mode response
+	COMMAND_ECHO,		// commandline mode command echo
+	HOST_NAME,			// list-hosts command (name)
+	HOST_NAME_HIGHLIGHT,// save-host command
+	HOST_INFO,			// list-hosts command (hostname/port)
+	INI_KEY_HIGHLIGHT,	// used by some exceptions to highlight INI keys.
+};
+
 static struct {
 	/// @brief Color palette
 	color::palette<UIElem> palette{
@@ -75,6 +78,7 @@ static struct {
 		std::make_pair(UIElem::HOST_NAME, color::white),
 		std::make_pair(UIElem::HOST_NAME_HIGHLIGHT, color::yellow),
 		std::make_pair(UIElem::HOST_INFO, color::light_gray),
+		std::make_pair(UIElem::INI_KEY_HIGHLIGHT, color::intense_yellow),
 	};
 	const HostInfo DEFAULT_TARGET{ // default target
 		"localhost",
@@ -97,9 +101,6 @@ static struct {
 
 	/// @brief	When true, the user can type "exit" in interactive mode to exit. Otherwise, they must use CTRL+C
 	bool allow_exit{ true };
-
-	/// @brief	When true, the exit command is forwarded to the server before quitting. Otherwise, quits before sending the command.
-	bool forward_exit_keyword{ false };
 
 	/// @brief	The name of the environment variable to check for the config directory
 	std::string EnvVar_CONFIG_DIR{ std::string(DEFAULT_PROGRAM_NAME) + "_CONFIG_DIR" };
@@ -140,7 +141,7 @@ static struct {
  */
 inline timeval make_timeout(const std::chrono::milliseconds& ms)
 {
-	return{ 0L, static_cast<long>(ms.count() * 1000L) };
+	return{ 0L, static_cast<long>(static_cast<double>(ms.count()) * 1000L) };
 }
 #define SELECT(nfds, rd, wr, ex, timeout) select(nfds, rd, wr, ex, timeout)
 #else // POSIX
@@ -151,7 +152,7 @@ inline timeval make_timeout(const std::chrono::milliseconds& ms)
  */
 inline timespec make_timeout(const std::chrono::milliseconds& ms)
 {
-	return{ 0L, static_cast<long>(ms.count() * 1e+6) };
+	return{ 0L, static_cast<long>(static_cast<double>(ms.count()) * 1000L) };
 }
 #define SELECT(nfds, rd, wr, ex, timeout) pselect(nfds, rd, wr, ex, timeout, nullptr)
 #endif // #ifdef OS_WIN
