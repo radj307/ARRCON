@@ -25,8 +25,20 @@ namespace config {
 	 */
 	inline std::filesystem::path getDirPath(const std::filesystem::path& program_dir, const std::string_view& env_var_name)
 	{
-		if (const auto v{ env::getvar(env_var_name) }; v.has_value())
-			return{ v.value() };
+		if (const auto v{ env::getvar(env_var_name) }; v.has_value()) {
+			std::filesystem::path path(v.value());
+			// check if value is valid
+			if (bool contains_filename{ path.has_filename() }, not_absolute{ !path.is_absolute() }, doesnt_exist{ !std::filesystem::exists(path) }; contains_filename || not_absolute || doesnt_exist)
+				throw make_exception(
+					"getDirPath() failed:  ", env_var_name, " (", v.value(), ") is invalid!\n",
+					(contains_filename ? "        Path contains a filename.\n" : ""),
+					(not_absolute ? "        Path isn't absolute.\n" : ""),
+					(doesnt_exist ? "        Path doesn't exist.\n" : ""),
+					"        The directory specified by ", env_var_name, " must be an absolute path to an existing directory!\n"
+				);
+			else
+				return path;
+		}
 
 		#ifdef OS_WIN
 		return program_dir;
