@@ -28,7 +28,10 @@ namespace config {
 		#ifdef OS_WIN
 		return program_dir;
 		#else
-		return std::filesystem::path("/usr/local/etc/");
+		const std::filesystem::path default_linux_config_dir{ "~/.config/ARRCON" };
+		// create directory if it doesn't exist
+		std::filesystem::create_directories(default_linux_config_dir);
+		return default_linux_config_dir;
 		#endif
 	}
 
@@ -37,7 +40,7 @@ namespace config {
 	 * @brief		Contains constant definitions for the headers in the INI
 	 */
 	namespace header {
-		inline constexpr const auto APPEARANCE{ "appearance" }, TIMING{ "timing" }, TARGET{ "target" }, MISCELLANEOUS{"miscellaneous"};
+		inline constexpr const auto APPEARANCE{ "appearance" }, TIMING{ "timing" }, TARGET{ "target" }, MISCELLANEOUS{ "miscellaneous" };
 	}
 
 	/**
@@ -165,7 +168,7 @@ namespace config {
 	{
 		HostList hosts{};
 
-		const auto& get_target_info{ 
+		const auto& get_target_info{
 			[](const file::ini::INIContainer::SectionContent& sec) -> HostInfo {
 				HostInfo info;
 				for (const auto& [key, val] : sec) {
