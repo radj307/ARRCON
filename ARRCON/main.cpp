@@ -70,6 +70,9 @@ inline HostInfo get_target_info(const opt::ParamsAPI2& args, const config::HostL
  */
 inline void handle_args(const opt::ParamsAPI2& args, config::HostList& hosts, const HostInfo& target, const std::filesystem::path& ini_path, const std::filesystem::path& hostfile_path)
 {
+	// quiet:
+	if (args.check_any<opt::Option, opt::Flag>('q', "quiet"))
+		Global.quiet = true;
 	const auto do_list_hosts{ args.check<opt::Option>("list-hosts") };
 	// remove-host
 	if (const auto remove_hosts{ args.typegetv_all<opt::Option>("remove-host") }; !remove_hosts.empty()) {
@@ -163,9 +166,6 @@ inline void handle_args(const opt::ParamsAPI2& args, config::HostList& hosts, co
 	// force interactive:
 	if (args.check_any<opt::Option, opt::Flag>('i', "interactive"))
 		Global.force_interactive = true;
-	// quiet:
-	if (args.check_any<opt::Option, opt::Flag>('q', "quiet"))
-		Global.quiet = true;
 	// no-prompt
 	if (args.check_any<opt::Flag, opt::Option>('Q', "no-prompt"))
 		Global.no_prompt = true;
