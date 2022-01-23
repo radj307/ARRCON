@@ -46,40 +46,6 @@
   * @brief		Contains functions used to interact with sockets.
   */
 namespace net {
-	/**
-	 * @brief	Call WSAStartup & initialize the winsock dll.
-	 *\n		Only necessary on Windows, as the Linux socket library
-	 *			performs the startup & cleanup operations automatically.
-	 */
-	inline void init(void) noexcept(false)
-	{
-	#ifdef _WIN32
-		WSADATA wsaData;
-		int rc{ 0 };
-		if (rc = WSAStartup(WINSOCK_VERSION, &wsaData); rc != 0 || LOBYTE(wsaData.wVersion) != LOBYTE(WINSOCK_VERSION) || HIBYTE(wsaData.wVersion) != HIBYTE(WINSOCK_VERSION))
-			throw std::exception("WSAStartup failed with error code " + rc);
-	#endif
-	}
-
-	/**
-	 * @brief		Close the socket & call WSACleanup on windows.
-	 * @param sd	The socket descriptor to close.
-	 */
-	inline void close_socket(const SOCKET& sd)
-	{
-	#ifdef _WIN32
-		closesocket(sd);
-		WSACleanup();
-	#endif
-	}
-
-	/// @brief	Emergency stop handler, should be passed to the std::atexit() function to allow a controlled shutdown of the socket in the event of an interrupt.
-	inline void cleanup(void)
-	{
-		close_socket(Global.socket);
-		std::cout << Global.palette.reset();
-	}
-
 	#ifdef OS_WIN
 	/// @brief	Returns the last reported socket error code.
 	#define LAST_SOCKET_ERROR_CODE() (WSAGetLastError())
@@ -110,6 +76,43 @@ namespace net {
 		#else
 		return{ strerror(LAST_SOCKET_ERROR_CODE()) };
 		#endif
+	}
+
+	/**
+	 * @brief	Call WSAStartup & initialize the winsock dll.
+	 *\n		Only necessary on Windows, as the Linux socket library
+	 *			performs the startup & cleanup operations automatically.
+	 */
+	inline void init(void) noexcept(false)
+	{
+		#ifdef _WIN32
+		WSADATA wsaData;
+		int rc{ 0 };
+		if (rc = WSAStartup(WINSOCK_VERSION, &wsaData); rc != 0)
+			throw make_exception("WSAStartup failed with error code ", rc, "! Last Socket Error:  (", LAST_SOCKET_ERROR_CODE(), ") ", getLastSocketErrorMessage());
+		else if (LOBYTE(wsaData.wVersion) != LOBYTE(WINSOCK_VERSION) || HIBYTE(wsaData.wVersion) != HIBYTE(WINSOCK_VERSION))
+			throw make_exception("Winsock version is invalid!");
+		#endif
+	}
+
+	/**
+	 * @brief		Close the socket & call WSACleanup on windows.
+	 * @param sd	The socket descriptor to close.
+	 */
+	inline void close_socket(const SOCKET& sd)
+	{
+		#ifdef _WIN32
+		closesocket(sd);
+		WSACleanup();
+		#endif
+	}
+
+	/// @brief	Emergency stop handler, should be passed to the std::atexit() function to allow a controlled shutdown of the socket in the event of an interrupt.
+	inline void cleanup(void)
+	{
+		if (Global.connected)
+			close_socket(Global.socket);
+		std::cout << Global.palette.reset();
 	}
 
 	/**
