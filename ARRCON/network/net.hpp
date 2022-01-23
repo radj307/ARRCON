@@ -223,10 +223,12 @@ namespace net {
 
 		if (auto ret{ recv(sd, (char*)&psize, sizeof(int), 0) }; ret == 0)
 			throw make_exception("Connection Lost! Last Error: (", LAST_SOCKET_ERROR_CODE(), ") ", getLastSocketErrorMessage());
-		else if (ret != sizeof(int)) {
-			std::cerr << term::get_warn(!Global.no_color) << "Received a corrupted packet! Code " << ret << '\n';
-			return{};
+		else if (ret == -1) { // throw if -1
+			std::cerr << "Connection Closed." << std::endl;
+			std::exit(EXIT_SUCCESS);
 		}
+		else if (ret != sizeof(int))
+			throw make_exception("Received a corrupted packet! Receive returned: ", ret, "! Last Socket Error: (", LAST_SOCKET_ERROR_CODE(), ") ", getLastSocketErrorMessage());
 
 		if (psize < packet::PSIZE_MIN) {
 			std::cerr << term::get_warn(!Global.no_color) << "Received unexpectedly small packet size: " << psize << std::endl;

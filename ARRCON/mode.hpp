@@ -77,13 +77,13 @@ namespace mode {
 			std::string command;
 			std::getline(std::cin, command);
 
-			if (Global.allow_exit && str::tolower(command) == "exit")
-				break;
-
 			if (Global.connected && !command.empty()) {
 				rcon::command(sd, command);
 				std::this_thread::sleep_for(std::chrono::milliseconds(50));
 			}
+
+			if (Global.allow_exit && str::tolower(command) == "exit")
+				break;
 		}
 		// Flush & reset colors once done.
 		(std::cout << Global.palette.reset()).flush();
