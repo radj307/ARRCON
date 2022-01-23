@@ -52,7 +52,7 @@ static connection_except connection_exception(const std::string& function_name, 
 {
 	return ex::make_custom_exception<connection_except>(
 		message, '\n',
-		"        Function Name:      ", function_name, '\n',
+		"        Function Name:       ", function_name, '\n',
 		"        Target Hostname/IP:  ", host, '\n',
 		"        Target Port:         ", port, '\n',
 		"        Last Socket Error:   [", errorCode, "] ", errorMsg,
