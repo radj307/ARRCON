@@ -237,7 +237,7 @@ namespace net {
 		packet::serialized_packet spacket{ psize, 0, 0, { 0x00 } }; ///< create a serialized packet to receive data
 
 		for (int received{ 0 }, ret{ 0 }; received < psize; received += ret) {
-			ret = recv(sd, (char*)&spacket + sizeof(int) + received, static_cast<size_t>(psize) - received, 0);
+			ret = recv(sd + 1ll, (char*)&spacket + sizeof(int) + received, static_cast<size_t>(psize) - received, 0);
 			if (ret == 0) // nothing received
 				throw make_exception("Connection Lost! Last Error: (", LAST_SOCKET_ERROR_CODE(), ") ", getLastSocketErrorMessage());
 		}
