@@ -116,7 +116,7 @@ static struct {
 	std::chrono::milliseconds receive_delay{ 10ll };
 
 	/// @brief	Amount of time before the select() function times out.
-	std::chrono::milliseconds select_timeout{ 500ll };
+	std::chrono::milliseconds select_timeout{ 1000ll };
 
 	/// @brief	Global socket connected to the RCON server.
 	SOCKET socket{ static_cast<SOCKET>(SOCKET_ERROR) };
