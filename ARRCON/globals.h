@@ -140,6 +140,8 @@ static struct {
  */
 inline timeval make_timeout(const std::chrono::milliseconds& ms)
 {
+	// ms -> s  ; truncate the (floating-point) result of dividing the value by 1000
+	// ms -> us ; multiply the value by 1000
 	return{ static_cast<long>(static_cast<long double>(ms.count()) / 1000.0L), static_cast<long>(ms.count() * 1000L) };
 }
 #define SELECT(nfds, rd, wr, ex, timeout) select(nfds, rd, wr, ex, timeout)
@@ -151,7 +153,9 @@ inline timeval make_timeout(const std::chrono::milliseconds& ms)
  */
 inline timespec make_timeout(const std::chrono::milliseconds& ms)
 {
-	return{ static_cast<long>(std::trunc(static_cast<long double>(ms.count()) / 1000.0L)), static_cast<long>(ms.count() * 1e+6) };
+	// ms -> s  ; truncate the (floating-point) result of dividing the value by 1000
+	// ms -> ns ; multiply the value by 1e+6
+	return{ static_cast<long>(static_cast<long double>(ms.count()) / 1000.0L), static_cast<long>(ms.count() * 1e+6) };
 }
 #define SELECT(nfds, rd, wr, ex, timeout) pselect(nfds, rd, wr, ex, timeout, nullptr)
 #endif // #ifdef OS_WIN
