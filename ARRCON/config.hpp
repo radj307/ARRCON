@@ -27,23 +27,16 @@ namespace config {
 	{
 		if (const auto v{ env::getvar(env_var_name) }; v.has_value()) {
 			std::filesystem::path path(v.value());
-			// check if value is valid
-			if (bool contains_filename{ path.has_filename() }, not_absolute{ !path.is_absolute() }, doesnt_exist{ !std::filesystem::exists(path) }; contains_filename || not_absolute || doesnt_exist)
-				throw make_exception(
-					"getDirPath() failed:  ", env_var_name, "=\"", v.value(), "\" is invalid!\n",
-					(contains_filename ? "        Path contains a filename.\n" : ""),
-					(not_absolute ? "        Path isn't absolute.\n" : ""),
-					(doesnt_exist ? "        Path doesn't exist.\n" : ""),
-					"        The directory specified by ", env_var_name, " must be an absolute path to an existing directory!\n"
-				);
-			else
-				return path;
+			return path;
 		}
 
 		#ifdef OS_WIN
 		return program_dir;
 		#else
-		const std::filesystem::path default_linux_config_dir{ "~/.config/ARRCON" };
+		const auto home{ env::getvar("HOME") }; // get the home directory of the current user.
+		if (!home.has_value())
+			throw make_exception("Failed to retrieve the $HOME environment variable!");
+		const std::filesystem::path default_linux_config_dir{ home.value() + "/.config/ARRCON" };
 		// create directory if it doesn't exist
 		std::filesystem::create_directories(default_linux_config_dir);
 		return default_linux_config_dir;
@@ -261,4 +254,4 @@ namespace config {
 	{
 		return hostlist.erase(name) == 1ull;
 	}
-}
+	}

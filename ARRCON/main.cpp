@@ -224,7 +224,14 @@ int main(const int argc, char** argv)
 		// Initialize the PATH variable & locate the program using argv[0]
 		env::PATH PATH{ argv[0] };
 		const auto& [myDir, myName] { PATH.resolve_split(argv[0]) };
-		Global.EnvVar_CONFIG_DIR = str::toupper(std::filesystem::path(myName).replace_extension().generic_string()) + "_CONFIG_DIR";
+
+		Global.EnvVar_CONFIG_DIR = {
+			[&myName]() -> std::string {
+				std::string name{ myName.generic_string() };
+				return str::toupper(name) + "_CONFIG_DIR";
+			}()
+		};
+		//Global.EnvVar_CONFIG_DIR = str::toupper(std::filesystem::path(myName).replace_extension().generic_string()) + "_CONFIG_DIR";
 
 		// Argument:  [-h|--help]
 		if (args.check_any<opt::Flag, opt::Option>('h', "help")) {
