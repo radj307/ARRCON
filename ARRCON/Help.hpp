@@ -18,15 +18,15 @@ public:
 	Help(const std::filesystem::path& program_name) : _program_name{ program_name } {}
 	friend std::ostream& operator<<(std::ostream& os, const Help& help)
 	{
-		os << std::filesystem::path(help._program_name).replace_extension().generic_string() << ' ' << ((help._program_name != std::string_view(DEFAULT_PROGRAM_NAME)) ? "("s + DEFAULT_PROGRAM_NAME + ") "s : "") << "v" << ARRCON_VERSION << '\n'
-			<< "Commandline Remote-CONsole Client.\n"
+		os << help._program_name.generic_string() << ' ' << ((help._program_name != std::string_view(DEFAULT_PROGRAM_NAME)) ? "("s + DEFAULT_PROGRAM_NAME + ") "s : "") << "v" << ARRCON_VERSION << '\n'
+			<< "Another Remote-CONsole Client.\n"
 			<< '\n'
 			<< "USAGE:\n"
 			<< "  " << help._program_name.generic_string() << " [OPTIONS] [COMMANDS]\n"
 			<< '\n'
 			<< "OPTIONS:\n"
-			<< "-H <Host>  --host <Host>       RCON Server IP Address or hostname.  (Default: \"" << Global.DEFAULT_TARGET.hostname << "\")" << '\n'
-			<< "-P <Port>  --port <Port>       RCON Server Port.                    (Default: \"" << Global.DEFAULT_TARGET.port + "\")" << '\n'
+			<< "-H <Host>  --host <Host>       RCON Server IP/Hostname.  (Default: \"" << Global.DEFAULT_TARGET.hostname << "\")" << '\n'
+			<< "-P <Port>  --port <Port>       RCON Server Port.         (Default: \"" << Global.DEFAULT_TARGET.port + "\")" << '\n'
 			<< "-p <Password>  --pass <Pass>   RCON Server Password." << '\n'
 			<< "-S <host>  --saved <host>      Use a saved host's IP, Port, & Password if the [-H|-P|-p] options are not specified." << '\n'
 			<< "--list-hosts                   Show a list of all currently saved hosts, then exit." << '\n'

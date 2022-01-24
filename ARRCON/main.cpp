@@ -26,17 +26,19 @@
  */
 inline HostInfo get_target_info(const opt::ParamsAPI2& args, const config::HostList& hostlist)
 {
+	
 	const auto
-		host{ args.typegetv_any<opt::Flag, opt::Option>('H', "host") },
-		port{ args.typegetv_any<opt::Flag, opt::Option>('P', "port") },
-		pass{ args.typegetv_any<opt::Flag, opt::Option>('p', "pass") };
+		host{ args.typegetv_any<opt::Flag, opt::Option>('H', "host") }, //< Argument:  [-H|--host]
+		port{ args.typegetv_any<opt::Flag, opt::Option>('P', "port") }, //< Argument:  [-P|--port]
+		pass{ args.typegetv_any<opt::Flag, opt::Option>('p', "pass") }; //< Argument:  [-p|--pass]
 
-	if (host.has_value()) { // check saved hosts first
-		const auto it{ std::find_if(hostlist.begin(), hostlist.end(), [&host](auto&& kvpr) {
-			return kvpr.first == host.value();
-		}) };
-		if (it != hostlist.end())
-			return it->second;
+	// Argument:  [-S|--saved]
+	if (const auto saved{ args.typegetv_any<opt::Flag, opt::Option>('S', "saved") }; saved.has_value()) {
+		if (const auto target{ hostlist.find(saved.value()) }; target != hostlist.end()) {
+			const auto info{ to_hostinfo(target->second) };
+			return HostInfo{ host.value_or(info.hostname), port.value_or(info.port), pass.value_or(info.password) };
+		}
+		throw make_exception("Couldn't find a saved host named \"", saved.value(), "\"!");
 	}
 
 	return{
@@ -54,7 +56,7 @@ inline void handle_hostfile_arguments(const opt::ParamsAPI2& args, config::HostL
 	if (const auto remove_hosts{ args.typegetv_all<opt::Option>("remove-host") }; !remove_hosts.empty()) {
 		std::stringstream message_buffer; // save the messages in a buffer to prevent misleading messages in the event of a file writing error
 		for (const auto& name : remove_hosts) {
-			if (config::remove_host_from(hosts, name)) // removed target successfully
+			if (hosts.erase(name))
 				message_buffer << term::get_msg(!Global.no_color) << "Removed " << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT) << name << Global.palette.reset() << '\n';
 			else
 				message_buffer << term::get_error(!Global.no_color) << "Hostname \"" << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT) << name << Global.palette.reset() << " doesn't exist!" << '\n';
@@ -80,18 +82,31 @@ inline void handle_hostfile_arguments(const opt::ParamsAPI2& args, config::HostL
 	// save-host
 	else if (const auto save_host{ args.typegetv<opt::Option>("save-host") }; save_host.has_value()) {
 		std::stringstream message_buffer; // save the messages in a buffer to prevent misleading messages in the event of a file writing error
-		switch (config::add_host_to(hosts, save_host.value(), target)) {
-		case 0: // Host already exists, and has the same target
-			throw make_exception("Host ", Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT), save_host.value(), Global.palette.reset(), " is already set to ", target.hostname, ':', target.port, '\n');
-		case 1: // Host already exists, but with a different target
-			message_buffer << term::get_msg(!Global.no_color) << "Updated " << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT) << save_host.value() << Global.palette.reset() << ": " << target.hostname << ':' << target.port << '\n';
-			break;
-		case 2: // Added new host
+		
+
+		const auto target_info{ from_hostinfo(target) };
+		const auto& [existing, added] {
+			hosts.insert(std::make_pair(save_host.value(), target_info))
+		};
+
+		if (added)
 			message_buffer << term::get_msg(!Global.no_color) << "Added host: " << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT) << save_host.value() << Global.palette.reset() << " " << target.hostname << ':' << target.port << '\n';
-			break;
-		default:
-			throw make_exception("Received an undefined return value while saving host!");
-		}
+		else if ([](const file::INI::SectionContent& left, const file::INI::SectionContent& right) -> bool {
+			if (const auto left_host{ left.find("sHost") }, right_host{ right.find("sHost") }; left_host == left.end() || right_host == right.end() || left_host->second != right_host->second) {
+				return false;
+			}
+			if (const auto left_port{ left.find("sPort") }, right_port{ right.find("sPort") }; left_port == left.end() || right_port == right.end() || left_port->second != right_port->second) {
+				return false;
+			}
+			if (const auto left_pass{ left.find("sPass") }, right_pass{ right.find("sPass") }; left_pass == left.end() || right_pass == right.end() || left_pass->second != right_pass->second) {
+				return false;
+			}
+			return true;
+			}(existing->second, target_info))
+			throw make_exception("Host ", Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT), save_host.value(), Global.palette.reset(), " is already set to ", target.hostname, ':', target.port, '\n');
+		else
+			message_buffer << term::get_msg(!Global.no_color) << "Updated " << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT) << save_host.value() << Global.palette.reset() << ": " << target.hostname << ':' << target.port << '\n';
+
 
 		if (config::save_hostfile(hosts, hostfile_path)) // print a success message or throw failure exception
 			std::cout << message_buffer.rdbuf() << term::get_msg(!Global.no_color) << "Saved modified hostlist to " << hostfile_path << std::endl;
@@ -103,20 +118,36 @@ inline void handle_hostfile_arguments(const opt::ParamsAPI2& args, config::HostL
 	// list all hosts
 	if (do_list_hosts) {
 		if (hosts.empty()) {
-			std::cerr << term::get_warn(!Global.no_color) << "No hosts were found." << std::endl;
-			std::exit(1);
+			std::cerr << "There are no saved hosts in the list." << std::endl;
+			std::exit(EXIT_SUCCESS);
 		}
-		const auto longest_name{ [&hosts]() {
+
+		const auto indentation_max{ [&hosts]() {
+			if (Global.quiet)
+				return 0ull; // don't process the list if this won't be used
 			size_t longest{0ull};
 			for (auto& [name, _] : hosts)
 				if (const auto sz{ name.size() }; sz > longest)
 					longest = sz;
 			return longest + 2ull;
 		}() };
-		for (const auto& [name, info] : hosts)
-			std::cout << Global.palette.set(UIElem::HOST_NAME) << name << Global.palette.reset() << str::VIndent(longest_name, name.size()) << Global.palette.set(UIElem::HOST_INFO) << "( " << info.hostname << ':' << info.port << " )" << Global.palette.reset() << '\n';
+
+		for (const auto& [name, info] : hosts) {
+			const auto& hostinfo{ to_hostinfo(info) };
+			if (!Global.quiet) {
+				std::cout
+					<< Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT) << name << Global.palette.reset() << '\n'
+					<< "    Host:  " << hostinfo.hostname << '\n'
+					<< "    Port:  " << hostinfo.port << '\n';
+			}
+			else {
+				std::cout << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT) << name << Global.palette.reset()
+					<< str::VIndent(indentation_max, name.size()) << "( " << hostinfo.hostname << ':' << hostinfo.port << " )\n";
+			}
+		}
 		std::exit(EXIT_SUCCESS);
 	}
+
 }
 
 /**
@@ -215,7 +246,7 @@ int main(const int argc, char** argv)
 {
 	try {
 		std::cout << term::EnableANSI; // enable ANSI escape sequences on windows
-		const opt::ParamsAPI2 args{ argc, argv, 'H', "host", 'P', "port", 'p', "pass", 'd', "delay", 'f', "file", "save-host", "remove-host" }; // parse arguments
+		const opt::ParamsAPI2 args{ argc, argv, 'H', "host", 'S', "saved", 'P', "port", 'p', "pass", 'd', "delay", 'f', "file", "save-host", "remove-host"}; // parse arguments
 
 		// check for disable colors argument:
 		if (const auto arg{ args.typegetv_any<opt::Option, opt::Flag>('n', "no-color") }; arg.has_value())
@@ -265,7 +296,7 @@ int main(const int argc, char** argv)
 				"        Function Name:        main()\n",
 				"        Suggested Solutions:\n",
 				"        1.  Set ", Global.palette.set(UIElem::INI_KEY_HIGHLIGHT), "bAllowNoArgs = true", Global.palette.reset(), " in the INI config file.\n",
-				"        2.  Specify a target to connect to with the [-H|--host], [-P|--port], & [-p|--password] options.\n",
+				"        2.  Specify a target to connect to with the [-H|--host], [-P|--port], & [-p|--pass] options.\n",
 				"        3.  Read the help display above for command assistance.\n"
 			);
 		}

@@ -156,16 +156,7 @@ namespace config {
 		#pragma warning (default:26800) // use of a moved-from object: ss
 	}
 
-	/// @brief	Contains the list of user-saved hosts.
-	using HostList = std::unordered_map<std::string, HostInfo>;
-
-	/// @brief HostList insertion operator used when writing to file.
-	inline std::ostream& operator<<(std::ostream& os, const HostList& hostlist)
-	{
-		for (auto& [name, hostinfo] : hostlist)
-			os << '[' << name << "]\n" << hostinfo << '\n';
-		return os;
-	}
+	using HostList = file::INI;
 
 	/**
 	 * @brief		Read & parse a given hosts file.
@@ -174,33 +165,7 @@ namespace config {
 	 */
 	inline HostList load_hostfile(const std::filesystem::path& path) noexcept(false)
 	{
-		HostList hosts{};
-
-		const auto& get_target_info{
-			[](const file::ini::INIContainer::SectionContent& sec) -> HostInfo {
-				HostInfo info;
-				for (const auto& [key, val] : sec) {
-					if (key == "sHost")
-						info.hostname = file::ini::to_string(val, false);
-					else if (key == "sPort")
-						info.port = file::ini::to_string(val, false);
-					else if (key == "sPass")
-						info.password = file::ini::to_string(val, false);
-				}
-				if (info.hostname.empty()) // fill in missing hostname
-					info.hostname = (Global.target.hostname.empty() ? Global.DEFAULT_TARGET.hostname : Global.target.hostname);
-				if (info.port.empty()) // fill in missing port
-					info.port = (Global.target.port.empty() ? Global.DEFAULT_TARGET.port : Global.target.port);
-				if (info.password.empty()) // fill in missing password
-					info.password = (Global.target.password.empty() ? Global.DEFAULT_TARGET.password : Global.target.password);
-				return info;
-			}
-		};
-
-		for (const auto& [hostname, section] : file::INI{ path })
-			hosts.insert_or_assign(hostname, get_target_info(section));
-
-		return hosts;
+		return file::INI(path);
 	}
 
 	/**
@@ -217,41 +182,56 @@ namespace config {
 		return file::write_to(path, std::move(ss));
 		#pragma warning (default:26800) // use of a moved-from object: ss
 	}
+}
 
-	/**
-	 * @brief			Insert an entry into the given hostlist.
-	 * @param hostlist	A reference to the host list.
-	 * @param name		Name to save host info as.
-	 * @param info		Host info to save.
-	 * @returns			char
-	 *\n				0		Host wasn't changed
-	 *\n				1		Host was updated
-	 *\n				2		Host was added
-	 */
-	inline char add_host_to(HostList& hostlist, const std::string& name, const HostInfo& info)
-	{
-		if (const auto existing{ hostlist.find(name) }; existing != hostlist.end()) { // host already exists
-			if (existing->second == info)
-				return 0; // host info is already set to this target
-			// update host info with the given target
-			existing->second = info;
-			return 1;
-		}
-		// add new host
-		hostlist.insert(std::move(std::make_pair(name, info)));
-		return 2;
-	}
 
-	/**
-	 * @brief			Remove an entry from the given hostlist.
-	 * @param hostlist	A reference to the hostlist.
-	 * @param name		The name of the target entry to remove.
-	 * @returns			bool
-	 *\n				true	Successfully removed the given target from the hostlist.
-	 *\n				false	Specified name doesn't exist.
-	 */
-	inline bool remove_host_from(HostList& hostlist, const std::string& name)
-	{
-		return hostlist.erase(name) == 1ull;
-	}
-	}
+/**
+ * @brief				Create a HostInfo object from an INI section.
+ * @param ini_section	A reference to an INI section container.
+ * @returns				HostInfo
+ */
+inline HostInfo to_hostinfo(const file::INI::SectionContent& ini_section)
+{
+	HostInfo info;
+
+	// hostname:
+	if (const auto host{ ini_section.find("sHost") }; host != ini_section.end())
+		info.hostname = file::ini::to_string(host->second);
+	else info.hostname = Global.DEFAULT_TARGET.hostname;
+	// port:
+	if (const auto port{ ini_section.find("sPort") }; port != ini_section.end())
+		info.port = file::ini::to_string(port->second);
+	else info.port = Global.DEFAULT_TARGET.port;
+	// password:
+	if (const auto pass{ ini_section.find("sPass") }; pass != ini_section.end())
+		info.password = file::ini::to_string(pass->second);
+	else info.password = Global.DEFAULT_TARGET.password;
+
+	return info;
+}
+
+/**
+ * @brief			Copy a hostinfo object's values into an INI section reference.
+ * @param section	Reference to an existing INI section.
+ * @param info		HostInfo to insert.
+ * @returns			file::INI::SectionContent
+ */
+inline file::INI::SectionContent& from_hostinfo(file::INI::SectionContent& section, const HostInfo& info)
+{
+	section.insert_or_assign("sHost", info.hostname);
+	section.insert_or_assign("sPort", info.port);
+	section.insert_or_assign("sPass", info.password);
+
+	return section;
+}
+
+/**
+ * @brief		Create an INI section from a hostinfo object.
+ * @param info	HostInfo to insert.
+ * @returns		file::INI::SectionContent
+ */
+inline file::INI::SectionContent from_hostinfo(const HostInfo& info)
+{
+	file::INI::SectionContent section;
+	return from_hostinfo(section, info);
+}
