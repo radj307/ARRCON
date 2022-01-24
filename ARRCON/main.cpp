@@ -245,6 +245,9 @@ inline std::vector<std::string> get_commands(const opt::ParamsAPI2& args, const 
 int main(const int argc, char** argv)
 {
 	try {
+		// This fixes a potential bug on terminal emulators with transparent backgrounds; so long as the palette doesn't contain background colors or formatting
+		Global.palette.setDefaultResetSequence(color::reset_f);
+
 		std::cout << term::EnableANSI; // enable ANSI escape sequences on windows
 		const opt::ParamsAPI2 args{ argc, argv, 'H', "host", 'S', "saved", 'P', "port", 'p', "pass", 'd', "delay", 'f', "file", "save-host", "remove-host"}; // parse arguments
 
