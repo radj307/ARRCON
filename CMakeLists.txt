@@ -4,7 +4,7 @@ cmake_minimum_required (VERSION 3.19)
 # Add 307modules to cmake modules path
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/307lib/307modules")
 
-include(AutoVersion)
+include(AutoVersion2)
 
 set(ENV{ARRCON_VERSION} "0.0.0")
 GET_VERSION_2("ARRCON" "${CMAKE_CURRENT_SOURCE_DIR}" MAJOR MINOR PATCH EXTRA)
