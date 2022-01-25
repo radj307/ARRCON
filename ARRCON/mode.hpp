@@ -81,7 +81,7 @@ namespace mode {
 
 			if (Global.connected.load() && !command.empty()) {
 				if (!rcon::command(sd, command) && !Global.quiet && Global.enable_no_response_message)
-					std::cout << str::VIndent(Global.custom_prompt.size()) << Global.palette.set(UIElem::NO_RESPONSE) << "[no response]" << Global.palette.reset() << '\n';
+					std::cout << Global.palette.set(UIElem::NO_RESPONSE) << "[no response]" << Global.palette.reset() << '\n';
 			}
 		}
 		// Flush & reset colors once done.
