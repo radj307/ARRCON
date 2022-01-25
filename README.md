@@ -19,7 +19,7 @@ While originally based on [mcrcon](https://github.com/Tiiffi/mcrcon) by [Tiiffi]
   - Cross-Platform:
     - Windows
     - Linux
-    - macOS      
+    - [macOS](https://github.com/radj307/ARRCON/wiki/Building-from-Source)
 
 
 # Installation
