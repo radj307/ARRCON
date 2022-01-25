@@ -35,27 +35,16 @@ jobs:
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-      
-    - name: Get Self-Reported Version Number
-      uses: mathiasvr/command-output@v1
-      id: getver
-      with:
-        run:  |
-              ${{github.workspace}}/build/${{env.BUILD_TYPE}}/ARRCON -vq
-              
-    - name: Echo Version Number
+
+    - name: Create Archive
       run:  |
-            echo "${{steps.getver.outputs.stdout}}"
-      
-    - name: Compress Executable & Label Archive
-      run:  |
-            zip -T9 ${{github.workspace}}/build/${{env.BUILD_TYPE}}/ARRCON ARRCON-${{steps.getver.outputs.stdout}}-macOS.zip
+            zip -T9 ${{github.workspace}}/build/ARRCON/ARRCON ARRCON-$(./build/ARRCON/ARRCON -vq)-Linux.zip
       shell: bash
       
-    - name: Upload Archive as an Artifact
+    - name: Upload Latest Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: ${{steps.getver.outputs.stdout}}-macOS
+        name: latest-linux
         path: ./*.zip
         retention-days: 2
 

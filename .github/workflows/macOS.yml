@@ -29,6 +29,20 @@ jobs:
     - name: Build
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-  
 
+    - name: macOS Debug Zip Tool
+      run:  zip --help
+  
+    - name: Create Archive
+      run:  |
+            cd ${{github.workspace}}
+            zip ./build/ARRCON/ARRCON ARRCON-$(./build/ARRCON/ARRCON -vq)-macOS.zip
+      shell: bash
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: latest-macos
+        path: ./*.zip
+        retention-days: 2
 

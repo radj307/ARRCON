@@ -31,13 +31,13 @@ jobs:
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
       
-    - name: Compress Executable & Label Archive
+    - name: Create Release Archive
       run:  |
             cd ${{github.workspace}}
             Compress-Archive .\build\ARRCON\ARRCON.exe ARRCON-$(.\build\ARRCON\ARRCON.exe -vq)-Windows.zip
       shell: powershell
       
-    - name: Upload Archive as an Artifact
+    - name: Upload Latest Artifact
       uses: actions/upload-artifact@v2
       with:
         name: latest-windows
