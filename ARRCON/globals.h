@@ -14,6 +14,7 @@
 #include <sys/socket.h>
 #include <chrono>
 #include <atomic>
+#include <unistd.h>
 
 /// @brief	The default program name on each platform.
 inline constexpr const auto DEFAULT_PROGRAM_NAME{
