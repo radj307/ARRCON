@@ -41,7 +41,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: latest-windows
-        path: ./*.zip
+        path: ${{github.workspace}}/build/ARRCON/*.zip
         retention-days: 2
 
 

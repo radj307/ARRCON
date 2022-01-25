@@ -46,7 +46,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: latest-linux
-        path: ./*.zip
+        path: ${{github.workspace}}/build/ARRCON/*.zip
         retention-days: 2
 
 
