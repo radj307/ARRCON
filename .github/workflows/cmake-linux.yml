@@ -44,19 +44,11 @@ jobs:
       with:
         submodules: recursive
         fetch-depth: 0
+    - uses: ilammy/msvc-dev-cmd@v1
     - uses: seanmiddleditch/gha-setup-ninja@master
-    
-      # use apt to download gcc & g++ 10
-    - run:   |
-             sudo apt update
-             sudo apt install gcc-10 g++-10
-      shell: bash
-        
+      
     - name: Configure CMake
       run:    cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -G Ninja
-      env:
-        CC:   gcc-10
-        CXX:  g++-10
       
     - name: Build
       # Build your program with the given configuration
