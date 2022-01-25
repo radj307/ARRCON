@@ -2,22 +2,23 @@ name: Windows Build
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    tags: '*.*.*'
 
 env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  # Build using Release configuration
   BUILD_TYPE: Release
 
 jobs:
   build-windows:
+    # Use a Windows build machine
     runs-on: windows-latest
 
     steps:
     - uses: actions/checkout@v2
       with:
+        # Recursively initialize & update all submodules
         submodules: recursive
+        # Checkout all history so the most recent tag is guaranteed to be included
         fetch-depth: 0
     - uses: ilammy/msvc-dev-cmd@v1
     - uses: seanmiddleditch/gha-setup-ninja@master
@@ -28,4 +29,29 @@ jobs:
     - name: Build
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-  
+      
+    - name: Get Self-Reported Version Number
+      uses: mathiasvr/command-output@v1
+      id: getver
+      with:
+        run:  |
+              ${{github.workspace}}/build/${{env.BUILD_TYPE}}/ARRCON.exe -vq
+              
+    - name: Echo Version Number
+      run:  |
+            echo "${{steps.getver.outputs.stdout}}"
+      
+    - name: Compress Executable & Label Archive
+      run:  |
+            Compress-Archive ${{github.workspace}}/build/${{env.BUILD_TYPE}}/ARRCON.exe ARRCON-${{steps.getver.outputs.stdout}}-Windows.zip
+      shell: powershell
+      
+    - name: Upload Archive as an Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{steps.getver.outputs.stdout}}-Windows
+        path: ./*.zip
+        retention-days: 2
+
+
+
