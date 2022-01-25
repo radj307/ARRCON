@@ -36,7 +36,7 @@ jobs:
     - name: Create Archive
       run:  |
             cd ${{github.workspace}}
-            zip ./build/ARRCON/ARRCON ARRCON-$(./build/ARRCON/ARRCON -vq)-macOS.zip
+            zip ARRCON-$(./build/ARRCON/ARRCON -vq)-macOS.zip ./build/ARRCON/ARRCON
       shell: bash
 
     - name: Upload Artifact

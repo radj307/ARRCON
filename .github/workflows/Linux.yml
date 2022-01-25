@@ -38,7 +38,7 @@ jobs:
 
     - name: Create Archive
       run:  |
-            zip -T9 ${{github.workspace}}/build/ARRCON/ARRCON ARRCON-$(./build/ARRCON/ARRCON -vq)-Linux.zip
+            zip -T9 ARRCON-$(./build/ARRCON/ARRCON -vq)-Linux.zip ${{github.workspace}}/build/ARRCON/ARRCON
       shell: bash
       
     - name: Upload Latest Artifact
