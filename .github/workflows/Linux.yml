@@ -23,7 +23,7 @@ jobs:
       # use apt to download gcc & g++ 10
     - run:   |
              sudo apt update
-             sudo apt install gcc-10 g++-10
+             sudo apt install gcc-10 g++-10 zip
       shell: bash
     
     - name: Configure CMake
@@ -35,4 +35,29 @@ jobs:
 
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-    
+      
+    - name: Get Self-Reported Version Number
+      uses: mathiasvr/command-output@v1
+      id: getver
+      with:
+        run:  |
+              ${{github.workspace}}/build/${{env.BUILD_TYPE}}/ARRCON -vq
+              
+    - name: Echo Version Number
+      run:  |
+            echo "${{steps.getver.outputs.stdout}}"
+      
+    - name: Compress Executable & Label Archive
+      run:  |
+            zip -T9 ${{github.workspace}}/build/${{env.BUILD_TYPE}}/ARRCON ARRCON-${{steps.getver.outputs.stdout}}-macOS.zip
+      shell: bash
+      
+    - name: Upload Archive as an Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: ${{steps.getver.outputs.stdout}}-macOS
+        path: ./*.zip
+        retention-days: 2
+
+
+
