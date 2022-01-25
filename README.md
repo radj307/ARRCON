@@ -1,11 +1,25 @@
-# ARRCON - Another __RCON__ Client
-![Windows](https://github.com/radj307/ARRCON/actions/workflows/Windows.yml/badge.svg)
-![Linux Build](https://github.com/radj307/ARRCON/actions/workflows/Linux.yml/badge.svg)
-![macOS Build](https://github.com/radj307/ARRCON/actions/workflows/macOS.yml/badge.svg)  
-Remote console client that is compatible with any game using the Source Rcon Protocol.  
-While originally based on [mcrcon](https://github.com/Tiiffi/mcrcon) by [Tiiffi](https://github.com/Tiiffi), it has since completely eclipsed it in terms of features and compatibility with games other than minecraft.  
+<p align="center">
+  <img
+       src="https://i.imgur.com/Q1Pk03U.png"
+       alt="ARRCON Banner"
+  />
+  <h1 align="center">Another RCON Client</h1>
+</p>  
+<p align="center">
+  <a href="https://github.com/radj307/ARRCON/actions">
+    <img src="https://github.com/radj307/ARRCON/actions/workflows/Windows.yml/badge.svg" alt="Windows Build Status"></img>
+    <img src="https://github.com/radj307/ARRCON/actions/workflows/Linux.yml/badge.svg" alt="Linux Build Status"></img>
+    <img src="https://github.com/radj307/ARRCON/actions/workflows/macOS.yml/badge.svg" alt="macOS Build Status"></img>
+  </a>
+</p>
 
-### Features
+
+
+# Features
+  - Cross-Platform:
+    - Windows
+    - Linux
+    - macOS  
   - Works for any game using the [Source RCON Protocol](https://developer.valvesoftware.com/wiki/Source_RCON_Protocol).
   - Handles large packets without issue.
   - Handles multi-packet responses without issue, and has configurable delays in the INI file.
@@ -17,16 +31,15 @@ While originally based on [mcrcon](https://github.com/Tiiffi/mcrcon) by [Tiiffi]
     - Supports running external "scripts" using the `-f`\|`--file` option.
       - Commands are separated by newlines.
       - Commands from script files are sent _after_ any commands from STDIN.
-  - Save & recall a server's IP/Hostname, port, and password directly from the commandline without editing a file.
-    - _Passwords are under no circumstances printed to the screen at any point; however, the RCON protocol does not allow encrypted messages so keep this in mind when using any RCON client._
-  - Cross-Platform:
-    - Windows
-    - Linux
-    - macOS  
-      _Pre-built macOS binaries are available as of version 3.2.12_
+  - Save & recall a server's IP/Hostname, port, and password directly from the commandline without editing files.  
+    _Passwords are __never__ printed to the terminal._
+  - Portable
+    
 
 
 # Download & Install
+
+
 There are 2 places you can get release archives:
  1.  The [Releases Pages](https://github.com/radj307/ARRCON/releases)  
  2.  The [Actions Tab](https://github.com/radj307/ARRCON/actions)  
