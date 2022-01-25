@@ -259,13 +259,8 @@ int main(const int argc, char** argv)
 		env::PATH PATH{ argv[0] };
 		const auto& [myDir, myName] { PATH.resolve_split(argv[0]) };
 
-		Global.EnvVar_CONFIG_DIR = {
-			[&myName]() -> std::string {
-				std::string name{ myName.generic_string() };
-				return str::toupper(name) + "_CONFIG_DIR";
-			}()
-		};
-		//Global.EnvVar_CONFIG_DIR = str::toupper(std::filesystem::path(myName).replace_extension().generic_string()) + "_CONFIG_DIR";
+		const config::Locator cfg_path(myDir, myName);
+		Global.EnvVar_CONFIG_DIR = cfg_path.getEnvironmentVariableName();
 
 		// Argument:  [-q|--quiet]
 		Global.quiet = args.check_any<opt::Option, opt::Flag>('q', "quiet");
@@ -281,11 +276,9 @@ int main(const int argc, char** argv)
 			std::cout << ARRCON_VERSION << std::endl;
 			return 0;
 		}
-		// get the config file path.
-		const auto cfg_dir{ config::getDirPath(myDir, Global.EnvVar_CONFIG_DIR) };
 
 		// Get the INI file's path
-		std::filesystem::path ini_path{ (cfg_dir / myName).replace_extension(".ini") };
+		std::filesystem::path ini_path{ cfg_path.from_extension(".ini") };
 
 		// Read the INI if it exists
 		if (file::exists(ini_path))
@@ -306,7 +299,7 @@ int main(const int argc, char** argv)
 		// Initialize the hostlist
 		config::HostList hosts;
 
-		const auto hostfile_path{ (cfg_dir / myName).replace_extension(".hosts") };
+		const auto hostfile_path{ cfg_path.from_extension(".hosts")};
 		if (file::exists(hostfile_path)) // load the hostfile if it exists
 			hosts = config::load_hostfile(hostfile_path);
 

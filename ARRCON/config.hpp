@@ -15,33 +15,46 @@
 #include <INI.hpp>
 
 namespace config {
-	/**
-	 * @brief				Retrieve the path to the directory where config files are located, depending on the current Operating System & whether or not the given environment variable name is set.
-	 * @param program_dir	The directory where the program is located.
-	 * @returns				std::filesystem::path
-	 *\n					This can be the value of the ${env_var_name} environment variable, or the default path for the current OS.
-	 *\n					Windows:	${program_dir}
-	 *\n					Linux:		`~/.config/ARRCON`
-	 */
-	inline std::filesystem::path getDirPath(const std::filesystem::path& program_dir, const std::string_view& env_var_name)
-	{
-		if (const auto v{ env::getvar(env_var_name) }; v.has_value()) {
-			std::filesystem::path path(v.value());
-			return path;
+	class Locator {
+		std::filesystem::path program_location;
+		std::string name_no_ext;
+		std::filesystem::path env_path;
+		std::filesystem::path home_path;
+
+	public:
+		Locator(const std::filesystem::path& program_dir, const std::filesystem::path& program_name) : program_location{ program_dir }, name_no_ext{ [](auto&& p) -> std::string { const std::string s{ p.generic_string() }; if (const auto pos{ s.find('.') }; pos < s.size()) return s.substr(0ull, pos); return s; }(program_name) }, env_path{ env::getvar(name_no_ext + "_CONFIG_DIR").value_or("") }, home_path{ env::get_home() } {}
+
+		std::string getEnvironmentVariableName(const std::string& suffix = "_CONFIG_DIR") const
+		{
+			return name_no_ext + suffix;
 		}
 
-		#ifdef OS_WIN
-		return program_dir;
-		#else
-		const auto home{ env::getvar("HOME") }; // get the home directory of the current user.
-		if (!home.has_value())
-			throw make_exception("Failed to retrieve the $HOME environment variable!");
-		const std::filesystem::path default_linux_config_dir{ home.value() + "/.config/ARRCON" };
-		// create directory if it doesn't exist
-		std::filesystem::create_directories(default_linux_config_dir);
-		return default_linux_config_dir;
-		#endif
-	}
+		/**
+		 * @brief		Retrieves the target location of the given file extension appended to the program name. (Excluding extension, if applicable.)
+		 * @param ext	The file extension of the target file.
+		 * @returns		std::filesystem::path
+		 *\n			This is NOT guaranteed to exist! If no valid config file was found, the .config directory in the user's home directory is returned.
+		 */
+		std::filesystem::path from_extension(const std::string& ext) const
+		{
+			if (ext.empty())
+				throw make_exception("Empty extension passed to Locator::from_extension()!");
+			std::string target{ name_no_ext + ((ext.front() != '.') ? ("." + ext) : ext) };
+			std::filesystem::path path;
+			// 1:  check the environment
+			if (!env_path.empty()) {
+				path = env_path / target;
+				if (file::exists(path))
+					return path;
+			}
+			// 2:  check the program directory.
+			if (path = program_location / target; file::exists(path))
+				return path;
+			// 3:  user's home directory:
+			path = home_path / ".config" / name_no_ext / target;
+			return path; // return even if it doesn't exist
+		}
+	};
 
 	/**
 	 * @namespace	header
