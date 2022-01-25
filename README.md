@@ -12,8 +12,11 @@
     <img src="https://github.com/radj307/ARRCON/actions/workflows/macOS.yml/badge.svg" alt="macOS Build Status"></img>
   </a>
 </p>
+<p align="center">
+  <a href="https://github.com/radj307/ARRCON/wiki">Wiki</a>&nbsp|&nbsp<a href="https://github.com/radj307/ARRCON/releases">Releases</a>&nbsp|&nbsp<a href="https://github.com/radj307/ARRCON/issues">Issues</a>
+</p>
 
-
+A lightweight terminal-based RCON client originally based on [mcrcon by Tiiffi](https://github.com/Tiiffi/mcrcon).
 
 # Features
   - Cross-Platform:
@@ -37,25 +40,21 @@
     
 
 
-# Download & Install
+## Download & Install
+Get the latest version for your OS from the [releases](https://github.com/radj307/ARRCON/releases) page.
+
+There is no installation process, simply extract the archive & it's ready to go.  
+To use ARRCON without specifying the absolute filepath to it, you have to [add the location to your Path variable](https://github.com/radj307/ARRCON/wiki/Adding-To-Path).
+
+### Building from Source
+See [here](https://github.com/radj307/ARRCON/wiki/Building-from-Source) for a brief guide on building ARRCON from source.
 
 
-There are 2 places you can get release archives:
- 1.  The [Releases Pages](https://github.com/radj307/ARRCON/releases)  
- 2.  The [Actions Tab](https://github.com/radj307/ARRCON/actions)  
-     To download releases from the Actions tab:
-     - Click on the most recent build for your OS. _(Nearest to the Top)_
-     - Scroll down to ___Artifacts___ & click `latest-<OS>` to download it.
+## Usage
+ARRCON is a CLI program, which means you need to run it through a terminal.  
+On Windows, you can use `cmd.exe` or `powershell.exe` by R+Clicking on the start menu.
 
-No installation is required, simply download the executable and put it somewhere on your [path](https://github.com/radj307/ARRCON/wiki/Adding-To-Path).  
-
-Alternatively, see [Build From Source](https://github.com/radj307/ARRCON/wiki/Building-from-Source) to build it yourself.
-
-
-# Usage
-Open a terminal in the location where you placed the executable, and run `./ARRCON -h` or `./ARRCON --help` for usage instructions.  
-
-## Modes
+### Modes
 The operation mode is selected based on context, but can be influenced by some options.  
 There are 2 modes:
 - ___Interactive___
