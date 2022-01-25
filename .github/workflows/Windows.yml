@@ -45,7 +45,8 @@ jobs:
       
     - name: Compress Executable & Label Archive
       run:  |
-            Compress-Archive ${{github.workspace}}/build/${{env.BUILD_TYPE}}/ARRCON.exe ARRCON-${{steps.getver.outputs.stdout}}-Windows.zip
+            ls -Recurse
+            Compress-Archive ${{github.workspace}}/build/${{env.BUILD_TYPE}}/ARRCON/ARRCON.exe ARRCON-${{steps.getver.outputs.stdout}}-Windows.zip
       shell: powershell
       
     - name: Upload Archive as an Artifact
