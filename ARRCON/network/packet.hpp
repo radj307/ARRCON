@@ -8,10 +8,10 @@
 #include <limits.h>
 #include <string.h>
 
-/**
- * @namespace	packet
- * @brief		Contains the Packet, serialized_packet, and ID_Manager objects.
- */
+ /**
+  * @namespace	packet
+  * @brief		Contains the Packet, serialized_packet, and ID_Manager objects.
+  */
 namespace packet {
 	/// @brief Minimum allowable packet size
 	inline constexpr const int PSIZE_MIN{ 10 };
@@ -98,8 +98,8 @@ namespace packet {
 		 * @param o		Another Packet or serialized_packet instance.
 		 * @returns		Packet&
 		 */
-		template<class T> requires std::same_as<T, Packet> || std::same_as<T, serialized_packet>
-		Packet & operator=(const T & o) noexcept
+		template<var::any_same<Packet, serialized_packet> T>
+		Packet& operator=(const T& o) noexcept
 		{
 			body.clear();
 			size = o.size;

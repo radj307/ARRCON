@@ -126,7 +126,7 @@ inline void handle_hostfile_arguments(const opt::ParamsAPI2& args, config::HostL
 			if (Global.quiet)
 				return 0ull; // don't process the list if this won't be used
 			size_t longest{0ull};
-			for (auto& [name, _] : hosts)
+			for (const auto& [name, _] : hosts)
 				if (const auto sz{ name.size() }; sz > longest)
 					longest = sz;
 			return longest + 2ull;
@@ -178,7 +178,7 @@ inline void handle_arguments(const opt::ParamsAPI2& args, const HostInfo& target
 		else throw make_exception("Invalid delay value given: \"", arg.value(), "\", expected an integer.");
 	}
 	// scriptfiles:
-	for (auto& scriptfile : args.typegetv_all<opt::Option, opt::Flag>('f', "file"))
+	for (const auto& scriptfile : args.typegetv_all<opt::Option, opt::Flag>('f', "file"))
 		Global.scriptfiles.emplace_back(scriptfile);
 }
 
@@ -218,7 +218,7 @@ inline std::vector<std::string> get_commands(const opt::ParamsAPI2& args, const 
 
 	// Check for piped data
 	if (hasPendingDataSTDIN()) {
-		for (std::string ln{}; str::getline(std::cin, ln, '\n'); ln.clear()) {
+		for (std::string ln{}; str::getline(std::cin, ln, '\n'); ) {
 			ln = str::strip_line(ln); // remove preceeding & trailing whitespace
 			if (!ln.empty())
 				commands.emplace_back(ln); // read all available lines from STDIN into the commands list
@@ -226,14 +226,14 @@ inline std::vector<std::string> get_commands(const opt::ParamsAPI2& args, const 
 	}
 
 	// read all user-specified files
-	for (auto& file : Global.scriptfiles) {
+	for (const auto& file : Global.scriptfiles) {
 		if (const auto script_commands{ read_script_file(file, pathvar) }; !script_commands.empty()) {
 			if (!Global.quiet) // feedback
 				std::cout << term::get_log(!Global.no_color) << "Successfully read commands from \"" << file << "\"\n";
 
 			commands.reserve(commands.size() + script_commands.size());
 
-			for (auto& command : script_commands)
+			for (const auto& command : script_commands)
 				commands.emplace_back(command);
 		}
 		else std::cerr << term::get_warn(!Global.no_color) << "Failed to read any commands from \"" << file << "\"\n";
