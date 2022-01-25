@@ -267,6 +267,8 @@ int main(const int argc, char** argv)
 		};
 		//Global.EnvVar_CONFIG_DIR = str::toupper(std::filesystem::path(myName).replace_extension().generic_string()) + "_CONFIG_DIR";
 
+		// Argument:  [-q|--quiet]
+		Global.quiet = args.check_any<opt::Option, opt::Flag>('q', "quiet");
 		// Argument:  [-h|--help]
 		if (args.check_any<opt::Flag, opt::Option>('h', "help")) {
 			std::cout << Help(myName) << std::endl;
@@ -274,14 +276,11 @@ int main(const int argc, char** argv)
 		}
 		// Argument:  [-v|--version] (mutually exclusive with help as it shows the version number as well)
 		if (args.check_any<opt::Flag, opt::Option>('v', "version")) {
-			if (!args.check_any<opt::Flag, opt::Option>('q', "quiet"))
+			if (!Global.quiet)
 				std::cout << DEFAULT_PROGRAM_NAME << ' ';
 			std::cout << ARRCON_VERSION << std::endl;
 			return 0;
 		}
-		// Argument:  [-q|--quiet]
-		Global.quiet = args.check_any<opt::Option, opt::Flag>('q', "quiet");
-
 		// get the config file path.
 		const auto cfg_dir{ config::getDirPath(myDir, Global.EnvVar_CONFIG_DIR) };
 
