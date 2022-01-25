@@ -22,10 +22,18 @@ While originally based on [mcrcon](https://github.com/Tiiffi/mcrcon) by [Tiiffi]
   - Cross-Platform:
     - Windows
     - Linux
-    - macOS
+    - macOS  
+      _Pre-built macOS binaries are available as of version 3.2.12_
 
 
-# Installation
+# Download & Install
+There are 2 places you can get release archives:
+ 1.  The [Releases Pages](https://github.com/radj307/ARRCON/releases)  
+ 2.  The [Actions Tab](https://github.com/radj307/ARRCON/actions)  
+     To download releases from the Actions tab:
+     - Click on the most recent build for your OS. _(Nearest to the Top)_
+     - Scroll down to ___Artifacts___ & click `latest-<OS>` to download it.
+
 No installation is required, simply download the executable and put it somewhere on your [path](https://github.com/radj307/ARRCON/wiki/Adding-To-Path).  
 
 Alternatively, see [Build From Source](https://github.com/radj307/ARRCON/wiki/Building-from-Source) to build it yourself.
