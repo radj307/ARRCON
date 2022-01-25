@@ -44,8 +44,7 @@ namespace config {
 			// 1:  check the environment
 			if (!env_path.empty()) {
 				path = env_path / target;
-				if (file::exists(path))
-					return path;
+				return path;
 			}
 			// 2:  check the program directory.
 			if (path = program_location / target; file::exists(path))
