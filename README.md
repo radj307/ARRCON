@@ -1,4 +1,7 @@
 # ARRCON - Another __RCON__ Client
+![Windows](https://github.com/radj307/ARRCON/actions/workflows/Windows.yml/badge.svg)
+![Linux Build](https://github.com/radj307/ARRCON/actions/workflows/Linux.yml/badge.svg)
+![macOS Build](https://github.com/radj307/ARRCON/actions/workflows/macOS.yml/badge.svg)  
 Remote console client that is compatible with any game using the Source Rcon Protocol.  
 While originally based on [mcrcon](https://github.com/Tiiffi/mcrcon) by [Tiiffi](https://github.com/Tiiffi), it has since completely eclipsed it in terms of features and compatibility with games other than minecraft.  
 
@@ -19,7 +22,7 @@ While originally based on [mcrcon](https://github.com/Tiiffi/mcrcon) by [Tiiffi]
   - Cross-Platform:
     - Windows
     - Linux
-    - [macOS](https://github.com/radj307/ARRCON/wiki/Building-from-Source)
+    - macOS
 
 
 # Installation
