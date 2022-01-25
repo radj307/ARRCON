@@ -35,17 +35,12 @@ jobs:
     - name: Build
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
-    - name: Create Archive
-      run:  |
-            zip -T9 ARRCON-$(./build/ARRCON/ARRCON -vq)-Linux.zip ${{github.workspace}}/build/ARRCON/ARRCON
-      shell: bash
-      
     - name: Upload Latest Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: latest-linux
-        path: ./*.zip
-        retention-days: 2
+        name: ARRCON-$(./build/ARRCON/ARRCON -vq)-Linux.zip
+        path: ${{github.workspace}}/build/ARRCON/ARRCON
+        retention-days: 5
 
 
 
