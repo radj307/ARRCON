@@ -36,8 +36,7 @@ jobs:
       id: getver
       with:
         run:  |
-              ls -Recurse
-              ${{github.workspace}}/build/${{env.BUILD_TYPE}}/ARRCON/ARRCON.exe -vq
+              "${{github.workspace}}/build/ARRCON/ARRCON.exe" -vq
         shell: powershell
               
     - name: Echo Version Number
@@ -47,8 +46,7 @@ jobs:
       
     - name: Compress Executable & Label Archive
       run:  |
-            ls -Recurse
-            Compress-Archive ${{github.workspace}}/build/${{env.BUILD_TYPE}}/ARRCON/ARRCON.exe ARRCON-${{steps.getver.outputs.stdout}}-Windows.zip
+            Compress-Archive "${{github.workspace}}/build/ARRCON/ARRCON.exe" "ARRCON-${{steps.getver.outputs.stdout}}-Windows.zip"
       shell: powershell
       
     - name: Upload Archive as an Artifact
