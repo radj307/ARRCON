@@ -110,9 +110,8 @@ namespace net {
 	/// @brief	Emergency stop handler, should be passed to the std::atexit() function to allow a controlled shutdown of the socket in the event of an interrupt.
 	inline void cleanup(void)
 	{
-		if (Global.connected)
+		if (Global.socket != SOCKET_ERROR)
 			close_socket(Global.socket);
-		std::cout << color::reset_all;
 	}
 
 	/**
