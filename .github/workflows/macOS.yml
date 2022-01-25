@@ -30,10 +30,16 @@ jobs:
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
+    - name: Create Archive
+      run:  |
+            cd ${{github.workspace}}
+            zip ARRCON-$(./build/ARRCON/ARRCON -vq)-macOS.zip ./build/ARRCON/ARRCON
+      shell: bash
+
     - name: Upload Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: ARRCON-$(./build/ARRCON/ARRCON -vq)-macOS.zip 
-        path: ./build/ARRCON/ARRCON
+        name: latest-macos
+        path: ./*.zip
         retention-days: 2
 
