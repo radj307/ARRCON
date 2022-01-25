@@ -66,6 +66,7 @@ enum class UIElem : unsigned char {
 	HOST_NAME_HIGHLIGHT,// save-host command
 	HOST_INFO,			// list-hosts command (hostname/port)
 	INI_KEY_HIGHLIGHT,	// used by some exceptions to highlight INI keys.
+	NO_RESPONSE,		// interactive mode no response message
 };
 
 static struct {
@@ -79,6 +80,7 @@ static struct {
 		std::make_pair(UIElem::HOST_NAME_HIGHLIGHT, color::yellow),
 		std::make_pair(UIElem::HOST_INFO, color::light_gray),
 		std::make_pair(UIElem::INI_KEY_HIGHLIGHT, color::intense_yellow),
+		std::make_pair(UIElem::NO_RESPONSE, color::orange),
 	};
 	const HostInfo DEFAULT_TARGET{ // default target
 		"localhost",
@@ -101,6 +103,9 @@ static struct {
 
 	/// @brief	When true, the user can type "exit" in interactive mode to exit. Otherwise, they must use CTRL+C
 	bool allow_exit{ true };
+
+	/// @brief	When true, a message is printed to STDOUT when a command didn't provoke any response from the server, indicating it was invalid.
+	bool enable_no_response_message{ true };
 
 	/// @brief	The name of the environment variable to check for the config directory
 	std::string EnvVar_CONFIG_DIR{ std::string(DEFAULT_PROGRAM_NAME) + "_CONFIG_DIR" };

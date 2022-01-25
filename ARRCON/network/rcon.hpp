@@ -41,16 +41,21 @@ namespace rcon {
 	inline bool command(const SOCKET& sd, const std::string& command)
 	{
 		const auto pid{ packet::ID_Manager.get() };
+		int packet_count{ 0 };
 
 		if (!net::send_packet(sd, { pid, packet::Type::SERVERDATA_EXECCOMMAND, command }))
-			return false;
+			throw socket_exception("rcon::command()", "Command failed, couldn't send the end-of-message detection packet!");
 
 		const auto terminator_pid{ packet::ID_Manager.get() };
 		bool wait_for_term{ false }; ///< true when terminator packet was sent successfully
 		std::this_thread::sleep_for(Global.receive_delay); ///< allow some time for the server to respond
+
 		auto p{ net::recv_packet(sd) }; ///< receive first packet
-		if (!Global.quiet)
-			std::cout << Global.palette.set(UIElem::PACKET) << p;
+
+		if (!Global.quiet) // print the packet
+			std::cout << p;
+
+		packet_count += static_cast<int>(p.isValid());
 
 		// create a file descriptor set for select()
 		fd_set socket_set;
@@ -68,12 +73,14 @@ namespace rcon {
 					net::flush(sd, false); // flush any remaining packets
 				break;
 			}
-			else if (!Global.quiet)
-				std::cout << p.body; ///< don't print newlines automatically
+			else if (!Global.quiet) {
+				std::cout << p; ///< don't print newlines automatically
+				++packet_count;
+			}
 			std::this_thread::sleep_for(Global.receive_delay);
 			p = {}; ///< wipe existing packet
 		}
 		std::cout.flush() << Global.palette.reset();; ///< flush STDOUT & reset color (interrupts before color reset call are handled by sighandler so colors don't bleed out)
-		return p.id == terminator_pid || !wait_for_term; // if the last received packet has the terminator's ID, or if the terminator wasn't set
+		return (p.id == terminator_pid || !wait_for_term) && packet_count > 0; // if the last received packet has the terminator's ID, or if the terminator wasn't set
 	}
 }

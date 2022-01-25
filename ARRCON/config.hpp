@@ -90,6 +90,7 @@ namespace config {
 
 		// Miscellaneous Header:
 		Global.allow_exit = ini.checkv(header::MISCELLANEOUS, "bInteractiveAllowExitKeyword", true);
+		Global.enable_no_response_message = ini.checkv(header::MISCELLANEOUS, "bEnableNoResponseMessage", true);
 
 		return true;
 	}
@@ -127,6 +128,7 @@ namespace config {
 				<< '\n'
 				<< '[' << header::MISCELLANEOUS << ']' << '\n'
 				<< "bInteractiveAllowExitKeyword = true\n"
+				<< "bEnableNoResponseMessage = true\n"
 				<< '\n';
 		}
 		else { // use current settings
@@ -150,6 +152,7 @@ namespace config {
 				<< '\n'
 				<< '[' << header::MISCELLANEOUS << ']' << '\n'
 				<< "bInteractiveAllowExitKeyword = " << Global.allow_exit << '\n'
+				<< "bEnableNoResponseMessage = " << Global.enable_no_response_message << '\n'
 				<< '\n';
 		}
 		return file::write_to(path, std::move(ss));
