@@ -3,6 +3,7 @@ name: Windows Build
 on:
   push:
     tags: '*.*.*'
+  workflow_dispatch:
 
 env:
   # Build using Release configuration
