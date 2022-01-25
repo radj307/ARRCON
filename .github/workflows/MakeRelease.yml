@@ -1,0 +1,32 @@
+name: Create Release
+
+on:
+  push:
+    tags: '*.*.*'
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Download Latest Linux Artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: latest-linux
+    - name: Download Latest Windows Artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: latest-windows
+    - name: Download Latest macOS Artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: latest-macos
+
+    - name: (Debug) List Directory
+      runs: ls -R
+                
+    
+
