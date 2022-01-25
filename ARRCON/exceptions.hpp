@@ -17,7 +17,7 @@ struct permission_except final : public ex::except { permission_except(auto&& me
 static permission_except permission_exception(const std::string& function_name, const std::filesystem::path& path, const std::string& message)
 {
 	return ex::make_custom_exception<permission_except>(
-		        "File Permissions Error:  ", message, '\n',
+		"File Permissions Error:  ", message, '\n',
 		"        Target Path:             ", path, '\n',
 		"        Function Name:           ", function_name, '\n',
 		"        Suggested Solutions:\n",
@@ -28,7 +28,7 @@ static permission_except permission_exception(const std::string& function_name, 
 		#else
 		"        3.  Re-run the command with sudo."
 		#endif
-	);
+		);
 }
 
 struct socket_except final : public ex::except { socket_except(auto&& message) : except(std::forward<decltype(message)>(message)) {} };
@@ -39,7 +39,7 @@ static socket_except socket_exception(const std::string& function_name, const st
 		message, '\n',
 		"        Function Name:      ", function_name, '\n',
 		"        Last Socket Error:  ", '[', errorCode, "] ", errorMsg
-	);
+		);
 }/// @brief	Make a socket exception
 static socket_except socket_exception(const std::string& function_name, const std::string& message)
 {
@@ -55,7 +55,7 @@ static connection_except connection_exception(const std::string& function_name, 
 		"        Function Name:       ", function_name, '\n',
 		"        Target Hostname/IP:  ", host, '\n',
 		"        Target Port:         ", port, '\n',
-		"        Last Socket Error:   [", errorCode, "] ", errorMsg,
+		(errorCode == 0 ? "        There are no reported socket errors." : ("        Last Socket Error:   ["s + std::to_string(errorCode) + "] " + errorMsg)), '\n',
 		"        Suggested Solutions:\n",
 		"        1.  Verify that you're using the correct IP/hostname & port.\n",
 		"        2.  Verify that the target is online.\n"
