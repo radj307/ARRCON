@@ -31,28 +31,16 @@ jobs:
       # Build your program with the given configuration
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
       
-    - name: Get Self-Reported Version Number
-      uses: mathiasvr/command-output@v1
-      id: getver
-      with:
-        run:  |
-              "${{github.workspace}}/build/ARRCON/ARRCON.exe" -vq
-        shell: powershell
-              
-    - name: Echo Version Number
-      run:  |
-            echo "${{steps.getver.outputs.stdout}}"
-      shell: powershell
-      
     - name: Compress Executable & Label Archive
       run:  |
-            Compress-Archive "${{github.workspace}}/build/ARRCON/ARRCON.exe" "ARRCON-${{steps.getver.outputs.stdout}}-Windows.zip"
+            cd ${{github.workspace}}
+            Compress-Archive .\build\ARRCON\ARRCON.exe ARRCON-$(.\build\ARRCON\ARRCON.exe -vq)-Windows.zip
       shell: powershell
       
     - name: Upload Archive as an Artifact
       uses: actions/upload-artifact@v2
       with:
-        name: ${{steps.getver.outputs.stdout}}-Windows
+        name: latest-windows
         path: ./*.zip
         retention-days: 2
 
