@@ -1,6 +1,6 @@
 <p align="center">
   <img
-       src="https://i.imgur.com/Q1Pk03U.png"
+       src="https://i.imgur.com/yARb4DV.png"
        alt="ARRCON Banner"
   />
   <h1 align="center">Another RCON Client</h1>
