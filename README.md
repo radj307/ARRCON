@@ -53,7 +53,12 @@ See [here](https://github.com/radj307/ARRCON/wiki/Building-from-Source) for a br
 
 ## Usage
 ARRCON is a CLI program, which means you need to run it through a terminal.  
-On Windows, you can use `cmd.exe` or `powershell.exe` by R+Clicking on the start menu.
+On Windows, you can use `cmd.exe` or `powershell.exe` by R+Clicking on the start menu.  
+For more detailed usage instructions, see [Getting Started](https://github.com/radj307/ARRCON/wiki)
+
+To see a list of commands, use `ARRCON -h` or `ARRCON --help`  
+To see a list of environment variables, their current values, and a description of each, use `ARRCON --print-env`
+
 
 ### Modes
 The operation mode is selected based on context, but can be influenced by some options.  
