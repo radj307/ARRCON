@@ -36,35 +36,31 @@ jobs:
   create-release:
     runs-on: ubuntu-latest
 
-    steps:
+    steps:    
     - name: Download Latest Artifact for Linux
       uses: dawidd6/action-download-artifact@v2
       with:
         workflow: Linux.yml
         workflow_conclusion: success
-        path: ${{github.workspace}}/Releases
         
     - name: Download Latest Artifact for Windows
       uses: dawidd6/action-download-artifact@v2
       with:
         workflow: Windows.yml
         workflow_conclusion: success
-        path: ${{github.workspace}}/Releases
         
     - name: Download Latest Artifact for macOS
       uses: dawidd6/action-download-artifact@v2
       with:
         workflow: macOS.yml
         workflow_conclusion: success
-        path: ${{github.workspace}}/Releases
         
     - name: Compile Artifacts
       run:  |
-            cd ${{github.workspace}}/Releases
             mv ./latest-*/* ./
         
     - name: List Directory
-      run:  ls -lAgh
+      run:  ls -lAghR
         
     - name: Create Release
       uses: softprops/action-gh-release@v1
