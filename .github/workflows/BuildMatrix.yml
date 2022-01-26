@@ -45,15 +45,15 @@ jobs:
       - uses: seanmiddleditch/gha-setup-ninja@master
 
       - name: Configure CMake (Windows)
-        if:   matrix.os == windows-latest
+        if:   matrix.os == 'windows-latest'
         run:  cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -G Ninja
 
       - name: Download Tools (Ubuntu)
-        if:   matrix.os == ubuntu-latest
+        if:   matrix.os == 'ubuntu-latest'
         run:  sudo apt-get update && sudo apt-get install gcc-10 g++-10 zip -y
                 
       - name: Configure CMake (POSIX)
-        if:   matrix.os == ubuntu-latest || matrix.os == ubuntu-latest
+        if:   matrix.os == 'ubuntu-latest' || matrix.os == 'ubuntu-latest'
         run:  cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -G Ninja
         env:
           CC:  gcc-10
