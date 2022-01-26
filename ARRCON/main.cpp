@@ -16,6 +16,16 @@
 #undef read
 #undef write
 
+inline HostInfo get_environment_target(std::string programNameNoExt)
+{
+	programNameNoExt = str::toupper(programNameNoExt);
+	return{
+		env::getvar(programNameNoExt + "_HOST").value_or(""),
+		env::getvar(programNameNoExt + "_PORT").value_or(""),
+		env::getvar(programNameNoExt + "_PASS").value_or("")
+	};
+}
+
 /**
  * @brief		Retrieve the user's specified connection target.
  * @param args	Arguments from main().
@@ -26,7 +36,7 @@
  */
 inline HostInfo get_target_info(const opt::ParamsAPI2& args, const config::HostList& hostlist)
 {
-	
+
 	const auto
 		host{ args.typegetv_any<opt::Flag, opt::Option>('H', "host") }, //< Argument:  [-H|--host]
 		port{ args.typegetv_any<opt::Flag, opt::Option>('P', "port") }, //< Argument:  [-P|--port]
@@ -82,7 +92,7 @@ inline void handle_hostfile_arguments(const opt::ParamsAPI2& args, config::HostL
 	// save-host
 	else if (const auto save_host{ args.typegetv<opt::Option>("save-host") }; save_host.has_value()) {
 		std::stringstream message_buffer; // save the messages in a buffer to prevent misleading messages in the event of a file writing error
-		
+
 
 		const auto target_info{ from_hostinfo(target) };
 		const auto& [existing, added] {
@@ -249,7 +259,7 @@ int main(const int argc, char** argv)
 		Global.palette.setDefaultResetSequence(color::reset_f);
 
 		std::cout << term::EnableANSI; // enable ANSI escape sequences on windows
-		const opt::ParamsAPI2 args{ argc, argv, 'H', "host", 'S', "saved", 'P', "port", 'p', "pass", 'd', "delay", 'f', "file", "save-host", "remove-host"}; // parse arguments
+		const opt::ParamsAPI2 args{ argc, argv, 'H', "host", 'S', "saved", 'P', "port", 'p', "pass", 'd', "delay", 'f', "file", "save-host", "remove-host" }; // parse arguments
 
 		// check for disable colors argument:
 		if (const auto arg{ args.typegetv_any<opt::Option, opt::Flag>('n', "no-color") }; arg.has_value())
@@ -259,7 +269,15 @@ int main(const int argc, char** argv)
 		env::PATH PATH{ argv[0] };
 		const auto& [myDir, myName] { PATH.resolve_split(argv[0]) };
 
-		const config::Locator cfg_path(myDir, myName);
+		const std::string myNameNoExt{
+			[](auto&& p) -> std::string {
+				const std::string s{ p.generic_string() };
+				if (const auto pos{ s.find('.') }; pos < s.size())
+					return str::toupper(s.substr(0ull, pos));
+				return str::toupper(s);
+		}(myName) };
+
+		const config::Locator cfg_path(myDir, myNameNoExt);
 		Global.EnvVar_CONFIG_DIR = cfg_path.getEnvironmentVariableName();
 
 		// Argument:  [-q|--quiet]
@@ -276,6 +294,11 @@ int main(const int argc, char** argv)
 			std::cout << ARRCON_VERSION << std::endl;
 			return 0;
 		}
+		// Argument:  [--print-env]
+		if (args.check<opt::Option>("print-env")) {
+			std::cout << EnvHelp(myNameNoExt) << std::endl;
+			return 0;
+		}
 
 		// Get the INI file's path
 		std::filesystem::path ini_path{ cfg_path.from_extension(".ini") };
@@ -283,6 +306,9 @@ int main(const int argc, char** argv)
 		// Read the INI if it exists
 		if (file::exists(ini_path))
 			config::load_ini(ini_path);
+
+		// load target-specifier environment variables
+		config::load_environment(myNameNoExt);
 
 		if (args.empty() && !Global.allow_no_args) {
 			std::cerr << Help(myName) << std::endl << std::endl;
@@ -299,7 +325,7 @@ int main(const int argc, char** argv)
 		// Initialize the hostlist
 		config::HostList hosts;
 
-		const auto hostfile_path{ cfg_path.from_extension(".hosts")};
+		const auto hostfile_path{ cfg_path.from_extension(".hosts") };
 		if (file::exists(hostfile_path)) // load the hostfile if it exists
 			hosts = config::load_hostfile(hostfile_path);
 
@@ -345,9 +371,11 @@ int main(const int argc, char** argv)
 		return 0;
 	} catch (const std::exception& ex) { ///< catch exceptions
 		std::cerr << term::get_error(!Global.no_color) << ex.what() << std::endl;
+		std::cerr << term::get_info(!Global.no_color) << "You can report bugs here: " << ISSUE_REPORT_URL << std::endl;
 		return -1;
 	} catch (...) { ///< catch all other exceptions
 		std::cerr << term::get_crit(!Global.no_color) << "An unknown exception occurred!" << std::endl;
+		std::cerr << term::get_info(!Global.no_color) << "Please report this exception here: " << ISSUE_REPORT_URL << std::endl;
 		return -1;
 	}
 }

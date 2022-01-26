@@ -22,7 +22,7 @@ namespace config {
 		std::filesystem::path home_path;
 
 	public:
-		Locator(const std::filesystem::path& program_dir, const std::filesystem::path& program_name) : program_location{ program_dir }, name_no_ext{ [](auto&& p) -> std::string { const std::string s{ p.generic_string() }; if (const auto pos{ s.find('.') }; pos < s.size()) return s.substr(0ull, pos); return s; }(program_name) }, env_path{ env::getvar(name_no_ext + "_CONFIG_DIR").value_or("") }, home_path{ env::get_home() } {}
+		Locator(const std::filesystem::path& program_dir, const std::string& program_name_no_extension) : program_location{ program_dir }, name_no_ext{ program_name_no_extension }, env_path{ env::getvar(name_no_ext + "_CONFIG_DIR").value_or("") }, home_path{ env::get_home() } {}
 
 		std::string getEnvironmentVariableName(const std::string& suffix = "_CONFIG_DIR") const
 		{
@@ -105,6 +105,13 @@ namespace config {
 		Global.enable_no_response_message = ini.checkv(header::MISCELLANEOUS, "bEnableNoResponseMessage", true);
 
 		return true;
+	}
+
+	inline void load_environment(const std::string& programNameNoExt)
+	{
+		Global.target.hostname = env::getvar(programNameNoExt + "_HOST").value_or(Global.target.hostname);
+		Global.target.port = env::getvar(programNameNoExt + "_PORT").value_or(Global.target.port);
+		Global.target.password = env::getvar(programNameNoExt + "_PASS").value_or(Global.target.password);
 	}
 
 	/**

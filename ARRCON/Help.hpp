@@ -18,7 +18,7 @@ public:
 	Help(const std::filesystem::path& program_name) : _program_name{ program_name } {}
 	friend std::ostream& operator<<(std::ostream& os, const Help& help)
 	{
-		os << help._program_name.generic_string() << ' ' << ((help._program_name != std::string_view(DEFAULT_PROGRAM_NAME)) ? "("s + DEFAULT_PROGRAM_NAME + ") "s : "") << "v" << ARRCON_VERSION << '\n'
+		return os << help._program_name.generic_string() << ' ' << ((help._program_name != std::string_view(DEFAULT_PROGRAM_NAME)) ? "("s + DEFAULT_PROGRAM_NAME + ") "s : "") << "v" << ARRCON_VERSION << '\n'
 			<< "Another Remote-CONsole Client.\n"
 			<< '\n'
 			<< "USAGE:\n"
@@ -40,6 +40,7 @@ public:
 			<< "-d <ms>  --delay <ms>          Time in milliseconds to wait between each command in commandline mode." << '\n'
 			<< "-n  --no-color                 Disable colorized console output." << '\n'
 			<< "-Q  --no-prompt                Disables the prompt in interactive mode, and command echo in commandline mode." << '\n'
+			<< "--print-env                    Prints all recognized environment variables, their values, and descriptions." << '\n'
 			<< "--write-ini                    (Over)write the configuration file with the default values & exit." << '\n'
 			<< '\n'
 			<< "MODES:\n"
@@ -53,6 +54,56 @@ public:
 			<< "                      Each line will be executed as a command in commandline mode after any arguments." << '\n'
 			<< "                      Input received from STDIN follows the same rules as script files."
 			;
-		return os.flush();
 	}
 };
+
+struct EnvHelp {
+	std::string program_name;
+	EnvHelp(const std::string& programName) : program_name{ programName } {}
+
+	friend std::ostream& operator<<(std::ostream& os, const EnvHelp& help)
+	{
+		std::string var{ help.program_name + "_CONFIG_DIR" };
+		// ARRCON_CONFIG_DIR
+		os
+			<< Global.palette.set(UIElem::ENV_VAR) << var << Global.palette.reset() << '\n'
+			<< "  " << "Current Value:  " << env::getvar(var).value_or("") << '\n'
+			<< "  " << "Description:\n"
+			<< "    " << "Overrides the default config location." << '\n'
+			<< "    " << "When this is set, config files in other locations are ignored." << '\n'
+			<< '\n'
+			;
+		// ARRCON_HOST
+		var = { help.program_name + "_HOST" };
+		os
+			<< Global.palette.set(UIElem::ENV_VAR) << var << Global.palette.reset() << '\n'
+			<< "  " << "Current Value:  " << env::getvar(var).value_or("") << '\n'
+			<< "  " << "Description:\n"
+			<< "    " << "Overrides the default target hostname." << '\n'
+			<< "    " << "This overrides the " << Global.palette.set(UIElem::INI_KEY_HIGHLIGHT) << "sDefaultHost" << Global.palette.reset() << " key in the INI file." << '\n'
+			<< '\n'
+			;
+		// ARRCON_PORT
+		var = { help.program_name + "_PORT" };
+		os
+			<< Global.palette.set(UIElem::ENV_VAR) << var << Global.palette.reset() << '\n'
+			<< "  " << "Current Value:  " << env::getvar(var).value_or("") << '\n'
+			<< "  " << "Description:\n"
+			<< "    " << "Overrides the default target port." << '\n'
+			<< "    " << "This overrides the " << Global.palette.set(UIElem::INI_KEY_HIGHLIGHT) << "sDefaultPort" << Global.palette.reset() << " key in the INI file." << '\n'
+			<< '\n'
+			;
+		// ARRCON_PASS
+		var = { help.program_name + "_PASS" };
+		os
+			<< Global.palette.set(UIElem::ENV_VAR) << var << Global.palette.reset() << '\n'
+			<< "  " << "Current Value:  " << env::getvar(var).value_or("") << '\n'
+			<< "  " << "Description:\n"
+			<< "    " << "Overrides the default target password." << '\n'
+			<< "    " << "This overrides the " << Global.palette.set(UIElem::INI_KEY_HIGHLIGHT) << "sDefaultPass" << Global.palette.reset() << " key in the INI file." << '\n'
+			;
+		return os;
+	}
+};
+
+

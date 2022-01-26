@@ -16,10 +16,10 @@
 #include <atomic>
 #include <unistd.h>
 
-/// @brief	The default program name on each platform.
+ /// @brief	The default program name on each platform.
 inline constexpr const auto DEFAULT_PROGRAM_NAME{
 #ifdef OS_WIN
-	"ARRCON.exe" 
+	"ARRCON.exe"
 #else
 	"ARRCON"
 #endif
@@ -35,6 +35,8 @@ using SOCKET = unsigned long long;
 #endif // #ifndef OS_WIN
 
 #define ISSUE_REPORT_URL "https://github.com/radj307/ARRCON/issues"
+
+
 
 /**
  * @struct	HostInfo
@@ -68,6 +70,7 @@ enum class UIElem : unsigned char {
 	HOST_INFO,			// list-hosts command (hostname/port)
 	INI_KEY_HIGHLIGHT,	// used by some exceptions to highlight INI keys.
 	NO_RESPONSE,		// interactive mode no response message
+	ENV_VAR,			// --print-env
 };
 
 static struct {
@@ -82,6 +85,7 @@ static struct {
 		std::make_pair(UIElem::HOST_INFO, color::light_gray),
 		std::make_pair(UIElem::INI_KEY_HIGHLIGHT, color::intense_yellow),
 		std::make_pair(UIElem::NO_RESPONSE, color::orange),
+		std::make_pair(UIElem::ENV_VAR, color::intense_yellow),
 	};
 	const HostInfo DEFAULT_TARGET{ // default target
 		"localhost",
@@ -89,6 +93,7 @@ static struct {
 		""
 	};
 	HostInfo target{ DEFAULT_TARGET }; // active target
+	HostInfo env_target{};
 
 	/// @brief	When true, response packets are not printed to the terminal
 	bool quiet{ false };
@@ -162,3 +167,4 @@ inline timespec make_timeout(const std::chrono::milliseconds& ms)
 }
 #define SELECT(nfds, rd, wr, ex, timeout) pselect(nfds, rd, wr, ex, timeout, nullptr)
 #endif // #ifdef OS_WIN
+
