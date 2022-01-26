@@ -50,16 +50,16 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1
         
 
-      - name: Configure CMake (Windows)
+      - name: (WINDOWS) Configure CMake
         if:   matrix.os == 'windows-latest'
         run:  cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -G Ninja
 
-      - name: Install gcc-10 for C++20 Compatibility
+      - name: (LINUX) Install gcc-10 for C++20 Compatibility
         if:   matrix.os == 'ubuntu-latest'
         run:  sudo apt-get update && sudo apt-get install gcc-10 g++-10 zip -y
                 
-      - name: Configure CMake
-        if:   matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
+      - name: (POSIX) Configure CMake
+        if:   runner.os != 'Windows'
         run:  cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -G Ninja
         env:
           CC:  gcc-10
@@ -68,10 +68,20 @@ jobs:
       - name: Build
         run:  cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
         
-      - name: Create Archive
+      - name: (POSIX) Create Archive
+        if: runner.os != 'Windows'
         run:  |
               cd ${{github.workspace}}/build/ARRCON
               zip -T9 ARRCON-$(./ARRCON -vq)-${{runner.os}}.zip ARRCON*
+        shell: bash
+        
+      - name: (WINDOWS) Create Archive
+        if: runner.os == 'Windows'
+        run:  |
+              cd ${{github.workspace}}\build\ARRCON
+              Compress-Archive ARRCON.exe ARRCON-$(.\ARRCON.exe -vq)-Windows.zip
+        shell: powershell
+          
               
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v2
