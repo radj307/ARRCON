@@ -58,10 +58,13 @@ jobs:
         workflow_conclusion: success
         path: ${{github.workspace}}/Releases
         
-    - name: Change & List Directory
+    - name: Compile Artifacts
       run:  |
             cd ${{github.workspace}}/Releases
-            ls -lAgh
+            mv ./latest-*/* ./
+        
+    - name: List Directory
+      run:  ls -lAgh
         
     - name: Create Release
       uses: softprops/action-gh-release@v1
