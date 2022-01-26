@@ -6,6 +6,10 @@
   <h1 align="center">Another RCON Client</h1>
 </p>  
 <p align="center">
+<p align="center">
+  <a href="https://github.com/radj307/ARRCON/releases">
+    <img src="https://img.shields.io/github/release/radj307/ARRCON.svg" />
+  </a>
   <a href="https://github.com/radj307/ARRCON/actions">
     <img src="https://github.com/radj307/ARRCON/actions/workflows/Windows.yml/badge.svg" alt="Windows Build Status"></img>
     <img src="https://github.com/radj307/ARRCON/actions/workflows/Linux.yml/badge.svg" alt="Linux Build Status"></img>
