@@ -117,6 +117,8 @@ namespace config {
 	 */
 	inline bool save_ini(const std::filesystem::path& path, const bool& use_defaults = true)
 	{
+		// create parent directories
+		std::filesystem::create_directories(path);
 		#pragma warning (disable:26800) // use of a moved-from object: ss
 		std::stringstream ss{};
 		if (use_defaults) {
@@ -191,6 +193,8 @@ namespace config {
 	 */
 	inline auto save_hostfile(const HostList& hostlist, const std::filesystem::path& path)
 	{
+		// create parent directories
+		std::filesystem::create_directories(path);
 		#pragma warning (disable:26800) // use of a moved-from object: ss
 		std::stringstream ss;
 		ss << hostlist;
