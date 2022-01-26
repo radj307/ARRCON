@@ -16,7 +16,8 @@
   <a href="https://github.com/radj307/ARRCON/wiki">Wiki</a>&nbsp|&nbsp<a href="https://github.com/radj307/ARRCON/releases">Releases</a>&nbsp|&nbsp<a href="https://github.com/radj307/ARRCON/issues">Issues</a>
 </p>
 
-A lightweight terminal-based RCON client originally based on [mcrcon by Tiiffi](https://github.com/Tiiffi/mcrcon).
+A lightweight terminal-based remote console client originally based on [mcrcon by Tiiffi](https://github.com/Tiiffi/mcrcon).  
+ARRCON is written in C++, and is available on all major platforms.  
 
 # Features
   - Cross-Platform:
