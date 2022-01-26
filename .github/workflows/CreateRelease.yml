@@ -1,0 +1,79 @@
+name: Create Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        description: 'Release Name'
+        required: true
+        type: string
+      tag: # Target tag to make a release for
+        description: 'Release Tag'
+        required: true
+        type: string
+      is-draft: # Input that selects whether to make a draft release or a public release
+        description: 'Make Draft Release'
+        required: false
+        default: 'true'
+        type: boolean
+      is-prerelease: # Input that selects whether to make a pre-release or normal release
+        description: 'Make Pre-Release'
+        required: false
+        default: 'false'
+        type: boolean
+      autogenerate:
+        description: 'Autogenerate Release Notes From Commits'
+        required: false
+        default: 'false'
+        type: boolean
+      body:
+        description: 'Release Body Paragraph'
+        required: false
+        default: ''
+        
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+
+    steps:    
+    - name: Download Latest Artifact for Linux
+      uses: dawidd6/action-download-artifact@v2
+      with:
+        workflow: Linux.yml
+        workflow_conclusion: success
+        
+    - name: Download Latest Artifact for Windows
+      uses: dawidd6/action-download-artifact@v2
+      with:
+        workflow: Windows.yml
+        workflow_conclusion: success
+        
+    - name: Download Latest Artifact for macOS
+      uses: dawidd6/action-download-artifact@v2
+      with:
+        workflow: macOS.yml
+        workflow_conclusion: success
+        
+    - name: Compile Artifacts
+      run:  |
+            mv ./latest-*/* ./
+        
+    - name: List Directory
+      run:  ls -lAghR
+        
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        draft: ${{github.event.inputs.is-draft}}
+        prerelease: ${{github.event.inputs.is-prerelease}}
+        tag_name: ${{github.event.inputs.tag}}
+        name: ${{github.event.inputs.name}}
+        generate_release_notes: ${{github.event.inputs.autogenerate}}
+        body: ${{github.event.inputs.body}}
+        fail_on_unmatched_files: true
+        files:  |
+                ./*.zip
+
+
+
