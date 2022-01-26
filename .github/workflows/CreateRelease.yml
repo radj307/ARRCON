@@ -72,7 +72,7 @@ jobs:
         draft: ${{github.event.inputs.is-draft}}
         prerelease: ${{github.event.inputs.is-prerelease}}
         tag_name: ${{github.event.inputs.tag}}
-        release_name: ${{github.event.inputs.name}}
+        name: ${{github.event.inputs.name}}
         generate_release_notes: ${{github.event.inputs.autogenerate}}
         body: ${{github.event.inputs.body}}
         fail_on_unmatched_files: true
