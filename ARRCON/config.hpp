@@ -14,7 +14,31 @@
 #include <str.hpp>
 #include <INI.hpp>
 
-namespace config {
+/**
+ * @namespace	config
+ * @brief		Contains functions and objects used to interact with ARRCON's configuration files.
+ */
+namespace config {	
+	/**
+	 * @namespace	header
+	 * @brief		Contains constants that correspond to the names of headers in ARRCON's configuration file.
+	 */
+	namespace header {
+		inline constexpr const auto 
+			// Appearance-related keys
+			APPEARANCE{ "appearance" }, 
+			// Timing-related keys
+			TIMING{ "timing" }, 
+			// Target-related keys
+			TARGET{ "target" }, 
+			// Misc keys
+			MISCELLANEOUS{ "miscellaneous" };
+	}
+
+	/**
+	 * @class	Locator
+	 * @brief	Used to locate ARRCON's config files.
+	 */
 	class Locator {
 		std::filesystem::path program_location;
 		std::string name_no_ext;
@@ -23,11 +47,6 @@ namespace config {
 
 	public:
 		Locator(const std::filesystem::path& program_dir, const std::string& program_name_no_extension) : program_location{ program_dir }, name_no_ext{ program_name_no_extension }, env_path{ env::getvar(name_no_ext + "_CONFIG_DIR").value_or("") }, home_path{ env::get_home() } {}
-
-		std::string getEnvironmentVariableName(const std::string& suffix = "_CONFIG_DIR") const
-		{
-			return name_no_ext + suffix;
-		}
 
 		/**
 		 * @brief		Retrieves the target location of the given file extension appended to the program name. (Excluding extension, if applicable.)
@@ -55,12 +74,38 @@ namespace config {
 		}
 	};
 
-	/**
-	 * @namespace	header
-	 * @brief		Contains constant definitions for the headers in the INI
-	 */
-	namespace header {
-		inline constexpr const auto APPEARANCE{ "appearance" }, TIMING{ "timing" }, TARGET{ "target" }, MISCELLANEOUS{ "miscellaneous" };
+	inline bool apply_configuration(const file::INI& ini)
+	{
+		if (ini.empty())
+			return false;
+
+		// Appearance Header:
+		Global.no_prompt = ini.checkv(header::APPEARANCE, "bDisablePrompt", true);
+		Global.enable_bukkit_color_support = str::string_to_bool<bool>(ini.getvs(header::APPEARANCE, "bEnableBukkitColors").value_or(""));
+		if (ini.checkv(header::APPEARANCE, "bDisableColors", "true", false)) {
+			Global.palette.setActive(false);
+			Global.enable_bukkit_color_support = false;
+		}
+		Global.custom_prompt = ini.getvs(header::APPEARANCE, "sCustomPrompt").value_or("");
+
+		// Timing Header:
+		using namespace std::chrono_literals;
+		const auto to_ms{ [](const std::optional<std::string>& str, const std::chrono::milliseconds& def) -> std::chrono::milliseconds { return ((str.has_value() && std::all_of(str.value().begin(), str.value().end(), isdigit)) ? std::chrono::milliseconds(str::stoi(str.value())) : def); } };
+		Global.command_delay = to_ms(ini.getvs(header::TIMING, "iCommandDelay"), Global.command_delay);
+		Global.receive_delay = to_ms(ini.getvs(header::TIMING, "iReceiveDelay"), Global.receive_delay);
+		Global.select_timeout = to_ms(ini.getvs(header::TIMING, "iSelectTimeout"), Global.select_timeout);
+
+		// Target Header:
+		Global.target.hostname = ini.getvs(header::TARGET, "sDefaultHost").value_or(Global.target.hostname);
+		Global.target.port = ini.getvs(header::TARGET, "sDefaultPort").value_or(Global.target.port);
+		Global.target.password = ini.getvs(header::TARGET, "sDefaultPass").value_or(Global.target.password);
+		Global.allow_no_args = ini.checkv(header::TARGET, "bAllowNoArgs", true);
+
+		// Miscellaneous Header:
+		Global.allow_exit = ini.checkv(header::MISCELLANEOUS, "bInteractiveAllowExitKeyword", true);
+		Global.enable_no_response_message = ini.checkv(header::MISCELLANEOUS, "bEnableNoResponseMessage", true);
+
+		return true;
 	}
 
 	/**
@@ -107,13 +152,6 @@ namespace config {
 		return true;
 	}
 
-	inline void load_environment(const std::string& programNameNoExt)
-	{
-		Global.target.hostname = env::getvar(programNameNoExt + "_HOST").value_or(Global.target.hostname);
-		Global.target.port = env::getvar(programNameNoExt + "_PORT").value_or(Global.target.port);
-		Global.target.password = env::getvar(programNameNoExt + "_PASS").value_or(Global.target.password);
-	}
-
 	/**
 	 * @brief				Save the INI configuration file.
 	 * @param path			Location to save config.
@@ -150,6 +188,7 @@ namespace config {
 				<< '[' << header::MISCELLANEOUS << ']' << '\n'
 				<< "bInteractiveAllowExitKeyword = true\n"
 				<< "bEnableNoResponseMessage = true\n"
+				<< "bEnforceSendSizeLimit = true\n"
 				<< '\n';
 		}
 		else { // use current settings
@@ -174,23 +213,16 @@ namespace config {
 				<< '[' << header::MISCELLANEOUS << ']' << '\n'
 				<< "bInteractiveAllowExitKeyword = " << Global.allow_exit << '\n'
 				<< "bEnableNoResponseMessage = " << Global.enable_no_response_message << '\n'
+				<< "bEnforceSendSizeLimit = " << Global.enforce_send_size_limit << '\n'
 				<< '\n';
 		}
 		return file::write_to(path, std::move(ss));
 		#pragma warning (default:26800) // use of a moved-from object: ss
 	}
 
-	using HostList = file::INI;
 
-	/**
-	 * @brief		Read & parse a given hosts file.
-	 * @param path	The location of the target hosts file.
-	 * @returns		HostList
-	 */
-	inline HostList load_hostfile(const std::filesystem::path& path) noexcept(false)
-	{
-		return file::INI(path);
-	}
+
+	using HostList = file::INI;
 
 	/**
 	 * @brief			Write the given hostlist to a file.
@@ -208,56 +240,4 @@ namespace config {
 		return file::write_to(path, std::move(ss));
 		#pragma warning (default:26800) // use of a moved-from object: ss
 	}
-}
-
-
-/**
- * @brief				Create a HostInfo object from an INI section.
- * @param ini_section	A reference to an INI section container.
- * @returns				HostInfo
- */
-inline HostInfo to_hostinfo(const file::INI::SectionContent& ini_section)
-{
-	HostInfo info;
-
-	// hostname:
-	if (const auto host{ ini_section.find("sHost") }; host != ini_section.end())
-		info.hostname = file::ini::to_string(host->second);
-	else info.hostname = Global.DEFAULT_TARGET.hostname;
-	// port:
-	if (const auto port{ ini_section.find("sPort") }; port != ini_section.end())
-		info.port = file::ini::to_string(port->second);
-	else info.port = Global.DEFAULT_TARGET.port;
-	// password:
-	if (const auto pass{ ini_section.find("sPass") }; pass != ini_section.end())
-		info.password = file::ini::to_string(pass->second);
-	else info.password = Global.DEFAULT_TARGET.password;
-
-	return info;
-}
-
-/**
- * @brief			Copy a hostinfo object's values into an INI section reference.
- * @param section	Reference to an existing INI section.
- * @param info		HostInfo to insert.
- * @returns			file::INI::SectionContent
- */
-inline file::INI::SectionContent& from_hostinfo(file::INI::SectionContent& section, const HostInfo& info)
-{
-	section.insert_or_assign("sHost", info.hostname);
-	section.insert_or_assign("sPort", info.port);
-	section.insert_or_assign("sPass", info.password);
-
-	return section;
-}
-
-/**
- * @brief		Create an INI section from a hostinfo object.
- * @param info	HostInfo to insert.
- * @returns		file::INI::SectionContent
- */
-inline file::INI::SectionContent from_hostinfo(const HostInfo& info)
-{
-	file::INI::SectionContent section;
-	return from_hostinfo(section, info);
 }

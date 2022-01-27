@@ -1,8 +1,6 @@
-#include "globals.h"
 #include "mode.hpp"				///< RCON client modes
 #include "config.hpp"			///< INI functions
 #include "Help.hpp"				///< CLI usage instructions
-#include "exceptions.hpp"
 
 #include <make_exception.hpp>
 #include <ParamsAPI2.hpp>
@@ -16,16 +14,6 @@
 #undef read
 #undef write
 
-inline HostInfo get_environment_target(std::string programNameNoExt)
-{
-	programNameNoExt = str::toupper(programNameNoExt);
-	return{
-		env::getvar(programNameNoExt + "_HOST").value_or(""),
-		env::getvar(programNameNoExt + "_PORT").value_or(""),
-		env::getvar(programNameNoExt + "_PASS").value_or("")
-	};
-}
-
 /**
  * @brief		Retrieve the user's specified connection target.
  * @param args	Arguments from main().
@@ -36,7 +24,6 @@ inline HostInfo get_environment_target(std::string programNameNoExt)
  */
 inline HostInfo get_target_info(const opt::ParamsAPI2& args, const config::HostList& hostlist)
 {
-
 	const auto
 		host{ args.typegetv_any<opt::Flag, opt::Option>('H', "host") }, //< Argument:  [-H|--host]
 		port{ args.typegetv_any<opt::Flag, opt::Option>('P', "port") }, //< Argument:  [-P|--port]
@@ -45,8 +32,8 @@ inline HostInfo get_target_info(const opt::ParamsAPI2& args, const config::HostL
 	// Argument:  [-S|--saved]
 	if (const auto saved{ args.typegetv_any<opt::Flag, opt::Option>('S', "saved") }; saved.has_value()) {
 		if (const auto target{ hostlist.find(saved.value()) }; target != hostlist.end()) {
-			const auto info{ to_hostinfo(target->second) };
-			return HostInfo{ host.value_or(info.hostname), port.value_or(info.port), pass.value_or(info.password) };
+			// returns values from the saved target, unless they are overidden by explicitly specified commandline args.
+			return HostInfo{ target->second, Global.DEFAULT_TARGET }.getWithOverride(host, port, pass);
 		}
 		throw make_exception("Couldn't find a saved host named \"", saved.value(), "\"!");
 	}
@@ -60,10 +47,10 @@ inline HostInfo get_target_info(const opt::ParamsAPI2& args, const config::HostL
 
 inline void handle_hostfile_arguments(const opt::ParamsAPI2& args, config::HostList& hosts, const HostInfo& target, const std::filesystem::path& hostfile_path)
 {
-
-	const auto do_list_hosts{ args.check<opt::Option>("list-hosts") };
+	bool do_exit{ false };
 	// remove-host
 	if (const auto remove_hosts{ args.typegetv_all<opt::Option>("remove-host") }; !remove_hosts.empty()) {
+		do_exit = true;
 		std::stringstream message_buffer; // save the messages in a buffer to prevent misleading messages in the event of a file writing error
 		for (const auto& name : remove_hosts) {
 			if (hosts.erase(name))
@@ -85,16 +72,14 @@ inline void handle_hostfile_arguments(const opt::ParamsAPI2& args, config::HostL
 				std::cout << message_buffer.rdbuf() << term::get_msg(!Global.no_color) << "Saved modified hostlist to " << hostfile_path << std::endl;
 			else
 				throw permission_exception("handle_hostfile_arguments()", hostfile_path, "Failed to write modified Hostfile to disk!");
-			if (!do_list_hosts) std::exit(EXIT_SUCCESS);
 		}
-
 	}
 	// save-host
-	else if (const auto save_host{ args.typegetv<opt::Option>("save-host") }; save_host.has_value()) {
+	if (const auto save_host{ args.typegetv<opt::Option>("save-host") }; save_host.has_value()) {
+		do_exit = true;
 		std::stringstream message_buffer; // save the messages in a buffer to prevent misleading messages in the event of a file writing error
 
-
-		const auto target_info{ from_hostinfo(target) };
+		const file::INI::SectionContent target_info{ target };
 		const auto& [existing, added] {
 			hosts.insert(std::make_pair(save_host.value(), target_info))
 		};
@@ -122,11 +107,10 @@ inline void handle_hostfile_arguments(const opt::ParamsAPI2& args, config::HostL
 			std::cout << message_buffer.rdbuf() << term::get_msg(!Global.no_color) << "Saved modified hostlist to " << hostfile_path << std::endl;
 		else
 			throw permission_exception("handle_hostfile_arguments()", hostfile_path, "Failed to write modified Hostfile to disk!");
-
-		if (!do_list_hosts) std::exit(EXIT_SUCCESS);
 	}
 	// list all hosts
-	if (do_list_hosts) {
+	if (args.check<opt::Option>("list-hosts")) {
+		do_exit = true;
 		if (hosts.empty()) {
 			std::cerr << "There are no saved hosts in the list." << std::endl;
 			std::exit(EXIT_SUCCESS);
@@ -143,7 +127,7 @@ inline void handle_hostfile_arguments(const opt::ParamsAPI2& args, config::HostL
 		}() };
 
 		for (const auto& [name, info] : hosts) {
-			const auto& hostinfo{ to_hostinfo(info) };
+			const HostInfo& hostinfo{ info };
 			if (!Global.quiet) {
 				std::cout
 					<< Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT) << name << Global.palette.reset() << '\n'
@@ -155,16 +139,16 @@ inline void handle_hostfile_arguments(const opt::ParamsAPI2& args, config::HostL
 					<< str::VIndent(indentation_max, name.size()) << "( " << hostinfo.hostname << ':' << hostinfo.port << " )\n";
 			}
 		}
-		std::exit(EXIT_SUCCESS);
 	}
-
+	if (do_exit)
+		std::exit(EXIT_SUCCESS);
 }
 
 /**
  * @brief		Handle commandline arguments.
  * @param args	Arguments from main()
  */
-inline void handle_arguments(const opt::ParamsAPI2& args, const HostInfo& target, const std::filesystem::path& ini_path)
+inline void handle_arguments(const opt::ParamsAPI2& args, const std::filesystem::path& ini_path)
 {
 	// write-ini:
 	if (args.check_any<opt::Option>("write-ini")) {
@@ -176,11 +160,9 @@ inline void handle_arguments(const opt::ParamsAPI2& args, const HostInfo& target
 			throw permission_exception("handle_arguments()", ini_path, "Failed to open INI for writing!");
 	}
 	// force interactive:
-	if (args.check_any<opt::Option, opt::Flag>('i', "interactive"))
-		Global.force_interactive = true;
+	Global.force_interactive = args.check_any<opt::Option, opt::Flag>('t', 'i', "interactive");
 	// no-prompt
-	if (args.check_any<opt::Flag, opt::Option>('Q', "no-prompt"))
-		Global.no_prompt = true;
+	Global.no_prompt = args.check_any<opt::Flag, opt::Option>('Q', "no-prompt");
 	// command delay:
 	if (const auto arg{ args.typegetv_any<opt::Flag, opt::Option>('d', "delay") }; arg.has_value()) {
 		if (std::all_of(arg.value().begin(), arg.value().end(), isdigit))
@@ -255,15 +237,18 @@ inline std::vector<std::string> get_commands(const opt::ParamsAPI2& args, const 
 int main(const int argc, char** argv)
 {
 	try {
-		// This fixes a potential bug on terminal emulators with transparent backgrounds; so long as the palette doesn't contain background colors or formatting
+		// Fixes a "bug" with the Wezterm terminal emulator where characters have opaque black backgrounds when using transparent backgrounds.
 		Global.palette.setDefaultResetSequence(color::reset_f);
 
 		std::cout << term::EnableANSI; // enable ANSI escape sequences on windows
 		const opt::ParamsAPI2 args{ argc, argv, 'H', "host", 'S', "saved", 'P', "port", 'p', "pass", 'd', "delay", 'f', "file", "save-host", "remove-host" }; // parse arguments
 
-		// check for disable colors argument:
-		if (const auto arg{ args.typegetv_any<opt::Option, opt::Flag>('n', "no-color") }; arg.has_value())
-			Global.palette.setActive(Global.no_color = false);
+		// Argument:  [-n|--no-color]
+		if (const auto arg{ args.typegetv_any<opt::Option, opt::Flag>('n', "no-color") }; arg.has_value()) {
+			Global.no_color = true;
+			Global.enable_bukkit_color_support = false;
+			Global.palette.setActive(false);
+		}
 
 		// Initialize the PATH variable & locate the program using argv[0]
 		env::PATH PATH{ argv[0] };
@@ -277,8 +262,9 @@ int main(const int argc, char** argv)
 				return str::toupper(s);
 		}(myName) };
 
+		Global.env.load_all(myNameNoExt);
+
 		const config::Locator cfg_path(myDir, myNameNoExt);
-		Global.EnvVar_CONFIG_DIR = cfg_path.getEnvironmentVariableName();
 
 		// Argument:  [-q|--quiet]
 		Global.quiet = args.check_any<opt::Option, opt::Flag>('q', "quiet");
@@ -296,7 +282,7 @@ int main(const int argc, char** argv)
 		}
 		// Argument:  [--print-env]
 		if (args.check<opt::Option>("print-env")) {
-			std::cout << EnvHelp(myNameNoExt) << std::endl;
+			std::cout << Global.env << std::endl;
 			return 0;
 		}
 
@@ -307,18 +293,20 @@ int main(const int argc, char** argv)
 		if (file::exists(ini_path))
 			config::load_ini(ini_path);
 
-		// load target-specifier environment variables
-		config::load_environment(myNameNoExt);
+		// Override with environment variables if specified
+		Global.target.hostname = Global.env.Values.hostname.value_or(Global.target.hostname);
+		Global.target.port = Global.env.Values.port.value_or(Global.target.port);
+		Global.target.password = Global.env.Values.password.value_or(Global.target.password);
 
 		if (args.empty() && !Global.allow_no_args) {
 			std::cerr << Help(myName) << std::endl << std::endl;
 			throw make_exception(
 				"No arguments were specified!\n",
-				"        Function Name:        main()\n",
-				"        Suggested Solutions:\n",
-				"        1.  Set ", Global.palette.set(UIElem::INI_KEY_HIGHLIGHT), "bAllowNoArgs = true", Global.palette.reset(), " in the INI config file.\n",
-				"        2.  Specify a target to connect to with the [-H|--host], [-P|--port], & [-p|--pass] options.\n",
-				"        3.  Read the help display above for command assistance.\n"
+				TABSPACE"Function Name:        main()\n",
+				TABSPACE"Suggested Solutions:\n",
+				TABSPACE"1.  Set ", Global.palette.set(UIElem::INI_KEY_HIGHLIGHT), "bAllowNoArgs = true", Global.palette.reset(), " in the INI config file.\n",
+				TABSPACE"2.  Specify a target to connect to with the [-H|--host], [-P|--port], & [-p|--pass] options.\n",
+				TABSPACE"3.  Read the help display above for command assistance.\n"
 			);
 		}
 
@@ -327,11 +315,13 @@ int main(const int argc, char** argv)
 
 		const auto hostfile_path{ cfg_path.from_extension(".hosts") };
 		if (file::exists(hostfile_path)) // load the hostfile if it exists
-			hosts = config::load_hostfile(hostfile_path);
+			hosts = file::INI{ hostfile_path };
 
 		// get the target server's connection information
 		const auto& hostinfo{ get_target_info(args, hosts) };
-		handle_arguments(args, hostinfo, ini_path);
+
+		handle_arguments(args, ini_path);
+
 		handle_hostfile_arguments(args, hosts, hostinfo, hostfile_path);
 
 		// get the commands to execute on the server
@@ -358,15 +348,8 @@ int main(const int argc, char** argv)
 			if (mode::commandline(commands) == 0ull || Global.force_interactive)
 				mode::interactive(Global.socket); // if no commands were executed from the commandline or if the force interactive flag was set
 		}
-		else {
-			throw make_exception("Authentication failure:  Incorrect Password!\n",
-				"        Target Hostname/IP:  ", hostinfo.hostname, '\n',
-				"        Target Port:         ", hostinfo.port, '\n',
-				"        Suggested Solutions:\n",
-				"        1.  Verify that you're using the right password.\n",
-				"        2.  Verify that this is the correct target."
-			);
-		}
+		else
+			throw badpass_exception(Global.target.hostname, Global.target.port, LAST_SOCKET_ERROR_CODE(), net::getLastSocketErrorMessage());
 
 		return 0;
 	} catch (const std::exception& ex) { ///< catch exceptions

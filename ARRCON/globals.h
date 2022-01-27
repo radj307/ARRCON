@@ -44,6 +44,49 @@ using SOCKET = unsigned long long;
  */
 struct HostInfo {
 	std::string hostname, port, password;
+
+	HostInfo() = default;
+	HostInfo(const std::string& hostname, const std::string& port, const std::string& password) : hostname{ hostname }, port{ port }, password{ password } {}
+	HostInfo(const file::INI::SectionContent& ini_section, const HostInfo& default_target)
+	{
+		// hostname:
+		if (const auto host{ ini_section.find("sHost") }; host != ini_section.end())
+			hostname = file::ini::to_string(host->second);
+		else hostname = default_target.hostname;
+		// port:
+		if (const auto prt{ ini_section.find("sPort") }; prt != ini_section.end())
+			port = file::ini::to_string(prt->second);
+		else port = default_target.port;
+		// password:
+		if (const auto pass{ ini_section.find("sPass") }; pass != ini_section.end())
+			password = file::ini::to_string(pass->second);
+		else password = default_target.password;
+	}
+	HostInfo(const file::INI::SectionContent& ini_section) : HostInfo(ini_section, HostInfo()) {}
+
+	/**
+	 * @brief			Create a HostInfo struct containing values from the given optional overrides, or values from this HostInfo instance for any null overrides.
+	 * @param ohost		Optional Override Hostname
+	 * @param oport		Optional Override Port
+	 * @param opass		Optional Override Password
+	 * @returns			HostInfo
+	 */
+	HostInfo getWithOverride(const std::optional<std::string>& ohost, const std::optional<std::string>& oport, const std::optional<std::string>& opass) const
+	{
+		return{ ohost.value_or(hostname), oport.value_or(port), opass.value_or(password) };
+	}
+
+	operator file::INI::SectionContent() const
+	{
+		file::INI::SectionContent section;
+
+		section.insert_or_assign("sHost", hostname);
+		section.insert_or_assign("sPort", port);
+		section.insert_or_assign("sPass", password);
+
+		return section;
+	}
+
 	friend std::ostream& operator<<(std::ostream& os, const HostInfo& hostinfo)
 	{
 		return (os
@@ -73,6 +116,32 @@ enum class UIElem : unsigned char {
 	ENV_VAR,			// --print-env
 };
 
+
+struct Environment {
+	std::string name_config_dir, name_host, name_port, name_pass;
+
+public:
+	struct Values {
+		std::optional<std::string> config_dir;
+		std::optional<std::string> hostname;
+		std::optional<std::string> port;
+		std::optional<std::string> password;
+	};
+	Values Values;
+
+	void load_all(const std::string& programFilename)
+	{
+		name_config_dir = programFilename + "_CONFIG_DIR";
+		name_host = programFilename + "_HOST";
+		name_port = programFilename + "_PORT";
+		name_pass = programFilename + "_PASS";
+
+		Values.config_dir = env::getvar(name_config_dir);
+		Values.hostname = env::getvar(name_host);
+		Values.port = env::getvar(name_port);
+		Values.password = env::getvar(name_pass);
+	}
+};
 static struct {
 	/// @brief Color palette
 	color::palette<UIElem> palette{
@@ -93,7 +162,8 @@ static struct {
 		""
 	};
 	HostInfo target{ DEFAULT_TARGET }; // active target
-	HostInfo env_target{};
+
+	Environment env;
 
 	/// @brief	When true, response packets are not printed to the terminal
 	bool quiet{ false };
@@ -142,6 +212,36 @@ static struct {
 	/// @brief	When entries are present, the user specified at least one [-f|--file] option.
 	std::vector<std::string> scriptfiles{};
 } Global;
+
+inline std::ostream& operator<<(std::ostream& os, const Environment& e)
+{
+	os
+		<< Global.palette.set(UIElem::ENV_VAR) << e.name_config_dir << Global.palette.reset()
+		<< "  Current Value:  " << e.Values.config_dir.value_or("") << '\n'
+		<< "  Description:\n"
+		<< "    Overrides the config file search location.\n"
+		<< "    When this is set, config files in other directories on the search path are ignored.\n"
+		<< '\n'
+		<< Global.palette.set(UIElem::ENV_VAR) << e.name_host << Global.palette.reset()
+		<< "  Current Value:  " << e.Values.hostname.value_or("") << '\n'
+		<< "  Description:\n"
+		<< "    Overrides the target hostname, unless one is specified on the commandline with [-H|--host].\n"
+		<< "    When this is set, the " << Global.palette.set(UIElem::INI_KEY_HIGHLIGHT) << "sDefaultHost" << Global.palette.reset() << " key in the INI will be ignored.\n"
+		<< '\n'
+		<< Global.palette.set(UIElem::ENV_VAR) << e.name_port << Global.palette.reset()
+		<< "  Current Value:  " << e.Values.port.value_or("") << '\n'
+		<< "  Description:\n"
+		<< "    Overrides the target port, unless one is specified on the commandline with [-P|--port].\n"
+		<< "    When this is set, the " << Global.palette.set(UIElem::INI_KEY_HIGHLIGHT) << "sDefaultPort" << Global.palette.reset() << " key in the INI will be ignored.\n"
+		<< '\n'
+		<< Global.palette.set(UIElem::ENV_VAR) << e.name_pass << Global.palette.reset()
+		<< "  Is Defined:     " << std::boolalpha << e.Values.password.has_value() << '\n'
+		<< "  Description:\n"
+		<< "    Overrides the target password, unless one is specified on the commandline with [-p|--pass].\n"
+		<< "    When this is set, the " << Global.palette.set(UIElem::INI_KEY_HIGHLIGHT) << "sDefaultPass" << Global.palette.reset() << " key in the INI will be ignored.\n"
+		;
+	return os;
+}
 
 // Use platform-specific select function
 #ifdef OS_WIN

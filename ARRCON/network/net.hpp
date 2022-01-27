@@ -209,7 +209,7 @@ namespace net {
 		if (do_check_first && SELECT(sd + 1ull, &set, nullptr, nullptr, &timeout) != 1)
 			return;
 		do {
-			if (recv(sd, std::unique_ptr<char>{}.get(), packet::PSIZE_MAX, 0) == 0)
+			if (recv(sd, std::unique_ptr<char>{}.get(), packet::PSIZE_MAX, 0) == 0ul)
 				throw socket_exception("net::flush()", "Connection Lost!", LAST_SOCKET_ERROR_CODE(), getLastSocketErrorMessage());
 			std::this_thread::sleep_for(Global.receive_delay);
 		} while (SELECT(sd + 1ull, &set, nullptr, nullptr, &timeout) == 1);

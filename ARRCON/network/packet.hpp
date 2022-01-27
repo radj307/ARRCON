@@ -13,10 +13,13 @@
   * @brief		Contains the Packet, serialized_packet, and ID_Manager objects.
   */
 namespace packet {
-	/// @brief Minimum allowable packet size
+	/// @brief Minimum possible RCON-packet size (10 B).
 	inline constexpr const int PSIZE_MIN{ 10 };
-	/// @brief Maximum allowable packet size
+	/// @brief Maximum allowable packet size (10 kB)
 	inline constexpr const int PSIZE_MAX{ 10240 };
+	/// @brief Maximum sendable packet size (4 kB)
+	inline constexpr const int PSIZE_MAX_SEND{ 4096 };
+
 	/// @brief Minimum allowable packet ID number.
 	inline constexpr const int PID_MIN{ 1 };
 	/// @brief Maximum allowable packet ID number.
@@ -116,6 +119,15 @@ namespace packet {
 		bool isValid() const
 		{
 			return (size > PSIZE_MIN && size < PSIZE_MAX) && (id >= PID_MIN && id <= PID_MAX) && (type == 0 || type == 2 || type == 3);
+		}
+
+		/**
+		 * @brief	Check if this packet's body is a valid length
+		 * @returns	bool
+		 */
+		bool isValidLength() const
+		{
+			return size < PSIZE_MAX_SEND;
 		}
 
 		/**
