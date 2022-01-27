@@ -8,12 +8,12 @@
 <p align="center">
 <p align="center">
   <a href="https://github.com/radj307/ARRCON/releases">
-    <img src="https://img.shields.io/github/release/radj307/ARRCON.svg" />
+    <img src="https://img.shields.io/github/release/radj307/ARRCON.svg?logo=github" alt="Latest Release Version" />
   </a>
   <a href="https://github.com/radj307/ARRCON/actions">
-    <img src="https://github.com/radj307/ARRCON/actions/workflows/Windows.yml/badge.svg" alt="Windows Build Status"></img>
-    <img src="https://github.com/radj307/ARRCON/actions/workflows/Linux.yml/badge.svg" alt="Linux Build Status"></img>
-    <img src="https://github.com/radj307/ARRCON/actions/workflows/macOS.yml/badge.svg" alt="macOS Build Status"></img>
+    <img src="https://github.com/radj307/ARRCON/actions/workflows/Windows.yml/badge.svg" alt="Windows Build Status" />
+    <img src="https://github.com/radj307/ARRCON/actions/workflows/Linux.yml/badge.svg" alt="Linux Build Status" />
+    <img src="https://github.com/radj307/ARRCON/actions/workflows/macOS.yml/badge.svg" alt="macOS Build Status" />
   </a>
 </p>
 <p align="center">
