@@ -9,7 +9,10 @@
 #include <color-values.h>
 #include <palette.hpp>
 #include <make_exception.hpp>
+#include <INI.hpp>
+#include <env.hpp>
 
+#include <thread>
 #include <cmath>
 #include <sys/socket.h>
 #include <chrono>

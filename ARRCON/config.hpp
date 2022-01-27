@@ -188,7 +188,6 @@ namespace config {
 				<< '[' << header::MISCELLANEOUS << ']' << '\n'
 				<< "bInteractiveAllowExitKeyword = true\n"
 				<< "bEnableNoResponseMessage = true\n"
-				<< "bEnforceSendSizeLimit = true\n"
 				<< '\n';
 		}
 		else { // use current settings
@@ -213,7 +212,6 @@ namespace config {
 				<< '[' << header::MISCELLANEOUS << ']' << '\n'
 				<< "bInteractiveAllowExitKeyword = " << Global.allow_exit << '\n'
 				<< "bEnableNoResponseMessage = " << Global.enable_no_response_message << '\n'
-				<< "bEnforceSendSizeLimit = " << Global.enforce_send_size_limit << '\n'
 				<< '\n';
 		}
 		return file::write_to(path, std::move(ss));

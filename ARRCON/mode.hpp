@@ -80,7 +80,7 @@ namespace mode {
 				break;
 
 			if (Global.connected.load() && !command.empty()) {
-				if (!rcon::command(sd, command) && !Global.quiet && Global.enable_no_response_message)
+				if (!rcon::command(sd, command) && Global.enable_no_response_message && !Global.quiet)
 					std::cout << Global.palette.set(UIElem::NO_RESPONSE) << "[no response]" << Global.palette.reset() << '\n';
 			}
 		}

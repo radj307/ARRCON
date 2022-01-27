@@ -232,9 +232,9 @@ namespace net {
 			throw socket_exception("net::recv_packet()", "Received a corrupted packet!", LAST_SOCKET_ERROR_CODE(), getLastSocketErrorMessage());
 
 		if (psize < packet::PSIZE_MIN)
-			std::cerr << print_warning("Received unexpectedly small packet size: ", psize) << std::endl;
+			std::cerr << "Received unexpectedly small packet size: " << psize << std::endl;
 		else if (psize > packet::PSIZE_MAX) {
-			std::cerr << print_warning("Received unexpectedly large packet size: ", psize) << std::endl;
+			std::cerr << "Received unexpectedly large packet size: " << psize << std::endl;
 			flush(sd); // flush the remaining data
 		}
 
