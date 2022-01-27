@@ -7,27 +7,23 @@
 </p>  
 <p align="center">
 <p align="center">
-  <a href="https://github.com/radj307/ARRCON/releases">
-    <img src="https://img.shields.io/github/release/radj307/ARRCON.svg?logo=github" alt="Latest Release Version" />
-  </a>
-  <a href="https://github.com/radj307/ARRCON/actions">
-    <img src="https://github.com/radj307/ARRCON/actions/workflows/Windows.yml/badge.svg" alt="Windows Build Status" />
-    <img src="https://github.com/radj307/ARRCON/actions/workflows/Linux.yml/badge.svg" alt="Linux Build Status" />
-    <img src="https://github.com/radj307/ARRCON/actions/workflows/macOS.yml/badge.svg" alt="macOS Build Status" />
-  </a>
+  <a href="https://github.com/radj307/ARRCON/releases"><img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/radj307/ARRCON?color=ffffff&label=Version&logo=github&style=for-the-badge"></a>
+  <a href="https://github.com/radj307/ARRCON/actions/workflows/Windows.yml"><img alt="GitHub Workflow Status" src="https://img.shields.io/github/workflow/status/radj307/ARRCON/Windows%20Build?label=Windows%20Build&logo=github&style=for-the-badge"></a>
+  <a href="https://github.com/radj307/ARRCON/actions/workflows/Linux.yml"><img alt="GitHub Workflow Status" src="https://img.shields.io/github/workflow/status/radj307/ARRCON/Linux%20Build?label=Linux%20Build&logo=github&style=for-the-badge"></a>
+  <a href="https://github.com/radj307/ARRCON/actions/workflows/Windows.yml"><img alt="GitHub Workflow Status" src="https://img.shields.io/github/workflow/status/radj307/ARRCON/macOS%20Build?label=macOS%20Build&logo=github&style=for-the-badge"></a>
 </p>
 <p align="center">
-  <a href="https://github.com/radj307/ARRCON/wiki">Wiki</a>&nbsp|&nbsp<a href="https://github.com/radj307/ARRCON/releases">Releases</a>&nbsp|&nbsp<a href="https://github.com/radj307/ARRCON/issues">Issues</a>
+  <a href="https://github.com/radj307/ARRCON/releases">Releases</a>&nbsp|&nbsp<a href="https://github.com/radj307/ARRCON/wiki">Wiki</a>&nbsp|&nbsp<a href="https://github.com/radj307/ARRCON/issues">Issues</a>
 </p>
 
-A lightweight terminal-based remote console client originally based on [mcrcon by Tiiffi](https://github.com/Tiiffi/mcrcon).  
-ARRCON is written in C++, and is available on all major platforms.  
+A lightweight & feature-rich remote console client inspired by [mcrcon by Tiiffi](https://github.com/Tiiffi/mcrcon) that provides  familiar syntax & usage while also including more advanced features for those who want them.  
+ARRCON can receive large packet sizes without issue, and is also capable of correctly handling multi-packet responses.  
 
 # Features
   - Cross-Platform:
     - Windows
     - Linux
-    - macOS  
+    - macOS
   - Works for any game using the [Source RCON Protocol](https://developer.valvesoftware.com/wiki/Source_RCON_Protocol).
   - Handles large packets without issue.
   - Handles multi-packet responses without issue, and has configurable delays in the INI file.
@@ -41,9 +37,7 @@ ARRCON is written in C++, and is available on all major platforms.
       - Commands from script files are sent _after_ any commands from STDIN.
   - Save & recall a server's IP/Hostname, port, and password directly from the commandline without editing files.  
     _Passwords are __never__ printed to the terminal._
-  - Portable
     
-
 
 ## Download & Install
 Get the latest version for your OS from the [releases](https://github.com/radj307/ARRCON/releases) page.
@@ -67,9 +61,11 @@ To see a list of environment variables, their current values, and a description 
 ### Modes
 The operation mode is selected based on context, but can be influenced by some options.  
 There are 2 modes:
-- ___Interactive___
+- ___Interactive___ / ___Terminal___
   - Used by default when there are no command arguments.
-  - Opens an interactive console session. You can send commands and view the responses.
+  - Opens an interactive console session. You can send commands and view the responses in real-time.
 - ___Commandline___
   - Executes a list of commands in order with a configurable delay between sending each packet.
   - You can also use the `-f <filepath>` or `--file <filepath>` options to specify a scriptfile, which is executed line-by-line after any commands passed on the commandline.
+  - Supports shell pipeline operators (`|`, `|&`, etc.)
+  - Supports STDIN input redirection. _(Input from STDIN is always considered to be a command)_
