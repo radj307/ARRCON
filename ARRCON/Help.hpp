@@ -46,9 +46,6 @@ public:
 			<< "  --write-ini                    (Over)write the INI file with the default configuration values & exit." << '\n'
 			<< "  --update-ini                   Writes the current configuration values to the INI file, and adds missing keys." << '\n'
 			<< '\n'
-			<< "ENVIRONMENT:\n"
-			<< ""
-			<< '\n'
 			<< "MODES:\n"
 			<< "  [1]  Interactive    Interactive terminal mode. This is the default mode when no commands are specified" << '\n'
 			<< "                      directly on the commandline. You can always force interactive mode even when there" << '\n'
