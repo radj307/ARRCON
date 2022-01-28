@@ -164,7 +164,7 @@ inline void handle_arguments(const opt::ParamsAPI2& args, const std::filesystem:
 	// no-prompt
 	Global.no_prompt = args.check_any<opt::Flag, opt::Option>('Q', "no-prompt");
 	// command delay:
-	if (const auto arg{ args.typegetv_any<opt::Flag, opt::Option>('d', "delay") }; arg.has_value()) {
+	if (const auto arg{ args.typegetv_any<opt::Flag, opt::Option>('w', "wait") }; arg.has_value()) {
 		if (std::all_of(arg.value().begin(), arg.value().end(), isdigit))
 			Global.command_delay = std::chrono::milliseconds(std::abs(str::stoll(arg.value())));
 		else throw make_exception("Invalid delay value given: \"", arg.value(), "\", expected an integer.");
@@ -241,7 +241,7 @@ int main(const int argc, char** argv)
 		Global.palette.setDefaultResetSequence(color::reset_f);
 
 		std::cout << term::EnableANSI; // enable ANSI escape sequences on windows
-		const opt::ParamsAPI2 args{ argc, argv, 'H', "host", 'S', "saved", 'P', "port", 'p', "pass", 'd', "delay", 'f', "file", "save-host", "remove-host" }; // parse arguments
+		const opt::ParamsAPI2 args{ argc, argv, 'H', "host", 'S', "saved", 'P', "port", 'p', "pass", 'w', "wait", 'f', "file", "save-host", "remove-host" }; // parse arguments
 
 		// Argument:  [-n|--no-color]
 		if (const auto arg{ args.typegetv_any<opt::Option, opt::Flag>('n', "no-color") }; arg.has_value()) {
