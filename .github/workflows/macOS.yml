@@ -42,6 +42,3 @@ jobs:
         name: latest-macos
         path: ${{github.workspace}}/build/ARRCON/*.zip
         retention-days: 2
-
-    - name: Log Version Tag
-      run:  echo $(./ARRCON -vq)
