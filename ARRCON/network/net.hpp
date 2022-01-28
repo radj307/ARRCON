@@ -223,27 +223,36 @@ namespace net {
 	inline packet::Packet recv_packet(const SOCKET& sd)
 	{
 		int psize{ 0 };
+		ssize_t ret{ recv(sd, (char*)&psize, sizeof(int), 0) };
 
-		if (auto ret{ recv(sd, (char*)&psize, sizeof(int), 0) }; ret == 0)
-			throw socket_exception("net::recv_packet()", "Connection Lost!", LAST_SOCKET_ERROR_CODE(), getLastSocketErrorMessage());
-		else if (ret == -1)
-			throw socket_exception("net::recv_packet()", "Connection closed by server.");
-		else if (ret != sizeof(int))
-			throw socket_exception("net::recv_packet()", "Received a corrupted packet!", LAST_SOCKET_ERROR_CODE(), getLastSocketErrorMessage());
-
-		if (psize < packet::PSIZE_MIN)
-			std::cerr << "Received unexpectedly small packet size: " << psize << std::endl;
-		else if (psize > packet::PSIZE_MAX) {
-			std::cerr << "Received unexpectedly large packet size: " << psize << std::endl;
-			flush(sd); // flush the remaining data
-		}
+		// lambda to check if the return code is valid and packet size is valid
+		const auto& validate{
+			[&psize, &ret, &sd]() {
+				switch (ret) {
+				case (sizeof(int)): // success
+					break;
+				case 0: // nothing received
+					throw socket_exception("net::recv_packet()", "Connection Lost!", LAST_SOCKET_ERROR_CODE(), getLastSocketErrorMessage());
+				case SOCKET_ERROR: // error
+					throw socket_exception("net::recv_packet()", "Connection closed by server.");
+				default: // invalid size
+					throw socket_exception("net::recv_packet()", "Received a corrupted packet!", LAST_SOCKET_ERROR_CODE(), getLastSocketErrorMessage());
+				}
+				if (psize < packet::PSIZE_MIN)
+					std::cerr << "Received unexpectedly small packet size: " << psize << std::endl;
+				else if (psize > packet::PSIZE_MAX) {
+					std::cerr << "Received unexpectedly large packet size: " << psize << std::endl;
+					flush(sd); // flush the remaining data
+				}
+			}
+		};
+		validate();
 
 		packet::serialized_packet spacket{ psize, 0, 0, { 0x00 } }; ///< create a serialized packet to receive data
 
 		for (int received{ 0 }, ret{ 0 }; received < psize; received += ret) {
 			ret = recv(sd, (char*)&spacket + sizeof(int) + received, static_cast<size_t>(psize) - received, 0);
-			if (ret == 0) // nothing received
-				throw socket_exception("net::recv_packet()", "Connection Lost!", LAST_SOCKET_ERROR_CODE(), getLastSocketErrorMessage());
+			validate();
 		}
 
 		return { spacket };

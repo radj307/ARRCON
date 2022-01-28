@@ -119,7 +119,10 @@ enum class UIElem : unsigned char {
 	ENV_VAR,			// --print-env
 };
 
-
+/**
+ * @struct	Environment
+ * @brief	Interface for interacting with environment variables.
+ */
 struct Environment {
 	std::string name_config_dir, name_host, name_port, name_pass;
 
@@ -218,30 +221,30 @@ static struct {
 
 inline std::ostream& operator<<(std::ostream& os, const Environment& e)
 {
-	os
-		<< Global.palette.set(UIElem::ENV_VAR) << e.name_config_dir << Global.palette.reset()
-		<< "  Current Value:  " << e.Values.config_dir.value_or("") << '\n'
-		<< "  Description:\n"
-		<< "    Overrides the config file search location.\n"
-		<< "    When this is set, config files in other directories on the search path are ignored.\n"
+	os << "Environment Variables"
+		<< "  " << Global.palette.set(UIElem::ENV_VAR) << e.name_config_dir << Global.palette.reset() << '\n'
+		<< "    Current Value:  " << e.Values.config_dir.value_or("") << '\n'
+		<< "    Description:\n"
+		<< "      Overrides the config file search location.\n"
+		<< "      When this is set, config files in other directories on the search path are ignored.\n"
 		<< '\n'
-		<< Global.palette.set(UIElem::ENV_VAR) << e.name_host << Global.palette.reset()
-		<< "  Current Value:  " << e.Values.hostname.value_or("") << '\n'
-		<< "  Description:\n"
-		<< "    Overrides the target hostname, unless one is specified on the commandline with [-H|--host].\n"
-		<< "    When this is set, the " << Global.palette.set(UIElem::INI_KEY_HIGHLIGHT) << "sDefaultHost" << Global.palette.reset() << " key in the INI will be ignored.\n"
+		<< "  " <<  Global.palette.set(UIElem::ENV_VAR) << e.name_host << Global.palette.reset() << '\n'
+		<< "    Current Value:  " << e.Values.hostname.value_or("") << '\n'
+		<< "    Description:\n"
+		<< "      Overrides the target hostname, unless one is specified on the commandline with [-H|--host].\n"
+		<< "      When this is set, the " << Global.palette.set(UIElem::INI_KEY_HIGHLIGHT) << "sDefaultHost" << Global.palette.reset() << " key in the INI will be ignored.\n"
 		<< '\n'
-		<< Global.palette.set(UIElem::ENV_VAR) << e.name_port << Global.palette.reset()
-		<< "  Current Value:  " << e.Values.port.value_or("") << '\n'
-		<< "  Description:\n"
-		<< "    Overrides the target port, unless one is specified on the commandline with [-P|--port].\n"
-		<< "    When this is set, the " << Global.palette.set(UIElem::INI_KEY_HIGHLIGHT) << "sDefaultPort" << Global.palette.reset() << " key in the INI will be ignored.\n"
+		<< "  " << Global.palette.set(UIElem::ENV_VAR) << e.name_port << Global.palette.reset() << '\n'
+		<< "    Current Value:  " << e.Values.port.value_or("") << '\n'
+		<< "    Description:\n"
+		<< "      Overrides the target port, unless one is specified on the commandline with [-P|--port].\n"
+		<< "      When this is set, the " << Global.palette.set(UIElem::INI_KEY_HIGHLIGHT) << "sDefaultPort" << Global.palette.reset() << " key in the INI will be ignored.\n"
 		<< '\n'
-		<< Global.palette.set(UIElem::ENV_VAR) << e.name_pass << Global.palette.reset()
-		<< "  Is Defined:     " << std::boolalpha << e.Values.password.has_value() << '\n'
-		<< "  Description:\n"
-		<< "    Overrides the target password, unless one is specified on the commandline with [-p|--pass].\n"
-		<< "    When this is set, the " << Global.palette.set(UIElem::INI_KEY_HIGHLIGHT) << "sDefaultPass" << Global.palette.reset() << " key in the INI will be ignored.\n"
+		<< "  " << Global.palette.set(UIElem::ENV_VAR) << e.name_pass << Global.palette.reset() << '\n'
+		<< "    Is Defined:     " << std::boolalpha << e.Values.password.has_value() << '\n'
+		<< "    Description:\n"
+		<< "      Overrides the target password, unless one is specified on the commandline with [-p|--pass].\n"
+		<< "      When this is set, the " << Global.palette.set(UIElem::INI_KEY_HIGHLIGHT) << "sDefaultPass" << Global.palette.reset() << " key in the INI will be ignored.\n"
 		;
 	return os;
 }
