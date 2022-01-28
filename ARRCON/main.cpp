@@ -267,7 +267,7 @@ int main(const int argc, char** argv)
 		const config::Locator cfg_path(myDir, myNameNoExt);
 
 		// Argument:  [-q|--quiet]
-		Global.quiet = args.check_any<opt::Option, opt::Flag>('q', "quiet");
+		Global.quiet = args.check_any<opt::Option, opt::Flag>('q', 's', "quiet");
 		// Argument:  [-h|--help]
 		if (args.check_any<opt::Flag, opt::Option>('h', "help")) {
 			std::cout << Help(myName) << std::endl;

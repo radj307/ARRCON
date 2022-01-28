@@ -38,7 +38,7 @@ public:
 			<< "  -h  --help                     Show the help display, then exit." << '\n'
 			<< "  -v  --version                  Print the current version number, then exit." << '\n'
 			<< "  -t  -i  --interactive          Always use interactive terminal mode. Any one-off commands are executed first." << '\n'
-			<< "  -q  --quiet                    Don't print server response packets." << '\n'
+			<< "  -q  -s  --quiet                Silent mode, prevents most console output from being printed." << '\n'
 			<< "  -w <ms>  --wait <ms>           Time in milliseconds to wait between each command in commandline mode." << '\n'
 			<< "  -n  --no-color                 Disable colorized console output." << '\n'
 			<< "  -Q  --no-prompt                Disables the prompt in interactive mode, and command echo in commandline mode." << '\n'
