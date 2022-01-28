@@ -151,9 +151,18 @@ inline void handle_hostfile_arguments(const opt::ParamsAPI2& args, config::HostL
 inline void handle_arguments(const opt::ParamsAPI2& args, const std::filesystem::path& ini_path)
 {
 	// write-ini:
-	if (args.check_any<opt::Option>("write-ini")) {
+	if (args.check<opt::Option>("write-ini")) {
 		if (!ini_path.empty() && config::save_ini(ini_path)) {
 			std::cout << term::get_msg(!Global.no_color) << "Successfully wrote config: " << ini_path << std::endl;
+			std::exit(EXIT_SUCCESS);
+		}
+		else
+			throw permission_exception("handle_arguments()", ini_path, "Failed to open INI for writing!");
+	}
+	// update-ini
+	if (args.check<opt::Option>("update-ini")) {
+		if (!ini_path.empty() && config::save_ini(ini_path, false)) {
+			std::cout << term::get_msg(!Global.no_color) << "Successfully updated config: " << ini_path << std::endl;
 			std::exit(EXIT_SUCCESS);
 		}
 		else

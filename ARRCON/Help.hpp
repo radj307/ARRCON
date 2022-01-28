@@ -24,7 +24,7 @@ public:
 			<< "USAGE:" << '\n'
 			<< "  " << help._program_name << " [OPTIONS] [COMMANDS]\n"
 			<< '\n'
-			<< "Arguments with spaces must be enclosed by single (\') or double (\") quotation marks." << '\n'
+			<< "  Arguments with spaces must be enclosed by single (\') or double (\") quotation marks." << '\n'
 			<< '\n'
 			<< "OPTIONS:" << '\n'
 			<< "  -H <Host>  --host <Host>       RCON Server IP/Hostname.  (Default: \"" << Global.DEFAULT_TARGET.hostname << "\")" << '\n'
@@ -43,7 +43,8 @@ public:
 			<< "  -n  --no-color                 Disable colorized console output." << '\n'
 			<< "  -Q  --no-prompt                Disables the prompt in interactive mode, and command echo in commandline mode." << '\n'
 			<< "  --print-env                    Prints all recognized environment variables, their values, and descriptions." << '\n'
-			<< "  --write-ini                    (Over)write the configuration file with the default values & exit." << '\n'
+			<< "  --write-ini                    (Over)write the INI file with the default configuration values & exit." << '\n'
+			<< "  --update-ini                   Writes the current configuration values to the INI file, and adds missing keys." << '\n'
 			<< '\n'
 			<< "ENVIRONMENT:\n"
 			<< ""
@@ -51,12 +52,13 @@ public:
 			<< "MODES:\n"
 			<< "  [1]  Interactive    Interactive terminal mode. This is the default mode when no commands are specified" << '\n'
 			<< "                      directly on the commandline. You can always force interactive mode even when there" << '\n'
-			<< "                      are commands with the [-i|--interactive] option; commands are always executed first." << '\n'
+			<< "                      are commands with the [-t|-i|--interactive] option; commands are always executed first." << '\n'
 			<< "  [2]  Commandline    Executes commands that were directly passed on the commandline, or from STDIN." << '\n'
 			<< "                      This mode is automatically used when non-option arguments are detected. This behaviour" << '\n'
-			<< "                      can be overridden with the [-i|--interactive] option." << '\n'
+			<< "                      can be overridden with the [-t|-i|--interactive] option." << '\n'
 			<< "                      You can also specify files using \"-f <file>\" or \"--file <file>\"." << '\n'
 			<< "                      Each line will be executed as a command in commandline mode after any arguments." << '\n'
+			<< "                      You can write line comments by using a semicolon (;) or pound (#) sign." << '\n'
 			<< "                      Input received from STDIN follows the same rules as script files."
 			;
 	}
