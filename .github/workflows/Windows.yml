@@ -43,5 +43,3 @@ jobs:
         name: latest-windows
         path: ${{github.workspace}}/build/ARRCON/*.zip
         retention-days: 2
-
-

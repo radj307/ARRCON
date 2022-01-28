@@ -48,5 +48,3 @@ jobs:
         name: latest-linux
         path: ${{github.workspace}}/build/ARRCON/*.zip
         retention-days: 2
-
-

@@ -42,4 +42,3 @@ jobs:
         name: latest-macos
         path: ${{github.workspace}}/build/ARRCON/*.zip
         retention-days: 2
-
