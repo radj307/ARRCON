@@ -351,6 +351,9 @@ int main(const int argc, char** argv)
 		if (!(Global.connected = (Global.socket != SOCKET_ERROR)))
 			throw connection_exception("main()", "Socket descriptor was set to (" + std::to_string(Global.socket) + ") after successfully initializing the connection.", hostinfo.hostname, hostinfo.port, LAST_SOCKET_ERROR_CODE(), net::getLastSocketErrorMessage());
 
+		if (hostinfo.password.empty())
+			throw make_exception("Password cannot be blank!");
+
 		// authenticate with the server, run queued commands, and open an interactive session if necessary.
 		if (rcon::authenticate(Global.socket, hostinfo.password)) {
 			// authentication succeeded, run commands
