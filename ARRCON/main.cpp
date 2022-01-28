@@ -244,7 +244,7 @@ int main(const int argc, char** argv)
 		const opt::ParamsAPI2 args{ argc, argv, 'H', "host", 'S', "saved", 'P', "port", 'p', "pass", 'w', "wait", 'f', "file", "save-host", "remove-host" }; // parse arguments
 
 		// Argument:  [-n|--no-color]
-		if (const auto arg{ args.typegetv_any<opt::Option, opt::Flag>('n', "no-color") }; arg.has_value()) {
+		if (args.check_any<opt::Option, opt::Flag>('n', "no-color")) {
 			Global.no_color = true;
 			Global.enable_bukkit_color_support = false;
 			Global.palette.setActive(false);
