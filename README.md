@@ -3,21 +3,25 @@
        src="https://i.imgur.com/yARb4DV.png"
        alt="ARRCON Banner"
   />
-  <h1 align="center">Another RCON Client</h1>
 </p>  
 <p align="center">
 <p align="center">
   <a href="https://github.com/radj307/ARRCON/releases"><img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/radj307/ARRCON?color=ffffff&label=Version&logo=github&style=for-the-badge"></a>
+  <nobr></nobr>
+  <img alt="Total Downloads" src="https://img.shields.io/github/downloads/radj307/ARRCON/total?label=Total%20Downloads&color=ffffff&logo=github&style=for-the-badge">
+</p>
+<p align="center">
   <a href="https://github.com/radj307/ARRCON/actions/workflows/Windows.yml"><img alt="GitHub Workflow Status" src="https://img.shields.io/github/workflow/status/radj307/ARRCON/Windows%20Build?label=Windows%20Build&logo=github&style=for-the-badge"></a>
   <a href="https://github.com/radj307/ARRCON/actions/workflows/Linux.yml"><img alt="GitHub Workflow Status" src="https://img.shields.io/github/workflow/status/radj307/ARRCON/Linux%20Build?label=Linux%20Build&logo=github&style=for-the-badge"></a>
   <a href="https://github.com/radj307/ARRCON/actions/workflows/Windows.yml"><img alt="GitHub Workflow Status" src="https://img.shields.io/github/workflow/status/radj307/ARRCON/macOS%20Build?label=macOS%20Build&logo=github&style=for-the-badge"></a>
 </p>
 <p align="center">
-  <a href="https://github.com/radj307/ARRCON/releases">Releases</a>&nbsp|&nbsp<a href="https://github.com/radj307/ARRCON/wiki">Wiki</a>&nbsp|&nbsp<a href="https://github.com/radj307/ARRCON/issues">Issues</a>
+  <a href="https://github.com/radj307/ARRCON/releases">Releases</a>&nbsp&nbsp|&nbsp&nbsp<a href="https://github.com/radj307/ARRCON/wiki">Wiki</a>&nbsp&nbsp|&nbsp&nbsp<a href="https://github.com/radj307/ARRCON/issues">Issues</a>
 </p>
 
-A lightweight & feature-rich remote console client inspired by [mcrcon by Tiiffi](https://github.com/Tiiffi/mcrcon) that provides  familiar syntax & usage while also including more advanced features for those who want them.  
-ARRCON can receive large packet sizes without issue, and is also capable of correctly handling multi-packet responses.  
+A lightweight terminal-based remote console client compatible with any game using the Source RCON Protocol.  
+
+ARRCON was inspired by [mcrcon by Tiiffi](https://github.com/Tiiffi/mcrcon), and will be familiar to anyone who has used mcrcon previously.  
 
 # Features
   - Cross-Platform:
@@ -39,17 +43,17 @@ ARRCON can receive large packet sizes without issue, and is also capable of corr
     _Passwords are __never__ printed to the terminal._
     
 
-## Download & Install
+# Download & Install
 Get the latest version for your OS from the [releases](https://github.com/radj307/ARRCON/releases) page.
 
 There is no installation process, simply extract the archive & it's ready to go.  
 To use ARRCON without specifying the absolute filepath to it, you have to [add the location to your Path variable](https://github.com/radj307/ARRCON/wiki/Adding-To-Path).
 
-### Building from Source
+## Building from Source
 See [here](https://github.com/radj307/ARRCON/wiki/Building-from-Source) for a brief guide on building ARRCON from source.
 
 
-## Usage
+# Usage
 ARRCON is a CLI program, which means you need to run it through a terminal.  
 On Windows, you can use `cmd.exe` or `powershell.exe` by R+Clicking on the start menu.  
 For more detailed usage instructions, see [Getting Started](https://github.com/radj307/ARRCON/wiki)
@@ -58,7 +62,7 @@ To see a list of commands, use `ARRCON -h` or `ARRCON --help`
 To see a list of environment variables, their current values, and a description of each, use `ARRCON --print-env`
 
 
-### Modes
+## Modes
 The operation mode is selected based on context, but can be influenced by some options.  
 There are 2 modes:
 - ___Interactive___ / ___Terminal___
