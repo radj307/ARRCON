@@ -48,6 +48,8 @@ jobs:
       if:  ${{ github.event_name != 'workflow_dispatch' }}
       uses: lewagon/wait-on-check-action@v1.1.1
       with:
+        ref: ${{github.sha}}
+        repo-token: ${{secrets.GITHUB_TOKEN}}
         running-workflow-name: 'Create Release'
         allowed-conclusions: success
         wait-interval: 15
