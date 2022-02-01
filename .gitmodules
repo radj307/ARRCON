@@ -6,3 +6,7 @@
 	path = libunistd
 	url = https://github.com/robinrowe/libunistd
 	branch = master
+[submodule "catch2"]
+	path = UnitTests/catch2
+	url = https://github.com/catchorg/Catch2
+	branch = devel
