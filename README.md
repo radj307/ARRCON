@@ -8,7 +8,7 @@
 <p align="center">
   <a href="https://github.com/radj307/ARRCON/releases"><img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/radj307/ARRCON?color=ffffff&label=Version&logo=github&style=for-the-badge"></a>
   <nobr></nobr>
-  <img alt="Total Downloads" src="https://img.shields.io/github/downloads/radj307/ARRCON/total?label=Total%20Downloads&color=ffffff&logo=github&style=for-the-badge">
+  <img alt="Downloads" src="https://img.shields.io/github/downloads/radj307/ARRCON/total?label=Downloads&color=ffffff&logo=github&style=for-the-badge">
 </p>
 <p align="center">
   <a href="https://github.com/radj307/ARRCON/actions/workflows/Windows.yml"><img alt="GitHub Workflow Status" src="https://img.shields.io/github/workflow/status/radj307/ARRCON/Windows%20Build?label=Windows%20Build&logo=github&style=for-the-badge"></a>
