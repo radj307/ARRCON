@@ -2,12 +2,11 @@ name: Create Release
 
 on:
   workflow_run:
-    branches:   [ 'main' ]
     workflows:
       - Windows Build
       - Linux Build
       - macOS Build
-    types:      [completed]
+    types: completed
   workflow_dispatch:
     inputs:
       name:
