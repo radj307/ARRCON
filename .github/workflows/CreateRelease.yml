@@ -1,6 +1,13 @@
 name: Create Release
 
 on:
+  workflow_run:
+    branches:   [ 'main' ]
+    workflows:
+      - Windows Build
+      - Linux Build
+      - macOS Build
+    types:      [completed]
   workflow_dispatch:
     inputs:
       name:
@@ -32,11 +39,19 @@ on:
         default:      ''
         
 
-jobs:
+jobs:    
   create-release:
+    name: Create Release
     runs-on: ubuntu-latest
-
-    steps:    
+    
+    steps:
+    - name: Wait for build workflows to complete
+      uses: lewagon/wait-on-check-action@v1.1.1
+      with:
+        running-workflow-name: 'Create Release'
+        allowed-conclusions: success
+        wait-interval: 15
+    
     - name: Download Latest Artifact for Linux
       uses: dawidd6/action-download-artifact@v2
       with:
