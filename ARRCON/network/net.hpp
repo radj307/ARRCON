@@ -39,6 +39,7 @@
 
 #ifndef OS_WIN
 #include <cstring>
+#include <fcntl.h>
 #endif
 
  /**
@@ -76,6 +77,16 @@ namespace net {
 		#else
 		return{ strerror(LAST_SOCKET_ERROR_CODE()) };
 		#endif
+	}
+
+	/**
+	 * @brief		Check if the given socket descriptor is valid.
+	 * @param sd	A Socket Descriptor to check.
+	 * @returns		bool
+	 */
+	inline bool isValidSocket(const SOCKET& sd)
+	{
+		return sd != SOCKET_ERROR && fcntl(sd, F_GETFD) != SOCKET_ERROR && LAST_SOCKET_ERROR_CODE() != EBADF;
 	}
 
 	/**

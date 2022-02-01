@@ -364,13 +364,15 @@ int main(const int argc, char** argv)
 			throw badpass_exception(Global.target.hostname, Global.target.port, LAST_SOCKET_ERROR_CODE(), net::getLastSocketErrorMessage());
 
 		return 0;
-	} catch (const std::exception& ex) { ///< catch exceptions
-		std::cerr << term::get_error(!Global.no_color) << ex.what() << std::endl;
-		std::cerr << term::get_info(!Global.no_color) << "You can report bugs here: " << ISSUE_REPORT_URL << std::endl;
+	} catch (const ex::except& ex) { // custom exception type
+		std::cerr << term::get_error(!Global.no_color, false) << ' ' << ex.what() << std::endl;
 		return -1;
-	} catch (...) { ///< catch all other exceptions
-		std::cerr << term::get_crit(!Global.no_color) << "An unknown exception occurred!" << std::endl;
-		std::cerr << term::get_info(!Global.no_color) << "Please report this exception here: " << ISSUE_REPORT_URL << std::endl;
+	} catch (const std::exception& ex) { // standard exceptions
+		std::cerr << term::get_error(!Global.no_color, false) << ' ' << ex.what() << std::endl;
+		std::cerr << term::get_info(!Global.no_color, false) << "  " << "Please report this exception here: " << ISSUE_REPORT_URL << std::endl;
+		return -1;
+	} catch (...) { // undefined exceptions
+		std::cerr << term::get_crit(!Global.no_color, false) << "  " << "An unknown exception occurred!" << std::endl;
 		return -1;
 	}
 }

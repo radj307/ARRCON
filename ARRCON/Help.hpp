@@ -24,7 +24,8 @@ public:
 			<< "USAGE:" << '\n'
 			<< "  " << help._program_name << " [OPTIONS] [COMMANDS]\n"
 			<< '\n'
-			<< "  Arguments with spaces must be enclosed by single (\') or double (\") quotation marks." << '\n'
+			<< "  Some arguments take additional inputs, labeled with <angle brackets>." << '\n'
+			<< "  Arguments that contain spaces must be enclosed with single (\') or double(\") quotation marks." << '\n'
 			<< '\n'
 			<< "OPTIONS [TARGET]:\n"
 			<< "  -H <Host>      --host <Host>   RCON Server IP/Hostname.  (Default: \"" << Global.DEFAULT_TARGET.hostname << "\")" << '\n'

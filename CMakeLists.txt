@@ -28,3 +28,10 @@ if (WIN32)
 	target_include_directories(libunistd PUBLIC "libunistd" "libunistd/unistd")
 	target_link_libraries(ARRCON PUBLIC libunistd)
 endif()
+
+
+option(ARRCON_ENABLE_TESTING "Enable the ARRCON unit testing subproject" ON)
+
+if (ARRCON_ENABLE_TESTING AND WIN32)
+	add_subdirectory("UnitTests")
+endif()

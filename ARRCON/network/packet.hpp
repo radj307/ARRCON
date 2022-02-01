@@ -8,6 +8,8 @@
 #include <limits.h>
 #include <string.h>
 
+#include <var.hpp>
+
  /**
   * @namespace	packet
   * @brief		Contains the Packet, serialized_packet, and ID_Manager objects.
@@ -127,7 +129,7 @@ namespace packet {
 		 */
 		bool isValidLength() const
 		{
-			return size < PSIZE_MAX_SEND;
+			return size >= 0 && size < PSIZE_MAX_SEND;
 		}
 
 		/**
