@@ -45,6 +45,7 @@ jobs:
     
     steps:
     - name: Wait for build workflows to complete
+      if:  ${{ github.event_name != 'workflow_dispatch' }}
       uses: lewagon/wait-on-check-action@v1.1.1
       with:
         running-workflow-name: 'Create Release'
