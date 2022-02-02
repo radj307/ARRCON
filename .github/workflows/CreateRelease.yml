@@ -3,9 +3,7 @@ name: Create Release
 on:
   workflow_run:
     workflows:
-      - Windows Build
       - Linux Build
-      - macOS Build
     types: completed
   workflow_dispatch:
     inputs:
@@ -42,6 +40,8 @@ jobs:
   create-release:
     name: Create Release
     runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 1
     
     steps:
     - name: Wait for build workflows to complete
