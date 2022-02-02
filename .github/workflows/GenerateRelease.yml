@@ -133,7 +133,7 @@ jobs:
         name:                     '${{ steps.get_version.outputs.VERSION }} Release'
         generate_release_notes:   true
         fail_on_unmatched_files:  true
-        files:                    ./*.zip
+        files:                    ${{github.workspace}}/*.zip
       # Dispatch Trigger
     - name: '(Dispatch) Create Release'
       if:   ${{ github.event_name == 'workflow_dispatch' }}
@@ -146,4 +146,4 @@ jobs:
         generate_release_notes:   ${{github.event.inputs.autogenerate}}
         body:                     ${{github.event.inputs.body}}
         fail_on_unmatched_files:  true
-        files:                    ./*.zip
+        files:                    ${{github.workspace}}/*.zip
