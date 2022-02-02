@@ -130,7 +130,7 @@ jobs:
         draft:                    true
         prerelease:               false
         tag_name:                 '${{ steps.get_version.outputs.VERSION }}'
-        name:                     '${{ steps.get_version.outputs.VERSION }} Release'
+        name:                     'Release ${{ steps.get_version.outputs.VERSION }}'
         generate_release_notes:   true
         fail_on_unmatched_files:  true
         files:                    ${{github.workspace}}/*.zip
