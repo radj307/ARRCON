@@ -30,6 +30,7 @@ set(HEADERS
 	"network/rcon.hpp"
 	"packet-color.hpp"
 	"mode.hpp"
+	"utils.hpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/version.h"
 )
 
