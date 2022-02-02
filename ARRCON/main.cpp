@@ -1,6 +1,4 @@
-#include "mode.hpp"				///< RCON client modes
-#include "config.hpp"			///< INI functions
-#include "Help.hpp"				///< CLI usage instructions
+#include "net/mode.hpp"		///< RCON client modes
 #include "utils.hpp"
 
 #include <make_exception.hpp>
@@ -10,6 +8,8 @@
 
 #include <signal.h>				///< signal handling
 #include <unistd.h>
+
+using namespace net;
 
 int main(const int argc, char** argv)
 {
@@ -88,7 +88,7 @@ int main(const int argc, char** argv)
 		}
 
 		// Initialize the hostlist
-		config::HostList hosts;
+		net::HostList hosts;
 
 		const auto hostfile_path{ cfg_path.from_extension(".hosts") };
 		if (file::exists(hostfile_path)) // load the hostfile if it exists

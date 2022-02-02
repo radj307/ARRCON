@@ -4,7 +4,7 @@
  * @brief	Contains packet color handling & printing functions.
  */
 #pragma once
-#include "network/packet.hpp"
+#include "net/objects/packet.hpp"
 #include <Sequence.hpp>
 #include <color-values.h>
 #include <setcolor.hpp>
@@ -68,7 +68,7 @@ namespace mc_color {
  * @param packet	Packet instance.
  * @returns			std::ostream&
  */
-inline std::ostream& operator<<(std::ostream& os, const packet::Packet& packet)
+inline std::ostream& operator<<(std::ostream& os, const net::packet::Packet& packet)
 {
 	if (Global.enable_bukkit_color_support) {
 		for (auto ch{ packet.body.begin() }; ch != packet.body.end(); ++ch) {

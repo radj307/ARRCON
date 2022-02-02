@@ -27,7 +27,7 @@
  *\n		  distribution.
  */
 #pragma once
-#include "packet.hpp"
+#include "objects/packet.hpp"
 #include "../exceptions.hpp"
 
 #include <make_exception.hpp>

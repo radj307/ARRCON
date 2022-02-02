@@ -12,7 +12,7 @@
   * @namespace	rcon
   * @brief		Contains functions used to interact with the RCON server.
   */
-namespace rcon {
+namespace net::rcon {
 	/**
 	 * @brief			Authenticate with the connected RCON server.
 	 * @param sd		Socket to use.

@@ -25,11 +25,11 @@ static permission_except permission_exception(const std::string& function_name, 
 		TABSPACE"Suggested Solutions:\n",
 		TABSPACE"1.  Change the config directory by setting the \"", Global.env.name_config_dir, "\" environment variable.\n",
 		TABSPACE"2.  Change the permissions of the target directory/file to allow read/write with the current elevation level.\n"
-#ifdef OS_WIN
+#		ifdef OS_WIN
 		TABSPACE"3.  Close the terminal, and re-open it as an administrator."
-#else
+#		else
 		TABSPACE"3.  Re-run the command with sudo."
-#endif
+#		endif
 	);
 }
 

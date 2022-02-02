@@ -23,14 +23,15 @@ CREATE_VERSION_HEADER_2("${CMAKE_CURRENT_SOURCE_DIR}/version.h" "ARRCON" "${ARRC
 
 set(HEADERS
 	"globals.h"
-	"config.hpp"
-	"Help.hpp"
-	"network/packet.hpp"
-	"network/net.hpp"
-	"network/rcon.hpp"
+	"net/objects/HostInfo.hpp"
+	"net/objects/packet.hpp"
+	"net/net.hpp"
+	"net/rcon.hpp"
+	"net/mode.hpp"
+	"exceptions.hpp"
 	"packet-color.hpp"
-	"mode.hpp"
 	"utils.hpp"
+	"config.hpp"
 	"${CMAKE_CURRENT_SOURCE_DIR}/version.h"
 )
 

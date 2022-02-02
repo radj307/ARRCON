@@ -5,16 +5,18 @@
  */
 #pragma once
 #include <sysarch.h>
-#include "globals.h"
-#include "network/rcon.hpp"
+#include "../globals.h"
+#include "rcon.hpp"
 
 #include <str.hpp>
 
-#include <signal.h>	///< signal handling
-#include <unistd.h>
-#ifndef OS_WIN // include <cstring> on POSIX
-#include <cstring>
-#endif
+#include <iostream>	///< for std::cout & std::cerr
+#include <thread>	///< for this_thread::sleep_for
+#include <signal.h>	///< for signal handling
+#include <unistd.h>	///< for signal handling
+#ifndef OS_WIN
+#include <cstring>	///< for something I forgot
+#endif // ^ POSIX
 
  /**
   * @brief		Handler function for OS signals. Passed to sigaction/signal to intercept interrupts and shut down the socket correctly.
@@ -43,7 +45,7 @@ namespace mode {
 		for (auto& cmd : commands) {
 			if (!Global.quiet && !Global.no_prompt)
 				std::cout << Global.custom_prompt << Global.palette.set(UIElem::COMMAND_ECHO) << cmd << Global.palette.reset() << '\n';
-			count += static_cast<int>(rcon::command(Global.socket, cmd)); // 0 or 1, command returns a boolean
+			count += static_cast<int>(net::rcon::command(Global.socket, cmd)); // 0 or 1, command returns a boolean
 			std::this_thread::sleep_for(Global.command_delay);
 		}
 		return count;
@@ -80,7 +82,7 @@ namespace mode {
 				break;
 
 			if (Global.connected.load() && !command.empty()) {
-				if (!rcon::command(sd, command) && Global.enable_no_response_message && !Global.quiet)
+				if (!net::rcon::command(sd, command) && Global.enable_no_response_message && !Global.quiet)
 					std::cout << Global.palette.set(UIElem::NO_RESPONSE) << "[no response]" << Global.palette.reset() << '\n';
 			}
 		}

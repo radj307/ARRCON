@@ -1,5 +1,6 @@
 #pragma once
 #include "globals.h"
+#include "config.hpp"			///< INI functions
 
 #include <filei.hpp>
 #include <fileutil.hpp>
@@ -16,6 +17,66 @@
 #undef read
 #undef write
 
+
+/**
+ * @struct	Help
+ * @brief	Functor that prints out the help display with auto-formatting.
+ */
+struct Help {
+private:
+	const std::string _program_name;
+
+public:
+	Help(const std::filesystem::path& program_name) : _program_name{ program_name.generic_string() } {}
+	friend std::ostream& operator<<(std::ostream& os, const Help& help)
+	{
+		return os << help._program_name << ' ' << ((help._program_name != std::string_view(DEFAULT_PROGRAM_NAME)) ? "("s + DEFAULT_PROGRAM_NAME + ") "s : "") << "v" << ARRCON_VERSION << '\n'
+			<< "Another RCON Client, compatible with any game using the Source RCON Protocol.\n"
+			<< '\n'
+			<< "USAGE:" << '\n'
+			<< "  " << help._program_name << " [OPTIONS] [COMMANDS]\n"
+			<< '\n'
+			<< "  Some arguments take additional inputs, labeled with <angle brackets>." << '\n'
+			<< "  Arguments that contain spaces must be enclosed with single (\') or double(\") quotation marks." << '\n'
+			<< '\n'
+			<< "OPTIONS [TARGET]:\n"
+			<< "  -H <Host>      --host <Host>   RCON Server IP/Hostname.  (Default: \"" << Global.DEFAULT_TARGET.hostname << "\")" << '\n'
+			<< "  -P <Port>      --port <Port>   RCON Server Port.         (Default: \"" << Global.DEFAULT_TARGET.port + "\")" << '\n'
+			<< "  -p <Password>  --pass <Pass>   RCON Server Password." << '\n'
+			<< "  -S <host>      --saved <host>  Use a saved host's IP, Port, & Password if the [-H|-P|-p] options are not specified." << '\n'
+			<< "  --save-host <name>             Save the target specified with the [-H|-P|-p] options as \"<name>\"" << '\n'
+			<< "  --remove-host <name>           Remove a saved host named \"<name>\" from the list, then exit." << '\n'
+			<< "  --list-hosts                   Show a list of all currently saved hosts, then exit." << '\n'
+			<< '\n'
+			<< "OPTIONS [OTHER]:\n"
+			<< "  -h         --help              Show the help display, then exit." << '\n'
+			<< "  -v         --version           Print the current version number, then exit." << '\n'
+			<< "  -s  -q     --quiet             Silent mode, prevents most console output from being printed." << '\n'
+			<< "  -t  -i     --interactive       Always use interactive terminal mode. Any one-off commands are executed first." << '\n'
+			<< "  -w <ms>    --wait <ms>         Wait for \"ms\" milliseconds between each command in commandline mode." << '\n'
+			<< "  -n         --no-color          Disable colorized console output." << '\n'
+			<< "  -Q         --no-prompt         Disables the prompt in interactive mode, and command echo in commandline mode." << '\n'
+			<< "             --print-env         Prints all recognized environment variables, their values, and descriptions." << '\n'
+			<< "             --write-ini         (Over)write the INI file with the default configuration values & exit." << '\n'
+			<< "             --update-ini        Writes the current configuration values to the INI file, and adds missing keys." << '\n'
+			<< "  -f <file>  --file <file>       Load the specified file and run each line as a command." << '\n'
+			<< '\n'
+			<< "MODES:\n"
+			<< "  [1]  Interactive    Interactive terminal mode. This is the default mode when no commands are specified" << '\n'
+			<< "                      directly on the commandline. You can always force interactive mode even when there" << '\n'
+			<< "                      are commands with the [-t|-i|--interactive] option; commands are always executed first." << '\n'
+			<< "  [2]  Commandline    Executes commands that were directly passed on the commandline, or from STDIN." << '\n'
+			<< "                      This mode is automatically used when non-option arguments are detected. This behaviour" << '\n'
+			<< "                      can be overridden with the [-t|-i|--interactive] option." << '\n'
+			<< "                      You can also specify files using \"-f <file>\" or \"--file <file>\"." << '\n'
+			<< "                      Each line will be executed as a command in commandline mode after any arguments." << '\n'
+			<< "                      You can write line comments by using a semicolon (;) or pound (#) sign." << '\n'
+			<< "                      Input received from STDIN follows the same rules as script files."
+			;
+	}
+};
+
+
 /**
  * @brief			Resolve the target server's connection information with the User's inputs.
  * @param args		Commandline argument container. The following options are checked:
@@ -27,18 +88,18 @@
  * @returns			HostInfo
  *\n				This contains the resolved connection information of the target server.
  */
-inline HostInfo resolveTargetInfo(const opt::ParamsAPI2& args, const config::HostList& saved = {})
+inline net::HostInfo resolveTargetInfo(const opt::ParamsAPI2& args, const net::HostList& saved = {})
 {
 	// Argument:  [-S|--saved]
 	if (const auto savedArg{ args.typegetv_any<opt::Flag, opt::Option>('S', "saved") }; savedArg.has_value()) {
 		if (const auto it{ saved.find(savedArg.value()) }; it != saved.end()) {
-			return std::move(HostInfo{ it->second, Global.DEFAULT_TARGET }.moveWithOverrides(
+			return std::move(net::HostInfo{ it->second, Global.DEFAULT_TARGET }.moveWithOverrides(
 				args.typegetv_any<opt::Flag, opt::Option>('H', "host"),
 				args.typegetv_any<opt::Flag, opt::Option>('P', "port"),
 				args.typegetv_any<opt::Flag, opt::Option>('p', "pass")
 			));
 		}
-		else throw make_exception("There is no saved target named ", (Global.no_color ? "\"" : ""), Global.palette.set(UIElem::INI_KEY_HIGHLIGHT), savedArg.value(), Global.palette.reset(), (Global.no_color ? "\"" : ""), " in the hosts file!");
+		else throw make_exception("There is no saved target named ", (Global.no_color ? "\"" : ""), Global.palette.set(UIElem::INI_KEY_HIGHLIGHT, true), savedArg.value(), Global.palette.reset(std::nullopt, true), (Global.no_color ? "\"" : ""), " in the hosts file!");
 	}
 	else return{
 		args.typegetv_any<opt::Flag, opt::Option>('H', "host").value_or(Global.DEFAULT_TARGET.hostname),
@@ -111,7 +172,7 @@ inline std::vector<std::string> get_commands(const opt::ParamsAPI2& args, const 
 }
 
 #pragma region ArgumentHandlers
-inline void handle_hostfile_arguments(const opt::ParamsAPI2& args, config::HostList& hosts, const HostInfo& target, const std::filesystem::path& hostfile_path)
+inline void handle_hostfile_arguments(const opt::ParamsAPI2& args, net::HostList& hosts, const net::HostInfo& target, const std::filesystem::path& hostfile_path)
 {
 	bool do_exit{ false };
 	// remove-host
@@ -120,9 +181,9 @@ inline void handle_hostfile_arguments(const opt::ParamsAPI2& args, config::HostL
 		std::stringstream message_buffer; // save the messages in a buffer to prevent misleading messages in the event of a file writing error
 		for (const auto& name : remove_hosts) {
 			if (hosts.erase(name))
-				message_buffer << term::get_msg(!Global.no_color) << "Removed " << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT) << name << Global.palette.reset() << '\n';
+				message_buffer << term::get_msg(!Global.no_color) << "Removed " << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT, true) << name << Global.palette.reset(std::nullopt, true) << '\n';
 			else
-				message_buffer << term::get_error(!Global.no_color) << "Hostname \"" << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT) << name << Global.palette.reset() << " doesn't exist!" << '\n';
+				message_buffer << term::get_error(!Global.no_color) << "Hostname \"" << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT, true) << name << Global.palette.reset(std::nullopt, true) << " doesn't exist!" << '\n';
 		}
 
 		// if the hosts file is empty, delete it
@@ -151,7 +212,7 @@ inline void handle_hostfile_arguments(const opt::ParamsAPI2& args, config::HostL
 		};
 
 		if (added)
-			message_buffer << term::get_msg(!Global.no_color) << "Added host: " << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT) << save_host.value() << Global.palette.reset() << " " << target.hostname << ':' << target.port << '\n';
+			message_buffer << term::get_msg(!Global.no_color) << "Added host: " << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT, true) << save_host.value() << Global.palette.reset(std::nullopt, true) << " " << target.hostname << ':' << target.port << '\n';
 		else if ([](const file::INI::SectionContent& left, const file::INI::SectionContent& right) -> bool {
 			if (const auto left_host{ left.find("sHost") }, right_host{ right.find("sHost") }; left_host == left.end() || right_host == right.end() || left_host->second != right_host->second) {
 				return false;
@@ -164,9 +225,9 @@ inline void handle_hostfile_arguments(const opt::ParamsAPI2& args, config::HostL
 			}
 			return true;
 			}(existing->second, target_info))
-			throw make_exception("Host ", Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT), save_host.value(), Global.palette.reset(), " is already set to ", target.hostname, ':', target.port, '\n');
+			throw make_exception("Host ", Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT, true), save_host.value(), Global.palette.reset(std::nullopt, true), " is already set to ", target.hostname, ':', target.port, '\n');
 		else
-			message_buffer << term::get_msg(!Global.no_color) << "Updated " << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT) << save_host.value() << Global.palette.reset() << ": " << target.hostname << ':' << target.port << '\n';
+			message_buffer << term::get_msg(!Global.no_color) << "Updated " << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT, true) << save_host.value() << Global.palette.reset(std::nullopt, true) << ": " << target.hostname << ':' << target.port << '\n';
 
 
 		if (config::save_hostfile(hosts, hostfile_path)) // print a success message or throw failure exception
@@ -193,15 +254,15 @@ inline void handle_hostfile_arguments(const opt::ParamsAPI2& args, config::HostL
 		}() };
 
 		for (const auto& [name, info] : hosts) {
-			const HostInfo& hostinfo{ info };
+			const net::HostInfo& hostinfo{ info };
 			if (!Global.quiet) {
 				std::cout
-					<< Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT) << name << Global.palette.reset() << '\n'
+					<< Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT, true) << name << Global.palette.reset(std::nullopt, true) << '\n'
 					<< "    Host:  " << hostinfo.hostname << '\n'
 					<< "    Port:  " << hostinfo.port << '\n';
 			}
 			else {
-				std::cout << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT) << name << Global.palette.reset()
+				std::cout << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT, true) << name << Global.palette.reset(std::nullopt, true)
 					<< str::VIndent(indentation_max, name.size()) << "( " << hostinfo.hostname << ':' << hostinfo.port << " )\n";
 			}
 		}

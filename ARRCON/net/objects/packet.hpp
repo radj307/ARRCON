@@ -14,7 +14,7 @@
   * @namespace	packet
   * @brief		Contains the Packet, serialized_packet, and ID_Manager objects.
   */
-namespace packet {
+namespace net::packet {
 	/// @brief Minimum possible RCON-packet size (10 B).
 	inline constexpr const int PSIZE_MIN{ 10 };
 	/// @brief Maximum allowable packet size (10 kB)

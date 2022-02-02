@@ -74,6 +74,11 @@ namespace config {
 		}
 	};
 
+	/**
+	 * @brief		Apply the values found in the config file to the current global program configuration.
+	 * @param ini	INI Container
+	 * @returns		bool
+	 */
 	inline bool apply_configuration(const file::INI& ini)
 	{
 		if (ini.empty())
@@ -162,54 +167,53 @@ namespace config {
 	 */
 	inline bool save_ini(const std::filesystem::path& path, const bool& use_defaults = true)
 	{
-		// create parent directories
 		std::filesystem::create_directories(std::filesystem::path(path).remove_filename());
 		#pragma warning (disable:26800) // use of a moved-from object: ss
 		std::stringstream ss{};
 		if (use_defaults) {
 			ss // use defaults
-				<< '[' << header::TARGET << ']' << '\n'
+				<< '[' << ::config::header::TARGET << ']' << '\n'
 				<< "sDefaultHost = \"localhost\"\n"
 				<< "sDefaultPort = \"27015\"\n"
 				<< "sDefaultPass = \"\"\n"
 				<< "bAllowNoArgs = false\n"
 				<< '\n'
-				<< '[' << header::APPEARANCE << ']' << '\n'
+				<< '[' << ::config::header::APPEARANCE << ']' << '\n'
 				<< "bDisablePrompt = false\n"
 				<< "bDisableColors = false\n"
 				<< "sCustomPrompt = \"\"\n"
 				<< "bEnableBukkitColors = true\n"
 				<< '\n'
-				<< '[' << header::TIMING << ']' << '\n'
+				<< '[' << ::config::header::TIMING << ']' << '\n'
 				<< "iCommandDelay = 0\n"
 				<< "iReceiveDelay = 10\n"
 				<< "iSelectTimeout = 500\n"
 				<< '\n'
-				<< '[' << header::MISCELLANEOUS << ']' << '\n'
+				<< '[' << ::config::header::MISCELLANEOUS << ']' << '\n'
 				<< "bInteractiveAllowExitKeyword = true\n"
 				<< "bEnableNoResponseMessage = true\n"
 				<< '\n';
 		}
 		else { // use current settings
 			ss << std::boolalpha
-				<< '[' << header::TARGET << ']' << '\n'
+				<< '[' << ::config::header::TARGET << ']' << '\n'
 				<< "sDefaultHost = \"" << Global.target.hostname << "\"\n"
 				<< "sDefaultPort = \"" << Global.target.port << "\"\n"
 				<< "sDefaultPass = \"" << Global.target.password << "\"\n"
 				<< "bAllowNoArgs = " << Global.allow_no_args << '\n'
 				<< '\n'
-				<< '[' << header::APPEARANCE << ']' << '\n'
+				<< '[' << ::config::header::APPEARANCE << ']' << '\n'
 				<< "bDisablePrompt = " << Global.no_prompt << '\n'
 				<< "bDisableColors = " << Global.no_color << '\n'
 				<< "sCustomPrompt = \"" << Global.custom_prompt << "\"\n"
 				<< "bEnableBukkitColors = " << Global.enable_bukkit_color_support << '\n'
 				<< '\n'
-				<< '[' << header::TIMING << ']' << '\n'
+				<< '[' << ::config::header::TIMING << ']' << '\n'
 				<< "iCommandDelay = " << Global.command_delay.count() << '\n'
 				<< "iReceiveDelay = " << Global.receive_delay.count() << '\n'
 				<< "iSelectTimeout = " << Global.select_timeout.count() << '\n'
 				<< '\n'
-				<< '[' << header::MISCELLANEOUS << ']' << '\n'
+				<< '[' << ::config::header::MISCELLANEOUS << ']' << '\n'
 				<< "bInteractiveAllowExitKeyword = " << Global.allow_exit << '\n'
 				<< "bEnableNoResponseMessage = " << Global.enable_no_response_message << '\n'
 				<< '\n';
@@ -218,24 +222,19 @@ namespace config {
 		#pragma warning (default:26800) // use of a moved-from object: ss
 	}
 
-
-
-	using HostList = file::INI;
-
 	/**
 	 * @brief			Write the given hostlist to a file.
 	 * @param hostlist	Host list to write.
 	 * @param filename	Target filename to write to.
 	 * @returns			bool
 	 */
-	inline auto save_hostfile(const HostList& hostlist, const std::filesystem::path& path)
+	inline auto save_hostfile(const net::HostList& hostlist, const std::filesystem::path& path)
 	{
-		// create parent directories
 		std::filesystem::create_directories(std::filesystem::path(path).remove_filename());
 		#pragma warning (disable:26800) // use of a moved-from object: ss
 		std::stringstream ss;
 		ss << hostlist;
-		return file::write_to(path, std::move(ss));
+		return file::write_to(path, std::move(ss), false);
 		#pragma warning (default:26800) // use of a moved-from object: ss
 	}
 }
