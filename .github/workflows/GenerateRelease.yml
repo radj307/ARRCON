@@ -124,11 +124,7 @@ jobs:
       uses: actions/download-artifact@v2
       with:
         name: latest-macOS
-      
-    # Unpack Artifacts to common directory
-    - name: 'Compile Artifacts'
-      run:  mv ./latest-*/* ./
-    
+        
     # Retrieve the latest git tag if this was triggered by a tag
     - name: '(Automatic) Get Release Tag'
       id:   get_version
