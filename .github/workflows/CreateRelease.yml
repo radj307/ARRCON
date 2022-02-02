@@ -45,7 +45,7 @@ jobs:
     
     steps:
     - name: Wait for build workflows to complete
-      if:  ${{ github.event_name != 'workflow_dispatch' }}
+      if:   ${{ github.event_name != 'workflow_dispatch' }}
       uses: lewagon/wait-on-check-action@v1.1.1
       with:
         ref: ${{github.sha}}
@@ -74,11 +74,9 @@ jobs:
         
     - name: Compile Artifacts
       run:  mv ./latest-*/* ./
-        
-    - name: List Directory
-      run:  ls -lAghR
-        
-    - name: Create Release
+    
+    - name: Create Release (workflow_dispatch)
+      if:   ${{ github.event_name == 'workflow_run' }}
       uses: softprops/action-gh-release@v1
       with:
         draft:                    ${{github.event.inputs.is-draft}}
@@ -89,3 +87,24 @@ jobs:
         body:                     ${{github.event.inputs.body}}
         fail_on_unmatched_files:  true
         files:                    ./*.zip
+
+    - name: Get Latest Tag (workflow_run)
+      id: latest-tag
+      if:   ${{ github.event_name == 'workflow_run' }}
+      uses: WyriHaximus/github-action-get-previous-tag@v1
+      with:
+        fallback:                 0.0.0
+
+    - name: Create Draft Release (workflow_run)
+      if:   ${{ github.event_name == 'workflow_run' }}
+      uses: softprops/action-gh-release@v1
+      with:
+        draft:                    true
+        prerelease:               false
+        tag_name:                 ${{ steps.latest-tag.outputs.tag }}
+        name:                     '${{steps.latest-tag.outputs.tag}} Release'
+        generate_release_notes:   false
+        body:                     ''
+        fail_on_unmatched_files:  true
+        files:                    ./*.zip
+
