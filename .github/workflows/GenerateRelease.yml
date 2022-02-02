@@ -7,11 +7,13 @@ on:
     inputs:
       name:
         description:  'Release Name'
-        required:     true
+        required:     false
+        default:      ''
         type:         string
       tag: # Target tag to make a release for
-        description:  'Release Tag'
-        required:     true
+        description:  'Release Tag ()'
+        required:     false
+        default:      ''
         type:         string
       is-draft: # Input that selects whether to make a draft release or a public release
         description:  'Make Draft Release'
@@ -42,8 +44,7 @@ jobs:
     strategy:
       matrix:
         os:         [ ubuntu-latest, windows-latest, macos-latest ]
-      max-parallel: 1
-      fail-fast:    false
+      fail-fast:    true
 
     steps:
       # Check out the repository
@@ -103,6 +104,7 @@ jobs:
       with:
         name: latest-${{runner.os}}
         path: '${{github.workspace}}/build/ARRCON/*.zip'
+#:create-binaries
       
   create-release:
     needs: create-binaries      
@@ -121,29 +123,37 @@ jobs:
       if:   ${{ github.event_name != 'workflow_dispatch' }}
       run:  echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
       
-    # Create Releases
+    # Stage downloaded build artifacts for deployment
+    - name:   'Stage Archives'
+      run:    |
+              cd ${{github.workspace}}
+              if mv ./latest-*/* ./ ; then ls -lAgh ; else ls -lAghR ; fi
+      shell:  bash
+      
+    # Upload Release
       # Tags Trigger
-    - name: '(Automatic) Create Release'
-      if:   ${{ github.event_name != 'workflow_dispatch' }}
-      uses: softprops/action-gh-release@v1
-      with:
-        draft:                    true
-        prerelease:               false
-        tag_name:                 '${{ steps.get_version.outputs.VERSION }}'
-        name:                     '${{ steps.get_version.outputs.VERSION }} Release'
-        generate_release_notes:   true
-        fail_on_unmatched_files:  true
-        files:                    ./*.zip
+#    - name: '(Automatic) Create Release'
+#      if:   ${{ github.event_name != 'workflow_dispatch' }}
+#      uses: softprops/action-gh-release@v1
+#      with:
+#        draft:                    true
+#        prerelease:               false
+#        tag_name:                 '${{ steps.get_version.outputs.VERSION }}'
+#        name:                     'Release ${{ steps.get_version.outputs.VERSION }}'
+#        generate_release_notes:   true
+#        fail_on_unmatched_files:  true
+#        files:                    ${{github.workspace}}/*.zip
       # Dispatch Trigger
     - name: '(Dispatch) Create Release'
-      if:   ${{ github.event_name == 'workflow_dispatch' }}
+      #if:   ${{ github.event_name == 'workflow_dispatch' }}
       uses: softprops/action-gh-release@v1
       with:
-        draft:                    ${{github.event.inputs.is-draft}}
-        prerelease:               ${{github.event.inputs.is-prerelease}}
-        tag_name:                 ${{github.event.inputs.tag}}
-        name:                     ${{github.event.inputs.name}}
-        generate_release_notes:   ${{github.event.inputs.autogenerate}}
-        body:                     ${{github.event.inputs.body}}
+        draft:                    ${{ github.event.inputs.is-draft || true }}
+        prerelease:               ${{ github.event.inputs.is-prerelease || false }}
+        tag_name:                 ${{ github.event.inputs.tag || steps.get_version.outputs.VERSION }}
+        name:                     'Release ${{ github.event.inputs.name || steps.get_version.outputs.VERSION }}'
+        generate_release_notes:   ${{ github.event.inputs.autogenerate || true }}
+        body:                     ${{ github.event.inputs.body || '' }}
         fail_on_unmatched_files:  true
-        files:                    ./*.zip
+        files:                    ${{github.workspace}}/*.zip
+#:create-release
