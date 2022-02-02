@@ -40,7 +40,6 @@ using SOCKET = unsigned long long;
 #define ISSUE_REPORT_URL "https://github.com/radj307/ARRCON/issues"
 
 
-
 /**
  * @struct	HostInfo
  * @brief	Contains the connection info for a single target.
@@ -74,9 +73,26 @@ struct HostInfo {
 	 * @param opass		Optional Override Password
 	 * @returns			HostInfo
 	 */
-	HostInfo getWithOverride(const std::optional<std::string>& ohost, const std::optional<std::string>& oport, const std::optional<std::string>& opass) const
+	HostInfo copyWithOverrides(const std::optional<std::string>& ohost, const std::optional<std::string>& oport, const std::optional<std::string>& opass) const
 	{
 		return{ ohost.value_or(hostname), oport.value_or(port), opass.value_or(password) };
+	}
+	/**
+	 * @brief			Create a HostInfo struct containing values from the given optional overrides, or values from this HostInfo instance for any null overrides.
+	 * @param ohost		Optional Override Hostname
+	 * @param oport		Optional Override Port
+	 * @param opass		Optional Override Password
+	 * @returns			HostInfo&&
+	 */
+	HostInfo&& moveWithOverrides(const std::optional<std::string>& ohost, const std::optional<std::string>& oport, const std::optional<std::string>& opass)
+	{
+		if (ohost.has_value())
+			hostname = ohost.value();
+		if (oport.has_value())
+			port = oport.value();
+		if (opass.has_value())
+			password = opass.value();
+		return std::move(*this);
 	}
 
 	operator file::INI::SectionContent() const
