@@ -130,6 +130,10 @@ jobs:
               if mv ./latest-*/* ./ ; then ls -lAgh ; else ls -lAghR ; fi
       shell:  bash
       
+    - name:   'Make Release Name'
+      id:     get-release
+      run:    echo ::set-output name=name::'Release ${{steps.get_version.outputs.VERSION}}'
+      
     # Upload Release
       # Tags Trigger
 #    - name: '(Automatic) Create Release'
@@ -151,7 +155,7 @@ jobs:
         draft:                    ${{ github.event.inputs.is-draft || true }}
         prerelease:               ${{ github.event.inputs.is-prerelease || false }}
         tag_name:                 ${{ github.event.inputs.tag || steps.get_version.outputs.VERSION }}
-        name:                     ${{ github.event.inputs.name || 'Release ${{steps.get_version.outputs.VERSION}}' }}
+        name:                     ${{ steps.get-release.outputs.name }}
         generate_release_notes:   ${{ github.event.inputs.autogenerate || true }}
         body:                     ${{ github.event.inputs.body || '' }}
         fail_on_unmatched_files:  true
