@@ -121,10 +121,12 @@ jobs:
       if:   ${{ github.event_name != 'workflow_dispatch' }}
       run:  echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
       
-    - name: 'Stage Archives'
-      run:  |
-            ls -lAghR ${{github.workspace}}
-            mv "${{github.workspace}}/latest-*/*" "${{github.workspace}}"
+    - name:   'Stage Archives'
+      run:    |
+              cd ${{github.workspace}}
+              ls -lAghR
+              mv ./latest-*/* ./
+      shell:  bash
       
     # Create Releases
       # Tags Trigger
