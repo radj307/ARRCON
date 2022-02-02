@@ -1,0 +1,160 @@
+name: Generate Release
+
+on:
+  push:
+    tags: '[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+    inputs:
+      name:
+        description:  'Release Name'
+        required:     true
+        type:         string
+      tag: # Target tag to make a release for
+        description:  'Release Tag'
+        required:     true
+        type:         string
+      is-draft: # Input that selects whether to make a draft release or a public release
+        description:  'Make Draft Release'
+        required:     false
+        default:      'true'
+        type:         boolean
+      is-prerelease: # Input that selects whether to make a pre-release or normal release
+        description:  'Make Pre-Release'
+        required:     false
+        default:      'false'
+        type:         boolean
+      autogenerate:
+        description:  'Autogenerate Release Notes From Commits'
+        required:     false
+        default:      'false'
+        type:         boolean
+      body:
+        description:  'Release Body Paragraph'
+        required:     false
+        default:      ''
+
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build-all:
+    runs-on: ${{matrix.os}}
+    strategy:
+      matrix:
+        os:         [ ubuntu-latest, windows-latest, macos-latest ]
+      max-parallel: 1
+      fail-fast:    false
+
+    steps:
+      # Check out the repository
+    - uses: actions/checkout@v2
+      with:
+        submodules:   recursive
+        fetch-depth:  0
+
+      
+    # Set up platform dependencies
+      # Ninja
+    - uses: seanmiddleditch/gha-setup-ninja@master
+      # MSVC (Windows)
+    - if:   ${{ runner.os == 'Windows' }}
+      uses: ilammy/msvc-dev-cmd@v1
+      # gcc-10 g++-10 zip unzip (Linux)
+    - if:   ${{ runner.os == 'Linux' }}
+      run:  sudo apt-get update && sudo apt-get install gcc-10 g++-10 zip unzip -y
+      
+      
+    # Configure CMake Cache
+      # Windows
+    - name:   Configure CMake (Windows)
+      if:     ${{ runner.os == 'Windows' }}
+      run:    cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -G Ninja
+      # Linux/macOS
+    - name:   Configure CMake (Linux/macOS)
+      if:     ${{ runner.os != 'Windows' }}
+      run:    cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -G Ninja
+      env:
+        CC:   gcc-10
+        CXX:  g++-10
+
+    # Build Binary
+    - name: Build
+      run:  cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      
+    # Create Packaged Release Archive
+      # Windows
+    - name:   Create Archive (Windows)
+      if:     ${{ runner.os == 'Windows' }}
+      run:    |
+              cd "${{github.workspace}}/build/ARRCON"
+              Compress-Archive ARRCON.exe ARRCON-$(.\ARRCON -vq)-Windows.zip
+      shell:  powershell
+      # Linux / macOS
+    - name:   Create Archive (Linux/macOS)
+      if:     ${{ runner.os != 'Windows' }}
+      run:    |
+              cd "${{github.workspace}}/build/ARRCON"
+              zip -T9 ARRCON-$(./ARRCON -vq)-${{runner.os}}.zip ARRCON
+      shell:  bash
+      
+    # Upload Artifact
+    - name:   Upload Artifact
+      uses:   actions/upload-artifact@v2
+      with:
+        name: latest-${{runner.os}}
+        path: '${{github.workspace}}/build/ARRCON/*.zip'
+      
+  create-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    # Download Binary Artifacts
+    - name: 'Download Linux Artifact'
+      uses: actions/download-artifact@v2
+      with:
+        name: latest-Linux
+    - name: 'Download Windows Artifact'
+      uses: actions/download-artifact@v2
+      with:
+        name: latest-Windows
+    - name: 'Download macOS Artifact'
+      uses: actions/download-artifact@v2
+      with:
+        name: latest-macOS
+      
+    # Unpack Artifacts to common directory
+    - name: 'Compile Artifacts'
+      run:  mv ./latest-*/* ./
+    
+    # Retrieve the latest git tag if this was triggered by a tag
+    - name: '(Automatic) Get Release Tag'
+      id:   get_version
+      if:   ${{ github.event_name != 'workflow_dispatch' }}
+      run:  echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      
+    # Create Releases
+      # Tags Trigger
+    - name: '(Automatic) Create Release'
+      if:   ${{ github.event_name != 'workflow_dispatch' }}
+      uses: softprops/action-gh-release@v1
+      with:
+        draft:                    true
+        prerelease:               false
+        tag_name:                 '${{ steps.get_version.outputs.VERSION }}'
+        name:                     '${{ steps.get_version.outputs.VERSION }} Release'
+        generate_release_notes:   true
+        fail_on_unmatched_files:  true
+        files:                    ./*.zip
+      # Dispatch Trigger
+    - name: '(Dispatch) Create Release'
+      if:   ${{ github.event_name == 'workflow_dispatch' }}
+      uses: softprops/action-gh-release@v1
+      with:
+        draft:                    ${{github.event.inputs.is-draft}}
+        prerelease:               ${{github.event.inputs.is-prerelease}}
+        tag_name:                 ${{github.event.inputs.tag}}
+        name:                     ${{github.event.inputs.name}}
+        generate_release_notes:   ${{github.event.inputs.autogenerate}}
+        body:                     ${{github.event.inputs.body}}
+        fail_on_unmatched_files:  true
+        files:                    ./*.zip
