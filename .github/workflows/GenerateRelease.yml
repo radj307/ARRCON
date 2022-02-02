@@ -106,6 +106,8 @@ jobs:
       
   create-release:
     runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 1    
     
     steps:
     # Download Binary Artifacts
