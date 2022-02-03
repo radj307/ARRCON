@@ -21,22 +21,24 @@
       "hidden": true,
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "ARRCON_ENABLE_ADDITIONAL_RESOURCES": false
+        "ARRCON_ENABLE_ADDITIONAL_RESOURCES": false,
+        "ARRCON_ENABLE_TESTING": true
       }
     },
     {
       "name": "RelWithDebInfo",
       "hidden": true,
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+        "ARRCON_ENABLE_ADDITIONAL_RESOURCES": false,
+        "ARRCON_ENABLE_TESTING": true
       }
     },
     {
       "name": "Release",
       "hidden": true,
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release",
-        "ARRCON_ENABLE_ADDITIONAL_RESOURCES": true
+        "CMAKE_BUILD_TYPE": "Release"
       }
     },
     {
