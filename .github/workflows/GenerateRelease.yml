@@ -118,10 +118,12 @@ jobs:
       uses: actions/download-artifact@v2
             
     # Retrieve the latest git tag if this was triggered by a tag
-    - name: '(Automatic) Get Release Tag'
+    - name: 'Get Release Tag'
       id:   get_version
-      if:   ${{ github.event_name != 'workflow_dispatch' }}
-      run:  echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+      run:  |
+            if [ "${{github.event.inputs.tag}}" == "" ]; then TAG="${GITHUB_REF/refs\/tags\//}"; else TAG="${{github.event.inputs.tag}}" ; fi
+            echo ::set-output name=VERSION::$TAG
+            echo ::set-output name=NAME::"Release $TAG"
       
     # Stage downloaded build artifacts for deployment
     - name:   'Stage Archives'
@@ -150,8 +152,8 @@ jobs:
       with:
         draft:                    ${{ github.event.inputs.is-draft || true }}
         prerelease:               ${{ github.event.inputs.is-prerelease || false }}
-        tag_name:                 ${{ github.event.inputs.tag || steps.get_version.outputs.VERSION }}
-        name:                     'Release ${{ github.event.inputs.name || steps.get_version.outputs.VERSION }}'
+        tag_name:                 ${{ steps.get_version.outputs.VERSION }}
+        name:                     ${{ steps.get_version.outputs.NAME }}
         generate_release_notes:   ${{ github.event.inputs.autogenerate || true }}
         body:                     ${{ github.event.inputs.body || '' }}
         fail_on_unmatched_files:  true
