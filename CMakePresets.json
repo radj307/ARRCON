@@ -15,23 +15,18 @@
         "uninitialized": true
       }
     },
-
     {
       "name": "Debug",
       "hidden": true,
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
-        "ARRCON_ENABLE_ADDITIONAL_RESOURCES": false,
-        "ARRCON_ENABLE_TESTING": true
       }
     },
     {
       "name": "RelWithDebInfo",
       "hidden": true,
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "ARRCON_ENABLE_ADDITIONAL_RESOURCES": false,
-        "ARRCON_ENABLE_TESTING": true
+        "CMAKE_BUILD_TYPE": "RelWithDebInfo"
       }
     },
     {
@@ -49,11 +44,13 @@
       }
     },
 
+
+
     {
       "name": "linux-default",
       "hidden": true,
       "inherits": "default",
-      "displayName": "Linux",
+      "displayName": "LINUX DEFAULT PRESET",
       "description": "Target the Windows Subsystem for Linux (WSL) or a remote Linux system.",
       "generator": "Ninja",
       "vendor": {
@@ -63,22 +60,36 @@
     },
     {
       "name": "linux-debug",
-      "hidden": false,
       "inherits": [ "linux-default", "Debug" ],
+      "hidden": false,
       "displayName": "Linux Debug"
     },
     {
-      "name": "linux-release",
+      "name": "linux-relwithdebinfo",
+      "inherits": [ "linux-default", "RelWithDebInfo" ],
       "hidden": false,
+      "displayName": "Linux Release w/ Debugging Symbols"
+    },
+    {
+      "name": "linux-release",
       "inherits": [ "linux-default", "Release" ],
+      "hidden": false,
       "displayName": "Linux Release"
     },
+    {
+      "name": "linux-minsizerel",
+      "inherits": [ "linux-default", "MinSizeRel" ],
+      "hidden": false,
+      "displayName": "Linux Minimal Release"
+    },
+
+
 
     {
       "name": "macos-default",
       "hidden": true,
       "inherits": "default",
-      "displayName": "macOS",
+      "displayName": "MACOS DEFAULT PRESET",
       "description": "Target a remote macOS system with Ninja",
       "generator": "Ninja",
       "vendor": {
@@ -93,17 +104,31 @@
       "displayName": "macOS Debug"
     },
     {
+      "name": "macos-relwithdebinfo",
+      "inherits": [ "macos-default", "RelWithDebInfo" ],
+      "hidden": false,
+      "displayName": "macOS Release w/ Debugging Symbols"
+    },
+    {
       "name": "macos-release",
       "hidden": false,
       "inherits": [ "macos-default", "Release" ],
       "displayName": "macOS Release"
     },
+    {
+      "name": "macos-minsizerel",
+      "inherits": [ "macos-default", "MinSizeRel" ],
+      "hidden": false,
+      "displayName": "macOS Minimal Release"
+    },
+
+
 
     {
       "name": "windows-default",
       "hidden": true,
       "inherits": "default",
-      "displayName": "Windows x64",
+      "displayName": "WINDOWS 64-BIT DEFAULT PRESET",
       "description": "Target Windows with the Visual Studio development environment.",
       "generator": "Ninja",
       "architecture": {
@@ -114,17 +139,32 @@
     },
     {
       "name": "windows-debug",
-      "hidden": false,
       "inherits": [ "windows-default", "Debug" ],
+      "hidden": false,
       "displayName": "Windows x64 Debug"
     },
     {
-      "name": "windows-release",
+      "name": "windows-relwithdebinfo",
+      "inherits": [ "windows-default", "RelWithDebInfo" ],
       "hidden": false,
+      "displayName": "Windows x64 Release w/ Debugging Symbols"
+    },
+    {
+      "name": "windows-release",
       "inherits": [ "windows-default", "Release" ],
+      "hidden": false,
       "displayName": "Windows x64 Release"
+    },
+    {
+      "name": "windows-minsizerel",
+      "inherits": [ "windows-default", "MinSizeRel" ],
+      "hidden": false,
+      "displayName": "Windows x64 Minimal Release"
     }
   ],
+
+
+
   "buildPresets": [
     {
       "name": "release-clean",
