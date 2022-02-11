@@ -44,7 +44,7 @@ namespace mode {
 		size_t count{ 0ull };
 		for (auto& cmd : commands) {
 			if (!Global.quiet && !Global.no_prompt)
-				std::cout << Global.custom_prompt << Global.palette.set(UIElem::COMMAND_ECHO) << cmd << Global.palette.reset() << '\n';
+				std::cout << Global.custom_prompt << Global.palette.set(Color::GREEN) << cmd << Global.palette.reset() << '\n';
 			count += static_cast<int>(net::rcon::command(Global.socket, cmd)); // 0 or 1, command returns a boolean
 			std::this_thread::sleep_for(Global.command_delay);
 		}
@@ -81,10 +81,14 @@ namespace mode {
 			if (Global.allow_exit && str::tolower(command) == "exit")
 				break;
 
-			if (Global.connected.load() && !command.empty()) {
-				if (!net::rcon::command(sd, command) && Global.enable_no_response_message && !Global.quiet)
-					std::cout << Global.palette.set(UIElem::NO_RESPONSE) << "[no response]" << Global.palette.reset() << '\n';
+			if (Global.connected.load()) {
+				if (!command.empty()) {
+					if (!net::rcon::command(sd, command) && Global.enable_no_response_message && !Global.quiet)
+						std::cerr << Global.palette.set(Color::ORANGE) << "[no response]" << Global.palette.reset() << '\n';
+				}
+				else std::cerr << Global.palette.set(Color::BLUE) << "[not sent: empty]" << Global.palette.reset() << '\n';
 			}
+			else std::cerr << Global.palette.set(Color::RED) << "[not sent: lost connection]" << '\n';
 		}
 		// Flush & reset colors once done.
 		(std::cout << Global.palette.reset()).flush();

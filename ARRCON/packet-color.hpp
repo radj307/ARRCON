@@ -85,7 +85,7 @@ inline std::ostream& operator<<(std::ostream& os, const net::packet::Packet& pac
 			}
 		}
 	}
-	else os << Global.palette.set(UIElem::PACKET) << packet.body << Global.palette.reset();
+	else os << packet.body;
 	if (!packet.body.empty() && packet.body.back() != '\n')
 		os << '\n'; // print newline if packet doesn't already have one
 	return os.flush();

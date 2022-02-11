@@ -59,7 +59,7 @@ int main(const int argc, char** argv)
 		}
 		// Argument:  [--print-env]
 		if (args.check<opt::Option>("print-env")) {
-			std::cout << Global.env << std::endl;
+			(std::cout << Global.env).flush();
 			return 0;
 		}
 
@@ -81,7 +81,7 @@ int main(const int argc, char** argv)
 				"No arguments were specified!\n",
 				TABSPACE"Function Name:        main()\n",
 				TABSPACE"Suggested Solutions:\n",
-				TABSPACE"1.  Set ", Global.palette.set(UIElem::INI_KEY_HIGHLIGHT), "bAllowNoArgs = true", Global.palette.reset(), " in the INI config file.\n",
+				TABSPACE"1.  Set ", Global.palette.set(Color::YELLOW), "bAllowNoArgs = true", Global.palette.reset(), " in the INI config file.\n",
 				TABSPACE"2.  Specify a target to connect to with the [-H|--host], [-P|--port], & [-p|--pass] options.\n",
 				TABSPACE"3.  Read the help display above for command assistance.\n"
 			);
@@ -106,7 +106,7 @@ int main(const int argc, char** argv)
 
 		// If no custom prompt is set, use the default one
 		if (Global.custom_prompt.empty())
-			Global.custom_prompt = (Global.no_prompt ? "" : str::stringify(Global.palette.set(UIElem::TERM_PROMPT_NAME), "RCON@", target.hostname, Global.palette.reset(UIElem::TERM_PROMPT_ARROW), '>', Global.palette.reset(), ' '));
+			Global.custom_prompt = (Global.no_prompt ? "" : str::stringify(Global.palette.set(Color::GREEN), "RCON@", target.hostname, Global.palette.reset(Color::GREEN), '>', Global.palette.reset(), ' '));
 
 
 		// Register the cleanup function before connecting the socket

@@ -99,7 +99,7 @@ inline net::HostInfo resolveTargetInfo(const opt::ParamsAPI2& args, const net::H
 				args.typegetv_any<opt::Flag, opt::Option>('p', "pass")
 			));
 		}
-		else throw make_exception("There is no saved target named ", (Global.no_color ? "\"" : ""), Global.palette.set_or(UIElem::INI_KEY_HIGHLIGHT, '\"'), savedArg.value(), Global.palette.reset_or('\"'), (Global.no_color ? "\"" : ""), " in the hosts file!");
+		else throw make_exception("There is no saved target named ", Global.palette.set_or(Color::YELLOW, '\"'), savedArg.value(), Global.palette.reset_or('\"'), " in the hosts file!");
 	}
 	else return{
 		args.typegetv_any<opt::Flag, opt::Option>('H', "host").value_or(Global.DEFAULT_TARGET.hostname),
@@ -181,22 +181,22 @@ inline void handle_hostfile_arguments(const opt::ParamsAPI2& args, net::HostList
 		std::stringstream message_buffer; // save the messages in a buffer to prevent misleading messages in the event of a file writing error
 		for (const auto& name : remove_hosts) {
 			if (hosts.erase(name))
-				message_buffer << term::get_msg(!Global.no_color) << "Removed " << Global.palette(UIElem::HOST_NAME_HIGHLIGHT, '\"') << name << Global.palette('\"') << '\n';
+				message_buffer << Global.palette.get_msg() << "Removed " << Global.palette(Color::YELLOW, '\"') << name << Global.palette('\"') << '\n';
 			else
-				message_buffer << term::get_error(!Global.no_color) << "Hostname \"" << Global.palette(UIElem::HOST_NAME_HIGHLIGHT, '\"') << name << Global.palette('\"') << " doesn't exist!" << '\n';
+				message_buffer << term::get_error(!Global.no_color) << "Hostname \"" << Global.palette(Color::YELLOW, '\"') << name << Global.palette('\"') << " doesn't exist!" << '\n';
 		}
 
 		// if the hosts file is empty, delete it
 		if (hosts.empty()) {
 			if (std::filesystem::remove(hostfile_path))
-				std::cout << message_buffer.rdbuf() << term::get_msg(!Global.no_color) << "Deleted the hostfile as there are no remaining entries." << std::endl;
+				std::cout << message_buffer.rdbuf() << Global.palette.get_msg() << "Deleted the hostfile as there are no remaining entries." << std::endl;
 			else
 				throw permission_exception("handle_hostfile_arguments()", hostfile_path, "Failed to delete empty Hostfile!");
 			std::exit(EXIT_SUCCESS); // host list is empty, ignore do_list_hosts as nothing will happen
 		} // otherwise, save the modified hosts file.
 		else {
 			if (config::save_hostfile(hosts, hostfile_path)) // print a success message or throw failure exception
-				std::cout << message_buffer.rdbuf() << term::get_msg(!Global.no_color) << "Successfully saved modified hostfile " << hostfile_path << std::endl;
+				std::cout << message_buffer.rdbuf() << Global.palette.get_msg() << "Successfully saved modified hostfile " << hostfile_path << std::endl;
 			else
 				throw permission_exception("handle_hostfile_arguments()", hostfile_path, "Failed to write modified Hostfile to disk!");
 		}
@@ -212,7 +212,7 @@ inline void handle_hostfile_arguments(const opt::ParamsAPI2& args, net::HostList
 		};
 
 		if (added)
-			message_buffer << term::get_msg(!Global.no_color) << "Added host: " << Global.palette(UIElem::HOST_NAME_HIGHLIGHT, '\"') << save_host.value() << Global.palette.reset_or('\"') << " " << target.hostname << ':' << target.port << '\n';
+			message_buffer << Global.palette.get_msg() << "Added host: " << Global.palette(Color::YELLOW, '\"') << save_host.value() << Global.palette.reset_or('\"') << " " << target.hostname << ':' << target.port << '\n';
 		else if ([](const file::INI::SectionContent& left, const file::INI::SectionContent& right) -> bool {
 			if (const auto left_host{ left.find("sHost") }, right_host{ right.find("sHost") }; left_host == left.end() || right_host == right.end() || left_host->second != right_host->second) {
 				return false;
@@ -225,13 +225,13 @@ inline void handle_hostfile_arguments(const opt::ParamsAPI2& args, net::HostList
 			}
 			return true;
 			}(existing->second, target_info))
-			throw make_exception("Host ", Global.palette(UIElem::HOST_NAME_HIGHLIGHT, '\"'), save_host.value(), Global.palette('\"'), " is already set to ", target.hostname, ':', target.port, '\n');
+			throw make_exception("Host ", Global.palette(Color::YELLOW, '\"'), save_host.value(), Global.palette('\"'), " is already set to ", target.hostname, ':', target.port, '\n');
 		else
-			message_buffer << term::get_msg(!Global.no_color) << "Updated " << Global.palette(UIElem::HOST_NAME_HIGHLIGHT, '\"') << save_host.value() << Global.palette('\"') << ": " << target.hostname << ':' << target.port << '\n';
+			message_buffer << Global.palette.get_msg() << "Updated " << Global.palette(Color::YELLOW, '\"') << save_host.value() << Global.palette('\"') << ": " << target.hostname << ':' << target.port << '\n';
 
 
 		if (config::save_hostfile(hosts, hostfile_path)) // print a success message or throw failure exception
-			std::cout << message_buffer.rdbuf() << term::get_msg(!Global.no_color) << "Successfully saved modified hostlist to " << hostfile_path << std::endl;
+			std::cout << message_buffer.rdbuf() << Global.palette.get_msg() << "Successfully saved modified hostlist to " << hostfile_path << std::endl;
 		else
 			throw permission_exception("handle_hostfile_arguments()", hostfile_path, "Failed to write modified Hostfile to disk!");
 	}
@@ -257,12 +257,12 @@ inline void handle_hostfile_arguments(const opt::ParamsAPI2& args, net::HostList
 			const net::HostInfo& hostinfo{ info };
 			if (!Global.quiet) {
 				std::cout
-					<< Global.palette(UIElem::HOST_NAME_HIGHLIGHT, '\"') << name << Global.palette('\"') << '\n'
+					<< Global.palette(Color::YELLOW, '\"') << name << Global.palette('\"') << '\n'
 					<< "    Host:  " << hostinfo.hostname << '\n'
 					<< "    Port:  " << hostinfo.port << '\n';
 			}
 			else {
-				std::cout << Global.palette(UIElem::HOST_NAME_HIGHLIGHT, '\"') << name << Global.palette('\"')
+				std::cout << Global.palette(Color::YELLOW, '\"') << name << Global.palette('\"')
 					<< str::VIndent(indentation_max, name.size()) << "( " << hostinfo.hostname << ':' << hostinfo.port << " )\n";
 			}
 		}
@@ -280,7 +280,7 @@ inline void handle_arguments(const opt::ParamsAPI2& args, const std::filesystem:
 	// write-ini:
 	if (args.check<opt::Option>("write-ini")) {
 		if (!ini_path.empty() && config::save_ini(ini_path)) {
-			std::cout << term::get_msg(!Global.no_color) << "Successfully wrote config: " << ini_path << std::endl;
+			std::cout << Global.palette.get_msg() << "Successfully wrote config: " << ini_path << std::endl;
 			std::exit(EXIT_SUCCESS);
 		}
 		else
@@ -289,7 +289,7 @@ inline void handle_arguments(const opt::ParamsAPI2& args, const std::filesystem:
 	// update-ini
 	if (args.check<opt::Option>("update-ini")) {
 		if (!ini_path.empty() && config::save_ini(ini_path, false)) {
-			std::cout << term::get_msg(!Global.no_color) << "Successfully updated config: " << ini_path << std::endl;
+			std::cout << Global.palette.get_msg() << "Successfully updated config: " << ini_path << std::endl;
 			std::exit(EXIT_SUCCESS);
 		}
 		else

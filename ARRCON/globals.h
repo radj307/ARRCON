@@ -40,23 +40,14 @@ using SOCKET = unsigned long long;
 
 #define ISSUE_REPORT_URL "https://github.com/radj307/ARRCON/issues"
 
-
-
-/**
- * @enum	UIElem
- * @brief	Defines various UI elements, used by the color palette to select appropriate colors.
- */
-enum class UIElem : unsigned char {
-	TERM_PROMPT_NAME,	// interactive mode prompt name
-	TERM_PROMPT_ARROW,	// interactive mode prompt arrow '>'
-	PACKET,				// interactive mode response
-	COMMAND_ECHO,		// commandline mode command echo
-	HOST_NAME,			// list-hosts command (name)
-	HOST_NAME_HIGHLIGHT,// save-host command
-	HOST_INFO,			// list-hosts command (hostname/port)
-	INI_KEY_HIGHLIGHT,	// used by some exceptions to highlight INI keys.
-	NO_RESPONSE,		// interactive mode no response message
-	ENV_VAR,			// --print-env
+enum class Color : unsigned char {
+	WHITE,
+	GRAY,
+	RED,
+	ORANGE,
+	GREEN,
+	BLUE,
+	YELLOW,
 };
 
 /**
@@ -90,17 +81,14 @@ public:
 };
 static struct {
 	/// @brief Color palette
-	color::palette<UIElem> palette{
-		std::make_pair(UIElem::TERM_PROMPT_NAME, color::green),
-		std::make_pair(UIElem::TERM_PROMPT_ARROW, color::green),
-		std::make_pair(UIElem::PACKET, color::white),
-		std::make_pair(UIElem::COMMAND_ECHO, color::green),
-		std::make_pair(UIElem::HOST_NAME, color::white),
-		std::make_pair(UIElem::HOST_NAME_HIGHLIGHT, color::yellow),
-		std::make_pair(UIElem::HOST_INFO, color::light_gray),
-		std::make_pair(UIElem::INI_KEY_HIGHLIGHT, color::intense_yellow),
-		std::make_pair(UIElem::NO_RESPONSE, color::orange),
-		std::make_pair(UIElem::ENV_VAR, color::intense_yellow),
+	color::palette<Color> palette{
+		std::make_pair(Color::GREEN, color::green),
+		std::make_pair(Color::GRAY, color::gray),
+		std::make_pair(Color::WHITE, color::white),
+		std::make_pair(Color::RED, color::red),
+		std::make_pair(Color::BLUE, color::cyan),
+		std::make_pair(Color::YELLOW, color::intense_yellow),
+		std::make_pair(Color::ORANGE, color::orange),
 	};
 	const net::HostInfo DEFAULT_TARGET{ // default target
 		"localhost",
@@ -163,32 +151,32 @@ inline std::ostream& operator<<(std::ostream& os, const Environment& e)
 {
 	os << std::boolalpha 
 		<< "Environment Variables" << '\n'
-		<< "  " << Global.palette.set(UIElem::ENV_VAR) << e.name_config_dir << Global.palette.reset() << '\n'
+		<< "  " << Global.palette.set(Color::YELLOW) << e.name_config_dir << Global.palette.reset() << '\n'
 		<< "    Is Defined:     " << e.Values.config_dir.has_value() << '\n'
 		<< "    Current Value:  " << e.Values.config_dir.value_or("") << '\n'
 		<< "    Description:\n"
 		<< "      Overrides the config file search location.\n"
 		<< "      When this is set, config files in other directories on the search path are ignored.\n"
 		<< '\n'
-		<< "  " << Global.palette.set(UIElem::ENV_VAR) << e.name_host << Global.palette.reset() << '\n'
+		<< "  " << Global.palette.set(Color::YELLOW) << e.name_host << Global.palette.reset() << '\n'
 		<< "    Is Defined:     " << e.Values.hostname.has_value() << '\n'
 		<< "    Current Value:  " << e.Values.hostname.value_or("") << '\n'
 		<< "    Description:\n"
 		<< "      Overrides the target hostname, unless one is specified on the commandline with [-H|--host].\n"
-		<< "      When this is set, the " << Global.palette.set(UIElem::INI_KEY_HIGHLIGHT) << "sDefaultHost" << Global.palette.reset() << " key in the INI will be ignored.\n"
+		<< "      When this is set, the " << Global.palette.set(Color::YELLOW) << "sDefaultHost" << Global.palette.reset() << " key in the INI will be ignored.\n"
 		<< '\n'
-		<< "  " << Global.palette.set(UIElem::ENV_VAR) << e.name_port << Global.palette.reset() << '\n'
+		<< "  " << Global.palette.set(Color::YELLOW) << e.name_port << Global.palette.reset() << '\n'
 		<< "    Is Defined:     " << e.Values.port.has_value() << '\n'
 		<< "    Current Value:  " << e.Values.port.value_or("") << '\n'
 		<< "    Description:\n"
 		<< "      Overrides the target port, unless one is specified on the commandline with [-P|--port].\n"
-		<< "      When this is set, the " << Global.palette.set(UIElem::INI_KEY_HIGHLIGHT) << "sDefaultPort" << Global.palette.reset() << " key in the INI will be ignored.\n"
+		<< "      When this is set, the " << Global.palette.set(Color::YELLOW) << "sDefaultPort" << Global.palette.reset() << " key in the INI will be ignored.\n"
 		<< '\n'
-		<< "  " << Global.palette.set(UIElem::ENV_VAR) << e.name_pass << Global.palette.reset() << '\n'
+		<< "  " << Global.palette.set(Color::YELLOW) << e.name_pass << Global.palette.reset() << '\n'
 		<< "    Is Defined:     " << e.Values.password.has_value() << '\n'
 		<< "    Description:\n"
 		<< "      Overrides the target password, unless one is specified on the commandline with [-p|--pass].\n"
-		<< "      When this is set, the " << Global.palette.set(UIElem::INI_KEY_HIGHLIGHT) << "sDefaultPass" << Global.palette.reset() << " key in the INI will be ignored.\n"
+		<< "      When this is set, the " << Global.palette.set(Color::YELLOW) << "sDefaultPass" << Global.palette.reset() << " key in the INI will be ignored.\n"
 		;
 	return os;
 }
