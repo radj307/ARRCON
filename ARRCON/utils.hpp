@@ -1,6 +1,8 @@
 #pragma once
 #include "globals.h"
 #include "config.hpp"			///< INI functions
+#include "exceptions.hpp"
+#include "net/objects/HostInfo.hpp"
 
 #include <filei.hpp>
 #include <fileutil.hpp>
@@ -165,7 +167,7 @@ inline std::vector<std::string> get_commands(const opt::ParamsAPI2& args, const 
 			for (const auto& command : script_commands)
 				commands.emplace_back(command);
 		}
-		else std::cerr << term::get_warn(!Global.no_color) << "Failed to read any commands from \"" << file << "\"\n";
+		else std::cerr << Global.palette.get_warn() << "Failed to read any commands from \"" << file << "\"\n";
 	}
 	commands.shrink_to_fit();
 	return commands;
