@@ -95,35 +95,35 @@ int main(const int argc, char** argv)
 			hosts = file::INI{ hostfile_path };
 
 		// get the target server's connection information
-		const auto& target{ resolveTargetInfo(args, hosts) };
+		Global.target = resolveTargetInfo(args, hosts);
 
 		handle_arguments(args, ini_path);
 
-		handle_hostfile_arguments(args, hosts, target, hostfile_path);
+		handle_hostfile_arguments(args, hosts, hostfile_path);
 
 		// get the commands to execute on the server
 		const auto commands{ get_commands(args, PATH) };
 
 		// If no custom prompt is set, use the default one
 		if (Global.custom_prompt.empty())
-			Global.custom_prompt = (Global.no_prompt ? "" : str::stringify(Global.palette.set(Color::GREEN), "RCON@", target.hostname, Global.palette.reset(Color::GREEN), '>', Global.palette.reset(), ' '));
+			Global.custom_prompt = (Global.no_prompt ? "" : str::stringify(Global.palette.set(Color::GREEN), "RCON@", Global.target.hostname, Global.palette.reset(Color::GREEN), '>', Global.palette.reset(), ' '));
 
 
 		// Register the cleanup function before connecting the socket
 		std::atexit(&net::cleanup);
 
 		// Connect the socket
-		Global.socket = net::connect(target.hostname, target.port);
+		Global.socket = net::connect(Global.target.hostname, Global.target.port);
 
 		// set & check if the socket was connected successfully
 		if (!(Global.connected = (Global.socket != SOCKET_ERROR)))
-			throw connection_exception("main()", "Socket descriptor was set to (" + std::to_string(Global.socket) + ") after successfully initializing the connection.", target.hostname, target.port, LAST_SOCKET_ERROR_CODE(), net::getLastSocketErrorMessage());
+			throw connection_exception("main()", "Socket descriptor was set to (" + std::to_string(Global.socket) + ") after successfully initializing the connection.", Global.target.hostname, Global.target.port, LAST_SOCKET_ERROR_CODE(), net::getLastSocketErrorMessage());
 
-		if (target.password.empty())
+		if (Global.target.password.empty())
 			throw make_exception("Password cannot be blank!");
 
 		// authenticate with the server, run queued commands, and open an interactive session if necessary.
-		if (rcon::authenticate(Global.socket, target.password)) {
+		if (rcon::authenticate(Global.socket, Global.target.password)) {
 			// authentication succeeded, run commands
 			if (mode::commandline(commands) == 0ull || Global.force_interactive)
 				mode::interactive(Global.socket); // if no commands were executed from the commandline or if the force interactive flag was set

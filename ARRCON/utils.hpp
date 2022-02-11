@@ -174,7 +174,7 @@ inline std::vector<std::string> get_commands(const opt::ParamsAPI2& args, const 
 }
 
 #pragma region ArgumentHandlers
-inline void handle_hostfile_arguments(const opt::ParamsAPI2& args, net::HostList& hosts, const net::HostInfo& target, const std::filesystem::path& hostfile_path)
+inline void handle_hostfile_arguments(const opt::ParamsAPI2& args, net::HostList& hosts, const std::filesystem::path& hostfile_path)
 {
 	bool do_exit{ false };
 	// remove-host
@@ -208,13 +208,13 @@ inline void handle_hostfile_arguments(const opt::ParamsAPI2& args, net::HostList
 		do_exit = true;
 		std::stringstream message_buffer; // save the messages in a buffer to prevent misleading messages in the event of a file writing error
 
-		const file::INI::SectionContent target_info{ target };
+		const file::INI::SectionContent target_info{ Global.target };
 		const auto& [existing, added] {
 			hosts.insert(std::make_pair(save_host.value(), target_info))
 		};
 
 		if (added)
-			message_buffer << Global.palette.get_msg() << "Added host: " << Global.palette(Color::YELLOW, '\"') << save_host.value() << Global.palette.reset_or('\"') << " " << target.hostname << ':' << target.port << '\n';
+			message_buffer << Global.palette.get_msg() << "Added host: " << Global.palette(Color::YELLOW, '\"') << save_host.value() << Global.palette.reset_or('\"') << " " << Global.target.hostname << ':' << Global.target.port << '\n';
 		else if ([](const file::INI::SectionContent& left, const file::INI::SectionContent& right) -> bool {
 			if (const auto left_host{ left.find("sHost") }, right_host{ right.find("sHost") }; left_host == left.end() || right_host == right.end() || left_host->second != right_host->second) {
 				return false;
@@ -227,9 +227,9 @@ inline void handle_hostfile_arguments(const opt::ParamsAPI2& args, net::HostList
 			}
 			return true;
 			}(existing->second, target_info))
-			throw make_exception("Host ", Global.palette(Color::YELLOW, '\"'), save_host.value(), Global.palette('\"'), " is already set to ", target.hostname, ':', target.port, '\n');
+			throw make_exception("Host ", Global.palette(Color::YELLOW, '\"'), save_host.value(), Global.palette('\"'), " is already set to ", Global.target.hostname, ':', Global.target.port, '\n');
 		else
-			message_buffer << Global.palette.get_msg() << "Updated " << Global.palette(Color::YELLOW, '\"') << save_host.value() << Global.palette('\"') << ": " << target.hostname << ':' << target.port << '\n';
+			message_buffer << Global.palette.get_msg() << "Updated " << Global.palette(Color::YELLOW, '\"') << save_host.value() << Global.palette('\"') << ": " << Global.target.hostname << ':' << Global.target.port << '\n';
 
 
 		if (config::save_hostfile(hosts, hostfile_path)) // print a success message or throw failure exception
