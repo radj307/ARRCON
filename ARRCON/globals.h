@@ -161,7 +161,8 @@ static struct {
 
 inline std::ostream& operator<<(std::ostream& os, const Environment& e)
 {
-	os << "Environment Variables" << std::boolalpha
+	os << std::boolalpha 
+		<< "Environment Variables" << '\n'
 		<< "  " << Global.palette.set(UIElem::ENV_VAR) << e.name_config_dir << Global.palette.reset() << '\n'
 		<< "    Is Defined:     " << e.Values.config_dir.has_value() << '\n'
 		<< "    Current Value:  " << e.Values.config_dir.value_or("") << '\n'
