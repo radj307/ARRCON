@@ -12,7 +12,7 @@
 #include <filesystem>
 
  /// @def TABSPACE @brief Used to indent lines that follow a term:: message prefix.
-#define TABSPACE "        "
+#define TABSPACE "          "
 
 struct permission_except final : public ex::except { permission_except(auto&& message) : except(std::forward<decltype(message)>(message)) {} };
 /// @brief	Make a file permission exception

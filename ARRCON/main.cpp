@@ -132,14 +132,14 @@ int main(const int argc, char** argv)
 
 		return 0;
 	} catch (const ex::except& ex) { // custom exception type
-		std::cerr << term::get_error(!Global.no_color, false) << ' ' << ex.what() << std::endl;
-		return -1;
+		std::cerr << Global.palette.get_error() << ' ' << ex.what() << std::endl;
+		return 1;
 	} catch (const std::exception& ex) { // standard exceptions
-		std::cerr << term::get_error(!Global.no_color, false) << ' ' << ex.what() << std::endl;
-		std::cerr << term::get_info(!Global.no_color, false) << "  " << "Please report this exception here: " << ISSUE_REPORT_URL << std::endl;
-		return -1;
+		std::cerr << Global.palette.get_error() << ' ' << ex.what() << std::endl;
+		std::cerr << Global.palette.get_placeholder() << "  " << "Please report this exception here: " << ISSUE_REPORT_URL << std::endl;
+		return 1;
 	} catch (...) { // undefined exceptions
-		std::cerr << term::get_crit(!Global.no_color, false) << "  " << "An unknown exception occurred!" << std::endl;
-		return -1;
+		std::cerr << Global.palette.get_crit() << "  " << "An unknown exception occurred!" << std::endl;
+		return 1;
 	}
 }
