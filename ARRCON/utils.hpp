@@ -99,7 +99,7 @@ inline net::HostInfo resolveTargetInfo(const opt::ParamsAPI2& args, const net::H
 				args.typegetv_any<opt::Flag, opt::Option>('p', "pass")
 			));
 		}
-		else throw make_exception("There is no saved target named ", (Global.no_color ? "\"" : ""), Global.palette.set(UIElem::INI_KEY_HIGHLIGHT, true), savedArg.value(), Global.palette.reset(std::nullopt, true), (Global.no_color ? "\"" : ""), " in the hosts file!");
+		else throw make_exception("There is no saved target named ", (Global.no_color ? "\"" : ""), Global.palette.set_or(UIElem::INI_KEY_HIGHLIGHT, '\"'), savedArg.value(), Global.palette.reset_or('\"'), (Global.no_color ? "\"" : ""), " in the hosts file!");
 	}
 	else return{
 		args.typegetv_any<opt::Flag, opt::Option>('H', "host").value_or(Global.DEFAULT_TARGET.hostname),
@@ -181,9 +181,9 @@ inline void handle_hostfile_arguments(const opt::ParamsAPI2& args, net::HostList
 		std::stringstream message_buffer; // save the messages in a buffer to prevent misleading messages in the event of a file writing error
 		for (const auto& name : remove_hosts) {
 			if (hosts.erase(name))
-				message_buffer << term::get_msg(!Global.no_color) << "Removed " << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT, true) << name << Global.palette.reset(std::nullopt, true) << '\n';
+				message_buffer << term::get_msg(!Global.no_color) << "Removed " << Global.palette(UIElem::HOST_NAME_HIGHLIGHT, '\"') << name << Global.palette('\"') << '\n';
 			else
-				message_buffer << term::get_error(!Global.no_color) << "Hostname \"" << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT, true) << name << Global.palette.reset(std::nullopt, true) << " doesn't exist!" << '\n';
+				message_buffer << term::get_error(!Global.no_color) << "Hostname \"" << Global.palette(UIElem::HOST_NAME_HIGHLIGHT, '\"') << name << Global.palette('\"') << " doesn't exist!" << '\n';
 		}
 
 		// if the hosts file is empty, delete it
@@ -212,7 +212,7 @@ inline void handle_hostfile_arguments(const opt::ParamsAPI2& args, net::HostList
 		};
 
 		if (added)
-			message_buffer << term::get_msg(!Global.no_color) << "Added host: " << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT, true) << save_host.value() << Global.palette.reset(std::nullopt, true) << " " << target.hostname << ':' << target.port << '\n';
+			message_buffer << term::get_msg(!Global.no_color) << "Added host: " << Global.palette(UIElem::HOST_NAME_HIGHLIGHT, '\"') << save_host.value() << Global.palette.reset_or('\"') << " " << target.hostname << ':' << target.port << '\n';
 		else if ([](const file::INI::SectionContent& left, const file::INI::SectionContent& right) -> bool {
 			if (const auto left_host{ left.find("sHost") }, right_host{ right.find("sHost") }; left_host == left.end() || right_host == right.end() || left_host->second != right_host->second) {
 				return false;
@@ -225,9 +225,9 @@ inline void handle_hostfile_arguments(const opt::ParamsAPI2& args, net::HostList
 			}
 			return true;
 			}(existing->second, target_info))
-			throw make_exception("Host ", Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT, true), save_host.value(), Global.palette.reset(std::nullopt, true), " is already set to ", target.hostname, ':', target.port, '\n');
+			throw make_exception("Host ", Global.palette(UIElem::HOST_NAME_HIGHLIGHT, '\"'), save_host.value(), Global.palette('\"'), " is already set to ", target.hostname, ':', target.port, '\n');
 		else
-			message_buffer << term::get_msg(!Global.no_color) << "Updated " << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT, true) << save_host.value() << Global.palette.reset(std::nullopt, true) << ": " << target.hostname << ':' << target.port << '\n';
+			message_buffer << term::get_msg(!Global.no_color) << "Updated " << Global.palette(UIElem::HOST_NAME_HIGHLIGHT, '\"') << save_host.value() << Global.palette('\"') << ": " << target.hostname << ':' << target.port << '\n';
 
 
 		if (config::save_hostfile(hosts, hostfile_path)) // print a success message or throw failure exception
@@ -257,12 +257,12 @@ inline void handle_hostfile_arguments(const opt::ParamsAPI2& args, net::HostList
 			const net::HostInfo& hostinfo{ info };
 			if (!Global.quiet) {
 				std::cout
-					<< Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT, true) << name << Global.palette.reset(std::nullopt, true) << '\n'
+					<< Global.palette(UIElem::HOST_NAME_HIGHLIGHT, '\"') << name << Global.palette('\"') << '\n'
 					<< "    Host:  " << hostinfo.hostname << '\n'
 					<< "    Port:  " << hostinfo.port << '\n';
 			}
 			else {
-				std::cout << Global.palette.set(UIElem::HOST_NAME_HIGHLIGHT, true) << name << Global.palette.reset(std::nullopt, true)
+				std::cout << Global.palette(UIElem::HOST_NAME_HIGHLIGHT, '\"') << name << Global.palette('\"')
 					<< str::VIndent(indentation_max, name.size()) << "( " << hostinfo.hostname << ':' << hostinfo.port << " )\n";
 			}
 		}
