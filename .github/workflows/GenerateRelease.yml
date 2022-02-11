@@ -44,10 +44,6 @@ jobs:
     strategy:
       matrix:
         os:         [ ubuntu-latest, windows-latest, macos-latest ]
-        include:
-          - runs-on: ubuntu-latest
-            compiler: gcc
-            gcc: 10
       fail-fast:    true
 
     steps:

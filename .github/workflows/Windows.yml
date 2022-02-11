@@ -13,12 +13,6 @@ jobs:
   build-windows:
     # Use a Windows build machine
     runs-on: windows-latest
-    strategy:
-      matrix:
-        include:
-          - runs-on:  ubuntu-latest
-            compiler: gcc
-            gcc:      10
 
     steps:
     - uses: actions/checkout@v2
@@ -27,7 +21,7 @@ jobs:
         submodules: recursive
         # Checkout all history so the most recent tag is guaranteed to be included
         fetch-depth: 0
-    #- uses: ilammy/msvc-dev-cmd@v1
+    - uses: ilammy/msvc-dev-cmd@v1
     - uses: seanmiddleditch/gha-setup-ninja@master
       
     - name: Configure CMake
