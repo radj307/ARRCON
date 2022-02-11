@@ -22,6 +22,9 @@ jobs:
         # Checkout all history so the most recent tag is guaranteed to be included
         fetch-depth: 0
     - uses: ilammy/msvc-dev-cmd@v1
+      with:
+        sdk:      '10.0.22000.0'
+        toolset:  '17.0.6'
     - uses: seanmiddleditch/gha-setup-ninja@master
       
     - name: Configure CMake
