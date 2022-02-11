@@ -13,6 +13,12 @@ jobs:
   build-windows:
     # Use a Windows build machine
     runs-on: windows-latest
+    strategy:
+      matrix:
+        include:
+          - runs-on:  ubuntu-latest
+            compiler: gcc
+            gcc:      10
 
     steps:
     - uses: actions/checkout@v2
