@@ -36,6 +36,12 @@ on:
         default:      ''
 
 env:
+  # [PROJECT_NAME]
+  # Currently this is used for the following scenarios:
+  # - Executable Name
+  # - Build Subdirectory Name
+  # - Archive Name Prefix
+  PROJECT_NAME: 'ARRCON'
   BUILD_TYPE: Release
 
 jobs:
@@ -87,15 +93,15 @@ jobs:
     - name:   Create Archive (Windows)
       if:     ${{ runner.os == 'Windows' }}
       run:    |
-              cd "${{github.workspace}}/build/ARRCON"
-              Compress-Archive ARRCON.exe ARRCON-$(.\ARRCON -vq)-Windows.zip
+              cd "${{github.workspace}}/build/${{env.PROJECT_NAME}}"
+              Compress-Archive "${{env.PROJECT_NAME}}.exe" "${{env.PROJECT_NAME}}-$(.\${{env.PROJECT_NAME}} -vq)-Windows.zip"
       shell:  powershell
       # Linux / macOS
     - name:   Create Archive (Linux/macOS)
       if:     ${{ runner.os != 'Windows' }}
       run:    |
-              cd "${{github.workspace}}/build/ARRCON"
-              zip -T9 ARRCON-$(./ARRCON -vq)-${{runner.os}}.zip ARRCON
+              cd "${{github.workspace}}/build/${{env.PROJECT_NAME}}"
+              zip -T9 "${{env.PROJECT_NAME}}-$(./${{env.PROJECT_NAME}} -vq)-${{runner.os}}.zip" "${{env.PROJECT_NAME}}"
       shell:  bash
       
     # Upload Artifact
@@ -103,7 +109,7 @@ jobs:
       uses:   actions/upload-artifact@v2
       with:
         name: latest-${{runner.os}}
-        path: '${{github.workspace}}/build/ARRCON/*.zip'
+        path: '${{github.workspace}}/build/${{env.PROJECT_NAME}}/*.zip'
 #:create-binaries
       
   create-release:
