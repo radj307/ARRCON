@@ -68,8 +68,12 @@ There are 2 modes:
 - ___Interactive Shell___
   - Used by default when there are no command arguments.
   - Opens an interactive console session. You can send commands and view the responses in real-time.
+  - Connection remains open until you disconnect or kill the process, or if the server closes.
 - ___Commandline___
   - Executes a list of commands in order with a configurable delay between sending each packet.
   - You can also use the `-f <filepath>` or `--file <filepath>` options to specify a scriptfile, which is executed line-by-line after any commands passed on the commandline.
   - Supports shell pipeline operators (`|`, `|&`, etc.)
   - Supports STDIN input redirection. _(Input from STDIN is always considered to be a command)_
+
+# Contributing / Suggestions
+Contributions are always welcome, submit a pull request and I'll check it out, or [submit a suggestion](https://github.com/radj307/ARRCON/issues/new?assignees=&labels=enhancement%2C+new+feature+request&template=request-a-new-feature.md&title=%5BNEW%5D).
