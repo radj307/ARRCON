@@ -65,7 +65,7 @@ To see a list of environment variables, their current values, and a description 
 ## Modes
 The operation mode is selected based on context, but can be influenced by some options.  
 There are 2 modes:
-- ___Interactive___ / ___Terminal___
+- ___Interactive Shell___
   - Used by default when there are no command arguments.
   - Opens an interactive console session. You can send commands and view the responses in real-time.
 - ___Commandline___
