@@ -21,6 +21,9 @@
 #include <vector>
 #include <string>
 
+#undef read
+#undef write
+
 /**
  * @struct	Help
  * @brief	Functor that prints out the help display.
