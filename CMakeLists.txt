@@ -29,9 +29,3 @@ if (WIN32)
 	target_link_libraries(ARRCON PUBLIC libunistd)
 endif()
 
-
-option(ARRCON_ENABLE_TESTING "Enable the ARRCON unit testing subproject" OFF)
-
-if (ARRCON_ENABLE_TESTING AND WIN32) # Todo: Figure out why POSIX can't compile unit tests
-	add_subdirectory("UnitTests")
-endif()
