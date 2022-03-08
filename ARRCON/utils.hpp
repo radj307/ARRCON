@@ -190,10 +190,12 @@ inline void handle_hostfile_arguments(const opt::ParamsAPI2& args, net::HostList
 
 		// if the hosts file is empty, delete it
 		if (hosts.empty()) {
-			if (std::filesystem::remove(hostfile_path))
-				std::cout << message_buffer.rdbuf() << Global.palette.get_msg() << "Deleted the hostfile as there are no remaining entries." << std::endl;
-			else
-				throw permission_exception("handle_hostfile_arguments()", hostfile_path, "Failed to delete empty Hostfile!");
+			if (Global.autoDeleteHostlist) {
+				if (std::filesystem::remove(hostfile_path))
+					std::cout << message_buffer.rdbuf() << Global.palette.get_msg() << "Deleted the hostfile as there are no remaining entries." << std::endl;
+				else
+					throw permission_exception("handle_hostfile_arguments()", hostfile_path, "Failed to delete empty Hostfile!");
+			}
 			std::exit(EXIT_SUCCESS); // host list is empty, ignore do_list_hosts as nothing will happen
 		} // otherwise, save the modified hosts file.
 		else {

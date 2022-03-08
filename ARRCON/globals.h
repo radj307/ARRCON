@@ -117,6 +117,9 @@ static struct {
 	/// @brief	When true, a message is printed to STDOUT when a command didn't provoke any response from the server, indicating it was invalid.
 	bool enable_no_response_message{ true };
 
+	/// @brief	Allows or disallows ARRCON from being able to create or delete files automatically, such as when the hostlist is empty.
+	bool autoDeleteHostlist{ true };
+
 	/// @brief	The name of the environment variable to check for the config directory
 	std::string EnvVar_CONFIG_DIR{ std::string(DEFAULT_PROGRAM_NAME) + "_CONFIG_DIR" };
 

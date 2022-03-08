@@ -65,7 +65,7 @@ namespace config {
 				path = env_path / target;
 				return path;
 			}
-			// 2:  check the program directory.
+			// 2:  check the program directory. (support portable versions by checking this before the user's home dir)
 			if (path = program_location / target; file::exists(path))
 				return path;
 			// 3:  user's home directory:
@@ -114,6 +114,7 @@ namespace config {
 		// Miscellaneous Header:
 		Global.allow_exit = ini.checkv(header::MISCELLANEOUS, "bInteractiveAllowExitKeyword", true);
 		Global.enable_no_response_message = ini.checkv(header::MISCELLANEOUS, "bEnableNoResponseMessage", true);
+		Global.autoDeleteHostlist = ini.checkv(header::MISCELLANEOUS, "bAutoDeleteHostlist", true);
 
 		return true;
 	}
@@ -153,6 +154,7 @@ namespace config {
 				<< '[' << ::config::header::MISCELLANEOUS << ']' << '\n'
 				<< "bInteractiveAllowExitKeyword = true\n"
 				<< "bEnableNoResponseMessage = true\n"
+				<< "bAutoDeleteHostlist = true\n"
 				<< '\n';
 		}
 		else { // use current settings
@@ -177,6 +179,7 @@ namespace config {
 				<< '[' << ::config::header::MISCELLANEOUS << ']' << '\n'
 				<< "bInteractiveAllowExitKeyword = " << Global.allow_exit << '\n'
 				<< "bEnableNoResponseMessage = " << Global.enable_no_response_message << '\n'
+				<< "bAutoDeleteHostlist = " << Global.autoDeleteHostlist << '\n'
 				<< '\n';
 		}
 		return file::write_to(path, std::move(ss));
