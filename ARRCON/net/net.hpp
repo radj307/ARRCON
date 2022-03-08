@@ -1,9 +1,9 @@
 /**
  * @file	net.hpp
- * @author	Tiiffi  ;  Heavily modified & updated for C++20 by radj307.
+ * @author	radj307, Tiiffi
  * @brief	Contains all of the raw networking functions used by the rcon namespace.
- *\n		These functions were originally created by Tiiffi for mcrcon: (https://github.com/Tiiffi/mcrcon)
- *\n		This is the original license:
+ *\n		These functions were originally created by Tiiffi for mcrcon: (https://github.com/Tiiffi/mcrcon).
+ *\n		Not much remains of the original code, and most of it is just basic socket programming, but I've included the original license anyway:
  *\n
  *\n		Copyright (c) 2012-2021, Tiiffi <tiiffi at gmail>
  *\n
@@ -38,6 +38,7 @@
 #include <netdb.h>
 
 #ifndef OS_WIN
+// include additional headers on non-windows platforms:
 #include <cstring>
 #include <fcntl.h>
 #endif
@@ -81,7 +82,7 @@ namespace net {
 	 */
 	inline std::string getLastSocketErrorMessage()
 	{
-		#ifdef OS_WIN
+#		ifdef OS_WIN
 		constexpr const unsigned BUFFER_SIZE{ 256u };
 		char msg[BUFFER_SIZE];
 		FormatMessage(
@@ -94,9 +95,9 @@ namespace net {
 			0
 		);
 		return{ msg };
-		#else
+#		else
 		return{ strerror(LAST_SOCKET_ERROR_CODE()) };
-		#endif
+#		endif
 	}
 
 	/**
@@ -116,14 +117,14 @@ namespace net {
 	 */
 	inline void init(void) noexcept(false)
 	{
-		#ifdef _WIN32
+#		ifdef _WIN32
 		WSADATA wsaData;
 		int rc{ 0 };
 		if (rc = WSAStartup(WINSOCK_VERSION, &wsaData); rc != 0)
 			throw make_exception("WSAStartup failed with error code ", rc, "! Last Socket Error:  (", LAST_SOCKET_ERROR_CODE(), ") ", getLastSocketErrorMessage());
 		else if (LOBYTE(wsaData.wVersion) != LOBYTE(WINSOCK_VERSION) || HIBYTE(wsaData.wVersion) != HIBYTE(WINSOCK_VERSION))
 			throw make_exception("Winsock version is invalid!");
-		#endif
+#		endif
 	}
 
 	/**
@@ -132,10 +133,10 @@ namespace net {
 	 */
 	inline void close_socket(const SOCKET& sd)
 	{
-		#ifdef _WIN32
+#		ifdef _WIN32
 		closesocket(sd);
 		WSACleanup();
-		#endif
+#		endif
 	}
 
 	/// @brief	Emergency stop handler, should be passed to the std::atexit() function to allow a controlled shutdown of the socket in the event of an interrupt.
@@ -227,8 +228,9 @@ namespace net {
 	}
 
 	/**
-	 * @brief		Flush all remaining packets.
-	 * @param sd	Target Socket.
+	 * @brief					Flush all remaining data from the socket.
+	 * @param sd				Target Socket.
+	 * @param do_check_first	When true, checks if there is data to flush before actually flushing it, which prevents unintended blocking if the socket is empty.
 	 */
 	inline void flush(const SOCKET& sd, const bool& do_check_first = true)
 	{
@@ -257,26 +259,24 @@ namespace net {
 		ssize_t ret{ recv(sd, (char*)&psize, sizeof(int), 0) };
 
 		// lambda to check if the return code is valid and packet size is valid
-		const auto& validate{
-			[&psize, &ret, &sd]() {
-				switch (ret) {
-				case (sizeof(int)): // success
-					break;
-				case 0: // nothing received
-					throw socket_exception("net::recv_packet()", "Connection Lost!", LAST_SOCKET_ERROR_CODE(), getLastSocketErrorMessage());
-				case SOCKET_ERROR: // error
-					throw socket_exception("net::recv_packet()", "Connection closed by server.");
-				default: // invalid size
-					throw socket_exception("net::recv_packet()", "Received a corrupted packet!", LAST_SOCKET_ERROR_CODE(), getLastSocketErrorMessage());
-				}
-				if (psize < packet::PSIZE_MIN)
-					std::cerr << "Received unexpectedly small packet size: " << psize << std::endl;
-				else if (psize > packet::PSIZE_MAX) {
-					std::cerr << "Received unexpectedly large packet size: " << psize << std::endl;
-					flush(sd); // flush the remaining data
-				}
+		const auto& validate{ [&psize, &ret, &sd]() {
+			switch (ret) {
+			case (sizeof(int)): // success
+				break;
+			case 0: // nothing received
+				throw socket_exception("net::recv_packet()", "Connection Lost!", LAST_SOCKET_ERROR_CODE(), getLastSocketErrorMessage());
+			case SOCKET_ERROR: // error
+				throw socket_exception("net::recv_packet()", "Connection closed by server.");
+			default: // invalid size
+				throw socket_exception("net::recv_packet()", "Received a corrupted packet!", LAST_SOCKET_ERROR_CODE(), getLastSocketErrorMessage());
 			}
-		};
+			if (psize < packet::PSIZE_MIN)
+				std::cerr << "Received unexpectedly small packet size: " << psize << std::endl;
+			else if (psize > packet::PSIZE_MAX) {
+				std::cerr << "Received unexpectedly large packet size: " << psize << std::endl;
+				flush(sd); // flush the remaining data
+			}
+		} };
 		validate();
 
 		packet::serialized_packet spacket{ psize, 0, 0, { 0x00 } }; ///< create a serialized packet to receive data
