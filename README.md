@@ -75,5 +75,21 @@ There are 2 modes:
   - Supports shell pipeline operators (`|`, `|&`, etc.)
   - Supports STDIN input redirection. _(Input from STDIN is always considered to be a command)_
 
-# Contributing / Suggestions
-Contributions are always welcome, submit a pull request and I'll check it out, or [submit a suggestion](https://github.com/radj307/ARRCON/issues/new?assignees=&labels=enhancement%2C+new+feature+request&template=request-a-new-feature.md&title=%5BNEW%5D).
+# Contributing
+
+## Feedback & Requests
+Feel free to leave feedback on the issues tab!  
+There are a number of premade templates for the following situations:
+- [Questions](https://github.com/radj307/ARRCON/issues/new?assignees=radj307&labels=question&template=question.md&title=%5BQUESTION%5D+)
+- [Bug Reports](https://github.com/radj307/ARRCON/issues/new?assignees=radj307&labels=bug&template=bug-report.md&title=%5BBUG%5D+%E2%80%A6)
+- [Protocol Support Requests](https://github.com/radj307/ARRCON/issues/new?assignees=radj307&labels=bug%2C+enhancement%2C+support&template=support-request.md&title=Unsupported+Title%3A+%3Ctitle%3E)  
+  - __A note on Battleye's RCON protocol:__  
+    Battleye's RCON protocol requires sending "keep-alive" packets at least every 45 seconds to maintain the connection, which is better suited by a multithreaded GUI application, and as such will not be implemented in ARRCON.  
+    Other protocols or game-specific implementations however, will be considered.
+- [Feature Requests](https://github.com/radj307/ARRCON/issues/new?assignees=&labels=enhancement%2C+new+feature+request&template=request-a-new-feature.md&title=%5BNEW%5D)
+- [Suggestions](https://github.com/radj307/ARRCON/issues/new?assignees=&labels=&template=change-an-existing-feature.md&title=%5BCHANGE%5D+)
+- [Documentation Suggestions or Additions](https://github.com/radj307/ARRCON/issues/new?assignees=&labels=documentation&template=documentation-request.md&title=%5BDOC%5D+)
+
+## Pull Requests
+Feel free to submit a pull request if you've added a feature or fixed a bug with the project!  
+Contributions are always welcomed, I'll review it as soon as I can.
