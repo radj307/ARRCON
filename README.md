@@ -11,9 +11,9 @@
   <a href="https://github.com/radj307/ARRCON/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/radj307/ARRCON/total?label=Downloads&color=ffffff&logo=github&style=for-the-badge"></a>
 </p>
 <p align="center">
-  <a href="https://github.com/radj307/ARRCON/actions/workflows/Windows.yml"><img alt="Windows Build Status" src="https://img.shields.io/github/workflow/status/radj307/ARRCON/Windows%20Build?label=Windows%20Build&logo=github&style=for-the-badge"></a>
-  <a href="https://github.com/radj307/ARRCON/actions/workflows/Linux.yml"><img alt="Linux Build Status" src="https://img.shields.io/github/workflow/status/radj307/ARRCON/Linux%20Build?label=Linux%20Build&logo=github&style=for-the-badge"></a>
-  <a href="https://github.com/radj307/ARRCON/actions/workflows/Windows.yml"><img alt="macOS Build Status" src="https://img.shields.io/github/workflow/status/radj307/ARRCON/macOS%20Build?label=macOS%20Build&logo=github&style=for-the-badge"></a>
+  <a href="https://github.com/radj307/ARRCON/actions/workflows/Windows.yml"><img alt="Windows Build Status" src="https://img.shields.io/github/workflow/status/radj307/ARRCON/Windows%20Smoketest?label=Windows%20Build&logo=github&style=for-the-badge"></a>
+  <a href="https://github.com/radj307/ARRCON/actions/workflows/Linux.yml"><img alt="Linux Build Status" src="https://img.shields.io/github/workflow/status/radj307/ARRCON/Linux%20Smoketest?label=Linux%20Build&logo=github&style=for-the-badge"></a>
+  <a href="https://github.com/radj307/ARRCON/actions/workflows/Windows.yml"><img alt="macOS Build Status" src="https://img.shields.io/github/workflow/status/radj307/ARRCON/macOS%20Smoketest?label=macOS%20Build&logo=github&style=for-the-badge"></a>
 </p>
 <p align="center">
   <a href="https://github.com/radj307/ARRCON/releases">Releases</a>&nbsp&nbsp|&nbsp&nbsp<a href="https://github.com/radj307/ARRCON/wiki">Wiki</a>&nbsp&nbsp|&nbsp&nbsp<a href="https://github.com/radj307/ARRCON/issues">Issues</a>
