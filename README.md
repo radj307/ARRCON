@@ -54,8 +54,8 @@ See [here](https://github.com/radj307/ARRCON/wiki/Building-from-Source) for a br
 
 
 # Usage
-ARRCON is a CLI program, which means you need to run it through a terminal.  
-On Windows, you can use `cmd.exe` or `powershell.exe` by R+Clicking on the start menu.  
+ARRCON is a CLI _(Command-Line Interface)_ program, which means you need to run it through a terminal.  
+On Windows, you can use `cmd.exe` or `powershell.exe` by R+Clicking on the start menu and selecting "Command Prompt" or "PowerShell".  
 For more detailed usage instructions, see [Getting Started](https://github.com/radj307/ARRCON/wiki)
 
 To see a list of commands, use `ARRCON -h` or `ARRCON --help`  
@@ -69,11 +69,11 @@ There are 2 modes:
   - Used by default when there are no command arguments.
   - Opens an interactive console session. You can send commands and view the responses in real-time.
   - Connection remains open until you disconnect or kill the process, or if the server closes.
-- ___Commandline___
+- ___Commandline / Scripting___  
+  - Automatically used when additional input is given on the commandline, or when piping input from STDIN.  
+    ![ARRCON Scripting Support](https://i.imgur.com/oPX47RD.png)  
   - Executes a list of commands in order with a configurable delay between sending each packet.
   - You can also use the `-f <filepath>` or `--file <filepath>` options to specify a scriptfile, which is executed line-by-line after any commands passed on the commandline.
-  - Supports shell pipeline operators (`|`, `|&`, etc.)
-  - Supports STDIN input redirection. _(Input from STDIN is always considered to be a command)_
 
 # Contributing
 
