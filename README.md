@@ -39,6 +39,7 @@ ARRCON was inspired by [mcrcon by Tiiffi](https://github.com/Tiiffi/mcrcon), and
     - Supports running external "scripts" using the `-f`\|`--file` option.
       - Commands are separated by newlines.
       - Commands from script files are sent _after_ any commands from STDIN.
+      - Line comments can be written using semicolons `;` or pound signs '#'.
   - Save & recall a server's IP/Hostname, port, and password directly from the commandline without editing files.  
     _Passwords are __never__ printed to the terminal._
     
