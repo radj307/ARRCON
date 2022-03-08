@@ -47,13 +47,33 @@
   * @brief		Contains functions used to interact with sockets.
   */
 namespace net {
-	#ifdef OS_WIN
+#	ifdef OS_WIN
+	/**
+	 * @brief		Convert a std::chrono millisecond duration to a timeval struct.
+	 * @param ms	Duration in milliseconds
+	 * @returns		timeval
+	 */
+	inline timeval make_timeout(const std::chrono::milliseconds& ms)
+	{
+		return{ 0L, static_cast<long>(static_cast<double>(ms.count()) * 1000L) };
+	}
+#	define SELECT(nfds, rd, wr, ex, timeout) select(nfds, rd, wr, ex, timeout)
 	/// @brief	Returns the last reported socket error code.
-	#define LAST_SOCKET_ERROR_CODE() (WSAGetLastError())
-	#else
+#	define LAST_SOCKET_ERROR_CODE() (WSAGetLastError())
+#	else // POSIX
+	/**
+	 * @brief		Convert a std::chrono millisecond duration to a timespec struct.
+	 * @param ms	Duration in milliseconds
+	 * @returns		timespec
+	 */
+	inline timespec make_timeout(const std::chrono::milliseconds& ms)
+	{
+		return{ 0L, static_cast<long>(static_cast<double>(ms.count()) * 1000L) };
+	}
+#	define SELECT(nfds, rd, wr, ex, timeout) pselect(nfds, rd, wr, ex, timeout, nullptr)
 	/// @brief	Returns the last reported socket error code.
-	#define LAST_SOCKET_ERROR_CODE() (errno)
-	#endif
+#	define LAST_SOCKET_ERROR_CODE() (errno)
+#	endif // #ifdef OS_WIN
 
 	/**
 	 * @brief	Returns the last reported socket error message.

@@ -40,6 +40,11 @@ using SOCKET = unsigned long long;
 
 #define ISSUE_REPORT_URL "https://github.com/radj307/ARRCON/issues"
 
+/**
+ * @enum	Color
+ * @brief	Defines the color keys available to the color palette.
+ *\n		To add or remove an entry, see the definition of Global::palette.
+ */
 enum class Color : unsigned char {
 	WHITE,
 	GRAY,
@@ -183,29 +188,4 @@ inline std::ostream& operator<<(std::ostream& os, const Environment& e)
 		;
 	return os;
 }
-
-// Use platform-specific select function
-#ifdef OS_WIN
-/**
- * @brief		Convert a std::chrono millisecond duration to a timeval struct.
- * @param ms	Duration in milliseconds
- * @returns		timeval
- */
-inline timeval make_timeout(const std::chrono::milliseconds& ms)
-{
-	return{ 0L, static_cast<long>(static_cast<double>(ms.count()) * 1000L) };
-}
-#define SELECT(nfds, rd, wr, ex, timeout) select(nfds, rd, wr, ex, timeout)
-#else // POSIX
-/**
- * @brief		Convert a std::chrono millisecond duration to a timespec struct.
- * @param ms	Duration in milliseconds
- * @returns		timespec
- */
-inline timespec make_timeout(const std::chrono::milliseconds& ms)
-{
-	return{ 0L, static_cast<long>(static_cast<double>(ms.count()) * 1000L) };
-}
-#define SELECT(nfds, rd, wr, ex, timeout) pselect(nfds, rd, wr, ex, timeout, nullptr)
-#endif // #ifdef OS_WIN
 
