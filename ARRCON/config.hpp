@@ -75,45 +75,6 @@ namespace config {
 	};
 
 	/**
-	 * @brief		Apply the values found in the config file to the current global program configuration.
-	 * @param ini	INI Container
-	 * @returns		bool
-	 */
-	inline bool apply_configuration(const file::INI& ini)
-	{
-		if (ini.empty())
-			return false;
-
-		// Appearance Header:
-		Global.no_prompt = ini.checkv(header::APPEARANCE, "bDisablePrompt", true);
-		Global.enable_bukkit_color_support = str::string_to_bool<bool>(ini.getvs(header::APPEARANCE, "bEnableBukkitColors").value_or(""));
-		if (ini.checkv(header::APPEARANCE, "bDisableColors", "true", false)) {
-			Global.palette.setActive(false);
-			Global.enable_bukkit_color_support = false;
-		}
-		Global.custom_prompt = ini.getvs(header::APPEARANCE, "sCustomPrompt").value_or("");
-
-		// Timing Header:
-		using namespace std::chrono_literals;
-		const auto to_ms{ [](const std::optional<std::string>& str, const std::chrono::milliseconds& def) -> std::chrono::milliseconds { return ((str.has_value() && std::all_of(str.value().begin(), str.value().end(), isdigit)) ? std::chrono::milliseconds(str::stoi(str.value())) : def); } };
-		Global.command_delay = to_ms(ini.getvs(header::TIMING, "iCommandDelay"), Global.command_delay);
-		Global.receive_delay = to_ms(ini.getvs(header::TIMING, "iReceiveDelay"), Global.receive_delay);
-		Global.select_timeout = to_ms(ini.getvs(header::TIMING, "iSelectTimeout"), Global.select_timeout);
-
-		// Target Header:
-		Global.target.hostname = ini.getvs(header::TARGET, "sDefaultHost").value_or(Global.target.hostname);
-		Global.target.port = ini.getvs(header::TARGET, "sDefaultPort").value_or(Global.target.port);
-		Global.target.password = ini.getvs(header::TARGET, "sDefaultPass").value_or(Global.target.password);
-		Global.allow_no_args = ini.checkv(header::TARGET, "bAllowNoArgs", true);
-
-		// Miscellaneous Header:
-		Global.allow_exit = ini.checkv(header::MISCELLANEOUS, "bInteractiveAllowExitKeyword", true);
-		Global.enable_no_response_message = ini.checkv(header::MISCELLANEOUS, "bEnableNoResponseMessage", true);
-
-		return true;
-	}
-
-	/**
 	 * @brief		Read the INI config and apply its settings to the Global object.
 	 * @param path	The location of the target config.
 	 */
