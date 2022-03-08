@@ -79,11 +79,11 @@ int main(const int argc, char** argv)
 			std::cerr << Help(myName) << std::endl << std::endl;
 			throw make_exception(
 				"No arguments were specified!\n",
-				TABSPACE"Function Name:        main()\n",
-				TABSPACE"Suggested Solutions:\n",
-				TABSPACE"1.  Set ", Global.palette.set(Color::YELLOW), "bAllowNoArgs = true", Global.palette.reset(), " in the INI config file.\n",
-				TABSPACE"2.  Specify a target to connect to with the [-H|--host], [-P|--port], & [-p|--pass] options.\n",
-				TABSPACE"3.  Read the help display above for command assistance.\n"
+				indent(10), "Function Name:        main()\n",
+				indent(10), "Suggested Solutions:\n",
+				indent(10), "1.  Set ", Global.palette.set(Color::YELLOW), "bAllowNoArgs = true", Global.palette.reset(), " in the INI config file.\n",
+				indent(10), "2.  Specify a target to connect to with the [-H|--host], [-P|--port], & [-p|--pass] options.\n",
+				indent(10), "3.  Read the help display above for command assistance.\n"
 			);
 		}
 
