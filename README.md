@@ -56,7 +56,9 @@ See [here](https://github.com/radj307/ARRCON/wiki/Building-from-Source) for a br
 
 # Usage
 ARRCON is a CLI _(Command-Line Interface)_ program, which means you need to run it through a terminal.  
-On Windows, you can use `cmd.exe` or `powershell.exe` by R+Clicking on the start menu and selecting "Command Prompt" or "PowerShell".  
+
+__On Windows, you can use `cmd.exe` or `powershell.exe` by R+Clicking on the start menu and selecting "Command Prompt" or "PowerShell".__  
+
 For more detailed usage instructions, see [Getting Started](https://github.com/radj307/ARRCON/wiki)
 
 To see a list of commands, use `ARRCON -h` or `ARRCON --help`  
@@ -64,17 +66,23 @@ To see a list of environment variables, their current values, and a description 
 
 
 ## Modes
-The operation mode is selected based on context, but can be influenced by some options.  
-There are 2 modes:
 - ___Interactive Shell___
   - Used by default when there are no command arguments.
   - Opens an interactive console session. You can send commands and view the responses in real-time.
   - Connection remains open until you disconnect or kill the process, or if the server closes.
-- ___Commandline / Scripting___  
-  - Automatically used when additional input is given on the commandline, or when piping input from STDIN.  
-    ![ARRCON Scripting Support](https://i.imgur.com/oPX47RD.png)  
-  - Executes a list of commands in order with a configurable delay between sending each packet.
-  - You can also use the `-f <filepath>` or `--file <filepath>` options to specify a scriptfile, which is executed line-by-line after any commands passed on the commandline.
+- ___One-Shot___  
+  ![ARRCON Scripting Support](https://i.imgur.com/oPX47RD.png)  
+  This mode is designed for executing commands directly from the commandline.  
+  It sends commands in sequential order, then exits if the `-i` / `--interactive` options aren't specified.  
+  Supported input methods:
+    - Commandline Parameters  
+      _These are any arguments that are __not__ short/long-opts and __not captured by__ short/long-opts._
+    - Shell Scripts
+    - Redirected input from STDIN
+    - Script Files  
+      Splits commands by line, and allows comments using a semicolon `;` or pound sign `#`.   
+      Comments are always considered line comments.  
+      _Use the '`-f`' or '`--file`' options to specify a scriptfile to load._
 
 # Contributing
 
