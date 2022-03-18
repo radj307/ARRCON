@@ -47,8 +47,14 @@ ARRCON was inspired by [mcrcon by Tiiffi](https://github.com/Tiiffi/mcrcon), and
 # Download & Install
 Get the latest version for your OS from the [releases](https://github.com/radj307/ARRCON/releases) page.
 
-There is no installation process, simply extract the archive & it's ready to go.  
-To use ARRCON without specifying the absolute filepath to it, you have to [add the location to your Path variable](https://github.com/radj307/ARRCON/wiki/Adding-To-Path).
+There is no installation process, simply extract the archive to a location of your choice, then run it using a terminal emulator.  
+If you want to be able to run ARRCON from any working directory without specifying its location, you must [add the location to your environment's PATH variable](https://github.com/radj307/ARRCON/wiki/Adding-To-Path).
+
+On newer versions of Windows, you may be required to "unblock" the executable before Windows will let you use it.  
+To do so, ___Right-Click___ on `ARRCON.exe` in the file explorer and click ___Properties___ at the bottom of the right-click menu.  
+![](https://i.imgur.com/LKLZPVX.png)  
+Check the ___unblock___ box, then click ___Apply___.  
+
 
 ## Building from Source
 See [here](https://github.com/radj307/ARRCON/wiki/Building-from-Source) for a brief guide on building ARRCON from source.
