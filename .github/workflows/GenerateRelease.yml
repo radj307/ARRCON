@@ -87,20 +87,36 @@ jobs:
     # Build Binary
     - name: Build
       run:  cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-            
+      
+    # Create Packaged Release Archive
+      # Windows
+    - name:   Create Archive (Windows)
+      if:     ${{ runner.os == 'Windows' }}
+      run:    |
+              cd "${{github.workspace}}/build/${{env.PROJECT_NAME}}"
+              Compress-Archive "${{env.PROJECT_NAME}}.exe" "${{env.PROJECT_NAME}}-$(.\${{env.PROJECT_NAME}} -vq)-Windows.zip"
+      shell:  powershell
+      # Linux / macOS
+    - name:   Create Archive (Linux/macOS)
+      if:     ${{ runner.os != 'Windows' }}
+      run:    |
+              cd "${{github.workspace}}/build/${{env.PROJECT_NAME}}"
+              zip -T9 "${{env.PROJECT_NAME}}-$(./${{env.PROJECT_NAME}} -vq)-${{runner.os}}.zip" "${{env.PROJECT_NAME}}"
+      shell:  bash
+      
     # Upload Artifact
     - name:   Upload Artifact
       uses:   actions/upload-artifact@v2
       with:
         name: latest-${{runner.os}}
-        path: '${{github.workspace}}/build/${{env.PROJECT_NAME}}/*'
+        path: '${{github.workspace}}/build/${{env.PROJECT_NAME}}/*.zip'
 #:create-binaries
       
-
-      # Create a github release
   create-release:
     needs: create-binaries      
     runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 1    
     
     steps:
     # Download Artifacts
@@ -124,6 +140,7 @@ jobs:
       
     # Upload Release
     - name: 'Create Release'
+      #if:   ${{ github.event_name == 'workflow_dispatch' }}
       uses: softprops/action-gh-release@v1
       with:
         draft:                    ${{ github.event.inputs.is-draft || true }}
@@ -133,5 +150,5 @@ jobs:
         generate_release_notes:   ${{ github.event.inputs.autogenerate || true }}
         body:                     ${{ github.event.inputs.body || '' }}
         fail_on_unmatched_files:  true
-        files:                    ${{github.workspace}}/*
+        files:                    ${{github.workspace}}/*.zip
 #:create-release
