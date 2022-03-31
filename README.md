@@ -79,7 +79,8 @@ To see a list of environment variables, their current values, and a description 
 - ___One-Shot___  
   ![ARRCON Scripting Support](https://i.imgur.com/oPX47RD.png)  
   This mode is designed for executing commands directly from the commandline.  
-  It sends commands in sequential order, then exits if the `-i` / `--interactive` options aren't specified.  
+  It sends commands in sequential order, then exits. _(You can open an interactive shell anyway by using the `-i` / `--interactive` options.)_
+  
   Supported input methods:
     - Commandline Parameters  
       _These are any arguments that are __not__ short/long-opts and __not captured by__ short/long-opts._
