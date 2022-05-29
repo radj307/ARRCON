@@ -108,4 +108,4 @@ There are a number of premade templates for the following situations:
 
 ## Pull Requests
 Feel free to submit a pull request if you've added a feature or fixed a bug with the project!  
-Contributions are always welcomed, I'll review it as soon as I can.
+Contributions are always welcomed, I'll review it as soon as I see the notification.
