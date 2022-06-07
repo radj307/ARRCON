@@ -5,23 +5,23 @@
   />
 </p>  
 <p align="center">
+A lightweight cross-platform RCON client compatible with <b>any game using the Source RCON Protocol</b>.<br/>
 <p align="center">
-  <a href="https://github.com/radj307/ARRCON/releases"><img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/radj307/ARRCON?color=ffffff&label=Version&logo=github&style=for-the-badge"></a>
-  <nobr></nobr>
-  <a href="https://github.com/radj307/ARRCON/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/radj307/ARRCON/total?label=Downloads&color=ffffff&logo=github&style=for-the-badge"></a>
+  <a href="https://github.com/radj307/ARRCON/releases"><img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/radj307/ARRCON?label=Latest+Version&style=flat"></a>
+  <nobr/>
+  <a href="https://github.com/awesome-selfhosted/awesome-selfhosted#games---administrative-utilities--control-panels"><img alt="Mentioned in Awesome-Selfhosted" src="https://awesome.re/mentioned-badge.svg"></a>
+  <nobr/>
+  <a href="https://github.com/radj307/ARRCON/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/radj307/ARRCON/total?label=Downloads&style=flat"></a>
 </p>
 <p align="center">
-  <a href="https://github.com/radj307/ARRCON/actions/workflows/Windows.yml"><img alt="Windows Status" src="https://img.shields.io/github/workflow/status/radj307/ARRCON/Windows%20Smoketest?label=Windows&logo=github&style=for-the-badge"></a>
-  <a href="https://github.com/radj307/ARRCON/actions/workflows/Linux.yml"><img alt="Linux Status" src="https://img.shields.io/github/workflow/status/radj307/ARRCON/Linux%20Smoketest?label=Linux&logo=github&style=for-the-badge"></a>
-  <a href="https://github.com/radj307/ARRCON/actions/workflows/Windows.yml"><img alt="macOS Status" src="https://img.shields.io/github/workflow/status/radj307/ARRCON/macOS%20Smoketest?label=macOS&logo=github&style=for-the-badge"></a>
+  <a href="https://github.com/radj307/ARRCON/actions/workflows/Windows.yml"><img alt="Windows Status" src="https://img.shields.io/github/workflow/status/radj307/ARRCON/Windows%20Smoketest?label=Windows&logo=github&style=flat"></a>
+  <a href="https://github.com/radj307/ARRCON/actions/workflows/Linux.yml"><img alt="Linux Status" src="https://img.shields.io/github/workflow/status/radj307/ARRCON/Linux%20Smoketest?label=Linux&logo=github&style=flat"></a>
+  <a href="https://github.com/radj307/ARRCON/actions/workflows/Windows.yml"><img alt="macOS Status" src="https://img.shields.io/github/workflow/status/radj307/ARRCON/macOS%20Smoketest?label=macOS&logo=github&style=flat"></a>
 </p>
 <p align="center">
   <a href="https://github.com/radj307/ARRCON/releases">Releases</a>&nbsp&nbsp|&nbsp&nbsp<a href="https://github.com/radj307/ARRCON/wiki">Wiki</a>&nbsp&nbsp|&nbsp&nbsp<a href="https://github.com/radj307/ARRCON/issues">Issues</a>
 </p>
 
-A lightweight terminal-based remote console client compatible with any game using the Source RCON Protocol.  
-
-ARRCON was inspired by [mcrcon by Tiiffi](https://github.com/Tiiffi/mcrcon), and will be familiar to anyone who has used mcrcon previously.  
 
 # Features
   - Cross-Platform:
@@ -65,7 +65,7 @@ ARRCON is a CLI _(Command-Line Interface)_ program, which means you need to run 
 
 __On Windows, you can use `cmd.exe` or `powershell.exe` by R+Clicking on the start menu and selecting "Command Prompt" or "PowerShell".__  
 
-For more detailed usage instructions, see [Getting Started](https://github.com/radj307/ARRCON/wiki)
+For more detailed usage instructions, see the [Getting Started](https://github.com/radj307/ARRCON/wiki) page on the wiki.
 
 To see a list of commands, use `ARRCON -h` or `ARRCON --help`  
 To see a list of environment variables, their current values, and a description of each, use `ARRCON --print-env`
@@ -92,6 +92,8 @@ To see a list of environment variables, their current values, and a description 
       _Use the '`-f`' or '`--file`' options to specify a scriptfile to load._
 
 # Contributing
+
+If you want to add a new feature, fix a bug, or just improve something that annoys you, feel free to submit pull requests and/or issues.
 
 ## Feedback & Requests
 Feel free to leave feedback on the issues tab!  
