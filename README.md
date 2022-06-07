@@ -72,14 +72,15 @@ To see a list of environment variables, their current values, and a description 
 
 
 ## Modes
-- ___Interactive Shell___
+- ___Interactive Shell___  
+  ![](https://i.imgur.com/4d4Epkb.png)  
+  Opens an interactive console session. You can send commands and view the responses in real-time.
   - Used by default when there are no command arguments.
-  - Opens an interactive console session. You can send commands and view the responses in real-time.
   - Connection remains open until you disconnect or kill the process, or if the server closes.
 - ___One-Shot___  
   ![ARRCON Scripting Support](https://i.imgur.com/oPX47RD.png)  
-  This mode is designed for executing commands directly from the commandline.  
-  It sends commands in sequential order, then exits. _(You can open an interactive shell anyway by using the `-i` / `--interactive` options.)_
+  This mode is designed for scripting, it sends commands directly from the commandline in sequential order before exiting.  
+  _(You can also open an interactive shell at the same time with the `-i` / `--interactive` options.)_
   
   Supported input methods:
     - Commandline Parameters  
