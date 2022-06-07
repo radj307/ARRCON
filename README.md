@@ -24,34 +24,40 @@ A lightweight cross-platform RCON client compatible with <b>any game using the S
 
 
 # Features
-  - Cross-Platform:
+  - Highly configurable
+  - **Cross-Platform:**
     - Windows
     - Linux
     - macOS
-  - Works for any game using the [Source RCON Protocol](https://developer.valvesoftware.com/wiki/Source_RCON_Protocol).
-  - Handles large packets without issue.
-  - Handles multi-packet responses without issue, and has configurable delays in the INI file.
-  - Supports Minecraft Bukkit terminal colors using the section sign `§`.
-  - Can be used as a one-off from the commandline, or in an interactive shell.
-    - Supports piping input from STDIN using shell operators.  
-      For example; `echo "help" | ARRCON -S myServer` would send the `help` command to the `myServer` host.
-        - Commands from STDIN are sent _after_ any commands explicitly specified on the commandline.
-    - Supports running external "scripts" using the `-f`\|`--file` option.
-      - Commands are separated by newlines.
-      - Commands from script files are sent _after_ any commands from STDIN.
-      - Line comments can be written using semicolons `;` or pound signs '#'.
-  - Save & recall a server's IP/Hostname, port, and password directly from the commandline without editing files.  
-    _Passwords are __never__ printed to the terminal._
+  - **Works for any game using the [Source RCON Protocol](https://developer.valvesoftware.com/wiki/Source_RCON_Protocol)**
+  - **Handles large packets without issue**
+  - **Handles multi-packet responses without issue**
+  - **Supports Minecraft Bukkit's colorized text**
+  - You can set delays in the INI file or directly on the commandline
+  - Supports saving a server's connection info so you can connect to it with 1 word  
+    If you've ever used `ssh`'s `config` file, this will be very familiar. *(albeit with more sensible syntax)*
+    - This can be done in a text editor **or entirely from the commandline**
+  - Can be used as a one-off from the commandline, or in an interactive console
+    - Supports piped input using shell operators.  
+      For example; `echo "help" | ARRCON -S myServer` would send the `help` command to the `myServer` host
+      - Piped commands are sent _after_ any commands explicitly specified on the commandline
+  - You can write scripts and manually execute them with the `-f`/`--file` options in addition to shell scripts
+    - Commands are separated by newlines
+    - Commands from script files are sent _after_ any piped commands
+    - Line comments can be written using semicolons `;` or pound signs '#'
+  - Shows an indicator when the server didn't respond to your command
     
 
-# Download & Install
+# Installation
 Get the latest version for your OS from the [releases](https://github.com/radj307/ARRCON/releases) page.
 
 There is no installation process, simply extract the archive to a location of your choice, then run it using a terminal emulator.  
 If you want to be able to run ARRCON from any working directory without specifying its location, you must [add the location to your environment's PATH variable](https://github.com/radj307/ARRCON/wiki/Adding-To-Path).
 
+## Microsoft's Infinite Wisdom
 On newer versions of Windows, you may be required to "unblock" the executable before Windows will let you use it.  
-To do so, ___Right-Click___ on `ARRCON.exe` in the file explorer and click ___Properties___ at the bottom of the right-click menu.  
+This is because the executable isn't signed with a Microsoft-approved signing certificate, which costs upwards of [$300/year](https://docs.microsoft.com/en-us/windows-hardware/drivers/dashboard/get-a-code-signing-certificate#step-2-buy-a-new-code-signing-certificate).  
+To unblock it, ___Right-Click___ on `ARRCON.exe` in the file explorer and click ___Properties___ at the bottom of the right-click menu.  
 ![](https://i.imgur.com/LKLZPVX.png)  
 Check the ___unblock___ box, then click ___Apply___.  
 
