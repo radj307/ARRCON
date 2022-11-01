@@ -49,8 +49,8 @@ jobs:
     runs-on: ${{matrix.os}}
     strategy:
       matrix:
-        os:         [ ubuntu-latest, windows-2022, macos-latest ]
-      fail-fast:    true
+        os:         [ ubuntu-latest, windows-2022, macos-11 ]
+      fail-fast:    false
 
     steps:
       # Check out the repository
@@ -82,8 +82,8 @@ jobs:
       if:     ${{ runner.os != 'Windows' }}
       run:    cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -G Ninja
       env:
-        CC:   gcc*
-        CXX:  g++*
+        CC:   gcc-10
+        CXX:  g++-10
 
     # Build Binary
     - name: Build
