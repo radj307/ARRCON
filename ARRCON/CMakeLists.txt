@@ -30,14 +30,15 @@ if (WIN32)
 		"${CMAKE_CURRENT_SOURCE_DIR}/ARRCON.ico"
 	)
 	
-	MAKE_RESOURCE("${CMAKE_CURRENT_BINARY_DIR}/rc/ARRCON.rc" "${_arrcon_stringrc_versioninfo}" "${_arrcon_stringrc_icon}")
+	set(_arrcon_rc "${CMAKE_CURRENT_BINARY_DIR}/rc/ARRCON.rc")
+	MAKE_RESOURCE("${_arrcon_rc}" "${_arrcon_stringrc_versioninfo}" "${_arrcon_stringrc_icon}")
 endif()
 
 MAKE_VERSION_HEADER("${CMAKE_CURRENT_BINARY_DIR}/rc/version.h" ARRCON "${ARRCON_VERSION_EXTENDED}")
 MAKE_COPYRIGHT_HEADER("${CMAKE_CURRENT_BINARY_DIR}/rc/copyright.h" ARRCON 2022 radj307)
 
 
-add_executable(ARRCON "${SRCS}" "${CMAKE_CURRENT_BINARY_DIR}/rc/ARRCON.rc" "${CMAKE_CURRENT_BINARY_DIR}/rc/version.h")
+add_executable(ARRCON "${SRCS}" "${_arrcon_rc}" "${CMAKE_CURRENT_BINARY_DIR}/rc/version.h" "${CMAKE_CURRENT_BINARY_DIR}/rc/copyright.h")
 
 set_property(TARGET ARRCON PROPERTY CXX_STANDARD 20)
 set_property(TARGET ARRCON PROPERTY CXX_STANDARD_REQUIRED ON)

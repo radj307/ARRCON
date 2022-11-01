@@ -2,7 +2,7 @@ name: Generate Release
 
 on:
   push:
-    tags: '*.*.*'
+    tags: [ '*.*.*' ]
   workflow_dispatch:
     inputs:
       name:
@@ -18,17 +18,17 @@ on:
       is-draft: # Input that selects whether to make a draft release or a public release
         description:  'Make Draft Release'
         required:     false
-        default:      'true'
+        default:      true
         type:         boolean
       is-prerelease: # Input that selects whether to make a pre-release or normal release
         description:  'Make Pre-Release'
         required:     false
-        default:      'false'
+        default:      false
         type:         boolean
       autogenerate:
         description:  'Autogenerate Release Notes From Commits'
         required:     false
-        default:      'false'
+        default:      false
         type:         boolean
       body:
         description:  'Release Body Paragraph'
@@ -113,10 +113,8 @@ jobs:
 #:create-binaries
       
   create-release:
-    needs: create-binaries      
+    needs: create-binaries
     runs-on: ubuntu-latest
-    strategy:
-      max-parallel: 1    
     
     steps:
     # Download Artifacts
