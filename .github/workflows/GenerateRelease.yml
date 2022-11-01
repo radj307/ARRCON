@@ -68,8 +68,9 @@ jobs:
       uses: ilammy/msvc-dev-cmd@v1
       # gcc-10 g++-10 zip unzip (Linux)
     - if:   ${{ runner.os == 'Linux' }}
-      run:  sudo apt-get update && sudo apt-get install gcc-10 g++-10 zip unzip -y
-      
+      run:  |
+            sudo apt-get update && sudo apt-get install gcc-10 g++-10 zip unzip -y
+            ls /usr/bin/g++*
       
     # Configure CMake Cache
       # Windows
@@ -79,10 +80,10 @@ jobs:
       # Linux/macOS
     - name:   Configure CMake (Linux/macOS)
       if:     ${{ runner.os != 'Windows' }}
-      run:    cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_COMPILER=g++-10 -G Ninja
+      run:    cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -G Ninja
       env:
-        CC:   gcc-10
-        CXX:  g++-10
+        CC:   gcc*
+        CXX:  g++*
 
     # Build Binary
     - name: Build
