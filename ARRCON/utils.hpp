@@ -26,10 +26,10 @@
 #undef read
 #undef write
 
-/**
- * @struct	Help
- * @brief	Functor that prints out the help display.
- */
+ /**
+  * @struct	Help
+  * @brief	Functor that prints out the help display.
+  */
 struct Help {
 private:
 	const std::string _program_name;
@@ -38,7 +38,7 @@ public:
 	Help(const std::filesystem::path& program_name) : _program_name{ program_name.generic_string() } {}
 	friend std::ostream& operator<<(std::ostream& os, const Help& help)
 	{
-		return os << DEFAULT_PROGRAM_NAME << " v" << ARRCON_VERSION << "  (" << ARRCON_COPYRIGHT << ")\n"
+		return os << DEFAULT_PROGRAM_NAME << " v" << ARRCON_VERSION_EXTENDED << "  (" << ARRCON_COPYRIGHT << ")\n"
 			<< "  A robust & powerful commandline Remote-CONsole (RCON) client designed for use with the Source RCON Protocol.\n"
 			<< "  It is also compatible with similar protocols such as the one used by Minecraft.\n"
 			<< '\n'

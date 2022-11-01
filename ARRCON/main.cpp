@@ -62,7 +62,7 @@ int main(const int argc, char** argv)
 		// Argument:  [-v|--version] (mutually exclusive with help as it shows the version number as well)
 		else if (args.check_any<opt3::Flag, opt3::Option>('v', "version")) {
 			if (!Global.quiet) std::cout << DEFAULT_PROGRAM_NAME << " v";
-			std::cout << ARRCON_VERSION;
+			std::cout << ARRCON_VERSION_EXTENDED;
 			if (!Global.quiet) std::cout << " (" << ARRCON_COPYRIGHT << ')';
 			std::cout << std::endl;
 			return 0;
