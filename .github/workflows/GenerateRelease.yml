@@ -67,10 +67,8 @@ jobs:
     - if:   ${{ runner.os == 'Windows' }}
       uses: ilammy/msvc-dev-cmd@v1
       # gcc-10 g++-10 zip unzip (Linux)
-    - if:   ${{ runner.os == 'Linux' || runner.os == "MacOS" }}
-      run:  |
-            sudo apt-get update && sudo apt-get install gcc-10 g++-10 zip unzip -y
-            ls /usr/bin/g++*
+    - if:   ${{ runner.os == 'Linux' || runner.os == 'MacOS' }}
+      run:  sudo apt-get update && sudo apt-get install gcc-10 g++-10 zip unzip -y
       
     # Configure CMake Cache
       # Windows
