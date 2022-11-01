@@ -1,87 +1,70 @@
 ﻿# ARRCON/ARRCON
-cmake_minimum_required (VERSION 3.15)
+cmake_minimum_required (VERSION 3.22)
 
-if (MSVC)
-	set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-endif()
-
-# Create project
-project("ARRCON" VERSION ${ARRCON_VERSION} LANGUAGES CXX)
+file(GLOB_RECURSE HEADERS
+	RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+	CONFIGURE_DEPENDS
+	"*.h*"
+)
+file(GLOB_RECURSE SRCS
+	RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}"
+	CONFIGURE_DEPENDS
+	"*.c*"
+)
 
 include(ResourceMaker)
 
-file(REMOVE "${CMAKE_CURRENT_SOURCE_DIR}/version.h")
-CREATE_FILE("${CMAKE_CURRENT_SOURCE_DIR}/version.h"
-	"#pragma once\\n"
-	"#define ARRCON_VERSION ${ARRCON_VERSION}\\n"
-	"#define ARRCON_VERSION_MAJOR ${ARRCON_VERSION_MAJOR}\\n"
-	"#define ARRCON_VERSION_MINOR ${ARRCON_VERSION_MINOR}\\n"
-	"#define ARRCON_VERSION_PATCH ${ARRCON_VERSION_PATCH}\\n"
-)
-
-MAKE_VERSION_HEADER("${CMAKE_CURRENT_SOURCE_DIR}/version.h" "ARRCON" "${ARRCON_VERSION}")
-
-set(HEADERS
-	"globals.h"
-	"net/objects/HostInfo.hpp"
-	"net/objects/packet.hpp"
-	"net/net.hpp"
-	"net/rcon.hpp"
-	"net/mode.hpp"
-	"exceptions.hpp"
-	"packet-color.hpp"
-	"utils.hpp"
-	"config.hpp"
-	"${CMAKE_CURRENT_SOURCE_DIR}/version.h"
-)
-
-option(ARRCON_ENABLE_ADDITIONAL_RESOURCES "Enable resource file generation" OFF)
-
-# Create resource files
 if (WIN32)
-	set(ARRCON_RESOURCE_FILE "${CMAKE_CURRENT_SOURCE_DIR}/ARRCON.rc")
-	file(REMOVE "${ARRCON_RESOURCE_FILE}")
-	file(TOUCH "${ARRCON_RESOURCE_FILE}")
+	file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/rc")
 
-	CREATE_VERSION_RESOURCE(
-		"${ARRCON_RESOURCE_FILE}"
-		"${ARRCON_VERSION_MAJOR}"
-		"${ARRCON_VERSION_MINOR}"
-		"${ARRCON_VERSION_PATCH}"
+	MAKE_STRINGRC_VERSIONINFO(
+		_arrcon_stringrc_versioninfo
+		"${ARRCON_VERSION}"
+		"Copyright © 2022 by radj307"
 		"radj307"
+		"ARRCON"
 		"Commandline client for communicating with servers using the Source RCON Protocol."
-		"ARRCON"
-		"GPLv3"
-		"ARRCON"
-		"ARRCON"
 	)
-	APPEND_ICON_RESOURCE("${ARRCON_RESOURCE_FILE}" "${CMAKE_CURRENT_SOURCE_DIR}/ARRCON.ico")
+	MAKE_STRINGRC_ICON(
+		_arrcon_stringrc_icon
+		"${CMAKE_CURRENT_SOURCE_DIR}/ARRCON.ico"
+	)
+	
+	MAKE_RESOURCE("${CMAKE_CURRENT_BINARY_DIR}/rc/ARRCON.rc" "${_arrcon_stringrc_versioninfo}" "${_arrcon_stringrc_icon}")
 endif()
 
-# Create executable
-add_executable (ARRCON "main.cpp" "${ARRCON_RESOURCE_FILE}")
+MAKE_VERSION_HEADER("${CMAKE_CURRENT_BINARY_DIR}/rc/version.h" ARRCON "${ARRCON_VERSION_EXTENDED}")
+MAKE_COPYRIGHT_HEADER("${CMAKE_CURRENT_BINARY_DIR}/rc/copyright.h" ARRCON 2022 radj307)
+
+
+add_executable(ARRCON "${SRCS}" "${CMAKE_CURRENT_BINARY_DIR}/rc/ARRCON.rc" "${CMAKE_CURRENT_BINARY_DIR}/rc/version.h")
+
 set_property(TARGET ARRCON PROPERTY CXX_STANDARD 20)
 set_property(TARGET ARRCON PROPERTY CXX_STANDARD_REQUIRED ON)
+
 if (MSVC)
-	target_compile_options(ARRCON PUBLIC "/Zc:__cplusplus")
+	set_property(TARGET ARRCON PROPERTY WINDOWS_EXPORT_ALL_SYMBOLS ON)
+	target_compile_options(ARRCON PRIVATE "${307lib_compiler_commandline}")
 endif()
 
-# Add headers
-target_sources(ARRCON PUBLIC ${HEADERS})
+target_include_directories(ARRCON PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/rc")
 
-# Check if user has 307lib as a submodule or as an installation, include necessary directories if using an installation
-option(ARRCON_USE_307lib_INSTALLATION OFF "Use an installed version of the 307lib library, instead of the git submodule version. This is faster to compile.")
-if (ARRCON_USE_307lib_INSTALLATION)
-	target_include_directories(ARRCON PUBLIC "${307lib_PATH}/${CMAKE_BUILD_TYPE}/include")
-	target_link_directories(ARRCON PUBLIC "${307lib_PATH}/${CMAKE_BUILD_TYPE}/lib")
+target_sources(ARRCON PRIVATE "${HEADERS}")
+
+# Setup libunistd
+if (WIN32)
+	include(FetchContent)
+	set(libunistd_name "libunistd")
+	FetchContent_Declare(
+		"${libunistd_name}"
+		GIT_REPOSITORY	https://github.com/robinrowe/libunistd.git
+		GIT_TAG			origin/master
+	)
+	FetchContent_MakeAvailable("${libunistd_name}")
 endif()
 
-# Link dependencies
-target_link_libraries(ARRCON PUBLIC shared strlib TermAPI filelib optlib)
+target_link_libraries(ARRCON PRIVATE TermAPI filelib "${libunistd_name}")
 
-# Create installation target
-install(
-	TARGETS ARRCON
-	RUNTIME
-	DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"
-)
+include(PackageInstaller)
+
+INSTALL_EXECUTABLE(ARRCON "${CMAKE_INSTALL_PREFIX}/bin")

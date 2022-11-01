@@ -38,7 +38,7 @@ static socket_except socket_exception(const std::string& function_name, const st
 		"Socket Error:  ", message, '\n',
 		indent(10), "Function Name:         ", function_name, '\n',
 		indent(10), "Socket Error Code:     ", errorCode, '\n',
-		indent(10), "Socket Error Message:  ", errorMsg, '\n'
+		indent(10), "Socket Error Message:  ", errorMsg
 	);
 }/// @brief	Make an inline socket exception
 static socket_except socket_exception(const std::string& function_name, const std::string& message)
@@ -74,6 +74,6 @@ static connection_except badpass_exception(const std::string& host, const std::s
 		indent(10), "Socket Error Message:  ", errorMsg, '\n',
 		indent(10), "Suggested Solutions:\n",
 		indent(10), "1.  Verify the password you entered is the correct password for this target.\n",
-		indent(10), "2.  Make sure this is the correct target.\n"
+		indent(10), "2.  Make sure this is the correct target."
 	);
 }

@@ -12,7 +12,7 @@
 #include <envpath.hpp>
 
 #include <str.hpp>
-#include <INI.hpp>
+#include <INIRedux.hpp>
 
 /**
  * @namespace	config

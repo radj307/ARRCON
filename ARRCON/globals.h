@@ -10,7 +10,7 @@
 #include <color-values.h>
 #include <palette.hpp>
 #include <make_exception.hpp>
-#include <INI.hpp>
+#include <INIRedux.hpp>
 #include <env.hpp>
 
 #include <thread>
@@ -21,13 +21,7 @@
 #include <unistd.h>
 
  /// @brief	The default program name on each platform.
-inline constexpr const auto DEFAULT_PROGRAM_NAME{
-#ifdef OS_WIN
-	"ARRCON.exe"
-#else
-	"ARRCON"
-#endif
-};
+inline constexpr const auto DEFAULT_PROGRAM_NAME{ "ARRCON" };
 
 /// @brief	SOCKET type compatible with winsock & posix
 using SOCKET = unsigned long long;
@@ -157,7 +151,7 @@ static struct {
 
 inline std::ostream& operator<<(std::ostream& os, const Environment& e)
 {
-	os << std::boolalpha 
+	os << std::boolalpha
 		<< "Environment Variables" << '\n'
 		<< "  " << Global.palette.set(Color::YELLOW) << e.name_config_dir << Global.palette.reset() << '\n'
 		<< "    Is Defined:     " << e.Values.config_dir.has_value() << '\n'

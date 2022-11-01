@@ -2,7 +2,7 @@
 #include "utils.hpp"
 
 #include <make_exception.hpp>
-#include <ParamsAPI2.hpp>
+#include <opt3.hpp>
 #include <fileio.hpp>			///< file I/O functions
 #include <TermAPI.hpp>			///< file I/O functions
 
@@ -18,10 +18,19 @@ int main(const int argc, char** argv)
 		Global.palette.setDefaultResetSequence(color::reset_f);
 
 		std::cout << term::EnableANSI; // enable ANSI escape sequences on windows
-		const opt::ParamsAPI2 args{ argc, argv, 'H', "host", 'S', "saved", 'P', "port", 'p', "pass", 'w', "wait", 'f', "file", "save-host", "remove-host" }; // parse arguments
+		const opt3::ArgManager args{ argc, argv,
+			opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, 'H', "host"),
+			opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, 'S', "saved"),
+			opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, 'P', "port"),
+			opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, 'p', "pass"),
+			opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, 'w', "wait"),
+			opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, 'f', "file"),
+			opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, "save-host"),
+			opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, "remove-host"),
+		}; // parse arguments
 
 		// Argument:  [-n|--no-color]
-		if (args.check_any<opt::Option, opt::Flag>('n', "no-color")) {
+		if (args.check_any<opt3::Option, opt3::Flag>('n', "no-color")) {
 			Global.no_color = true;
 			Global.enable_bukkit_color_support = false;
 			Global.palette.setActive(false);
@@ -44,21 +53,22 @@ int main(const int argc, char** argv)
 		const config::Locator cfg_path(myDir, myNameNoExt);
 
 		// Argument:  [-q|--quiet]
-		Global.quiet = args.check_any<opt::Option, opt::Flag>('q', 's', "quiet");
+		Global.quiet = args.check_any<opt3::Option, opt3::Flag>('q', 's', "quiet");
 		// Argument:  [-h|--help]
-		if (args.check_any<opt::Flag, opt::Option>('h', "help")) {
+		if (args.check_any<opt3::Flag, opt3::Option>('h', "help")) {
 			std::cout << Help(myName) << std::endl;
 			return 0;
 		}
 		// Argument:  [-v|--version] (mutually exclusive with help as it shows the version number as well)
-		if (args.check_any<opt::Flag, opt::Option>('v', "version")) {
-			if (!Global.quiet)
-				std::cout << DEFAULT_PROGRAM_NAME << ' ';
-			std::cout << ARRCON_VERSION << std::endl;
+		else if (args.check_any<opt3::Flag, opt3::Option>('v', "version")) {
+			if (!Global.quiet) std::cout << DEFAULT_PROGRAM_NAME << " v";
+			std::cout << ARRCON_VERSION;
+			if (!Global.quiet) std::cout << " (" << ARRCON_COPYRIGHT << ')';
+			std::cout << std::endl;
 			return 0;
 		}
 		// Argument:  [--print-env]
-		if (args.check<opt::Option>("print-env")) {
+		else if (args.check<opt3::Option>("print-env")) {
 			(std::cout << Global.env).flush();
 			return 0;
 		}
@@ -81,9 +91,9 @@ int main(const int argc, char** argv)
 				"No arguments were specified!\n",
 				indent(10), "Function Name:        main()\n",
 				indent(10), "Suggested Solutions:\n",
-				indent(10), "1.  Set ", Global.palette.set(Color::YELLOW), "bAllowNoArgs = true", Global.palette.reset(), " in the INI config file.\n",
-				indent(10), "2.  Specify a target to connect to with the [-H|--host], [-P|--port], & [-p|--pass] options.\n",
-				indent(10), "3.  Read the help display above for command assistance.\n"
+				indent(10), "1.  Specify a target to connect to with the [-H|--host], [-P|--port], & [-p|--pass] options.\n",
+				indent(10), "2.  Set ", Global.palette(Color::YELLOW), "bAllowNoArgs = true", Global.palette(), " in the INI config file.\n",
+				indent(10), "3.  Read the help display above for command assistance."
 			);
 		}
 
@@ -108,7 +118,6 @@ int main(const int argc, char** argv)
 		if (Global.custom_prompt.empty())
 			Global.custom_prompt = (Global.no_prompt ? "" : str::stringify(Global.palette.set(Color::GREEN), "RCON@", Global.target.hostname, Global.palette.reset(Color::GREEN), '>', Global.palette.reset(), ' '));
 
-
 		// Register the cleanup function before connecting the socket
 		std::atexit(&net::cleanup);
 
@@ -132,14 +141,14 @@ int main(const int argc, char** argv)
 
 		return 0;
 	} catch (const ex::except& ex) { // custom exception type
-		std::cerr << Global.palette.get_error() << ' ' << ex.what() << std::endl;
+		std::cerr << Global.palette.get_fatal() << ex.what() << std::endl;
 		return 1;
 	} catch (const std::exception& ex) { // standard exceptions
-		std::cerr << Global.palette.get_error() << ' ' << ex.what() << std::endl;
-		std::cerr << Global.palette.get_placeholder() << "  " << "Please report this exception here: " << ISSUE_REPORT_URL << std::endl;
+		std::cerr << Global.palette.get_fatal() << ex.what() << std::endl;
+		std::cerr << Global.palette.get_placeholder() << "Please report this exception here: " << ISSUE_REPORT_URL << std::endl;
 		return 1;
 	} catch (...) { // undefined exceptions
-		std::cerr << Global.palette.get_crit() << "  " << "An unknown exception occurred!" << std::endl;
+		std::cerr << Global.palette.get_crit() << "An unknown exception occurred!" << std::endl;
 		return 1;
 	}
 }

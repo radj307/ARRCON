@@ -11,7 +11,7 @@
 
 
 namespace mc_color {
-	inline ANSI::Sequence to_sequence(const char& ch)
+	inline ANSI::sequence to_sequence(const char& ch)
 	{
 		using namespace ANSI;
 		switch (ch) {
@@ -75,7 +75,7 @@ inline std::ostream& operator<<(std::ostream& os, const net::packet::Packet& pac
 			switch (*ch) {
 			case -62: // discard first part of section sign when represented in ASCII
 				break;
-			case -89: // '§' // second part of ASCII section sign
+			case -89: // 'ï¿½' // second part of ASCII section sign
 				if (std::distance(ch, packet.body.end()) > 1ull)
 					os << mc_color::to_sequence(*++ch);
 				break;

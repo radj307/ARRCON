@@ -4,7 +4,7 @@
  * @brief	Contains the HostInfo struct, an object used to store a target's connection information.
  */
 #pragma once
-#include <INI.hpp>
+#include <INIRedux.hpp>
 
 #include <string>
 #include <optional>
