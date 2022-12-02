@@ -107,7 +107,7 @@ namespace net {
 	 */
 	inline bool isValidSocket(const SOCKET& sd)
 	{
-		return sd != SOCKET_ERROR && fcntl(sd, F_GETFD) != SOCKET_ERROR && LAST_SOCKET_ERROR_CODE() != EBADF;
+		return sd != static_cast<SOCKET>(SOCKET_ERROR) && fcntl(sd, F_GETFD) != SOCKET_ERROR && LAST_SOCKET_ERROR_CODE() != EBADF;
 	}
 
 	/**
@@ -142,7 +142,7 @@ namespace net {
 	/// @brief	Emergency stop handler, should be passed to the std::atexit() function to allow a controlled shutdown of the socket in the event of an interrupt.
 	inline void cleanup(void)
 	{
-		if (Global.socket != SOCKET_ERROR)
+		if (Global.socket != static_cast<SOCKET>(SOCKET_ERROR))
 			close_socket(Global.socket);
 	}
 
@@ -177,7 +177,7 @@ namespace net {
 		for (p = server_info; p != NULL; p = p->ai_next) {
 			sd = socket(p->ai_family, p->ai_socktype, p->ai_protocol);
 
-			if (sd == -1)
+			if (sd == static_cast<SOCKET>(-1))
 				continue;
 
 			ret = connect(sd, p->ai_addr, static_cast<int>(p->ai_addrlen));

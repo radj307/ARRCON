@@ -125,7 +125,7 @@ int main(const int argc, char** argv)
 		Global.socket = net::connect(Global.target.hostname, Global.target.port);
 
 		// set & check if the socket was connected successfully
-		if (!(Global.connected = (Global.socket != SOCKET_ERROR)))
+		if (!(Global.connected = (Global.socket != static_cast<SOCKET>(SOCKET_ERROR))))
 			throw connection_exception("main()", "Socket descriptor was set to (" + std::to_string(Global.socket) + ") after successfully initializing the connection.", Global.target.hostname, Global.target.port, LAST_SOCKET_ERROR_CODE(), net::getLastSocketErrorMessage());
 
 		if (Global.target.password.empty())

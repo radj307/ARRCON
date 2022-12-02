@@ -76,7 +76,7 @@ inline std::ostream& operator<<(std::ostream& os, const net::packet::Packet& pac
 			case -62: // discard first part of section sign when represented in ASCII
 				break;
 			case -89: // '�' // second part of ASCII section sign
-				if (std::distance(ch, packet.body.end()) > 1ull)
+				if (std::distance(ch, packet.body.end()) > static_cast<std::ptrdiff_t>(1))
 					os << mc_color::to_sequence(*++ch);
 				break;
 			default:
