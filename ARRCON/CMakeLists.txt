@@ -63,9 +63,15 @@ if (WIN32)
 		GIT_TAG			origin/master
 	)
 	FetchContent_MakeAvailable("${libunistd_name}")
+
+elseif(APPLE)
+	set(ARRCON_LINK_TYPE -static)
+endif()
+if(NOT DEFINED ARRCON_LINK_TYPE)
+	set(ARRCON_LINK_TYPE PRIVATE)
 endif()
 
-target_link_libraries(ARRCON PRIVATE TermAPI filelib "${libunistd_name}")
+target_link_libraries(ARRCON ${ARRCON_LINK_TYPE} TermAPI filelib "${libunistd_name}")
 
 include(PackageInstaller)
 
