@@ -38,6 +38,10 @@ MAKE_VERSION_HEADER("${CMAKE_CURRENT_BINARY_DIR}/rc/version.h" ARRCON "${ARRCON_
 include(CopyrightMaker)
 MAKE_COPYRIGHT_HEADER("${CMAKE_CURRENT_BINARY_DIR}/rc/copyright.h" ARRCON 2022 radj307)
 
+if (APPLE)
+	# Fix libstdc++ dynamic link failure on macOS by using apple's libc++ instead:
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi")
+endif()
 
 add_executable(ARRCON "${SRCS}" "${_arrcon_rc}" "${CMAKE_CURRENT_BINARY_DIR}/rc/version.h" "${CMAKE_CURRENT_BINARY_DIR}/rc/copyright.h")
 
