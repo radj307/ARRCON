@@ -1,6 +1,6 @@
 <p align="center">
   <img
-       src="https://i.imgur.com/a1g4uYk.png"
+       src="https://i.imgur.com/BdC2Qz9.png"
        alt="ARRCON Banner"
   />
 </p>  
