@@ -38,11 +38,6 @@ MAKE_VERSION_HEADER("${CMAKE_CURRENT_BINARY_DIR}/rc/version.h" ARRCON "${ARRCON_
 include(CopyrightMaker)
 MAKE_COPYRIGHT_HEADER("${CMAKE_CURRENT_BINARY_DIR}/rc/copyright.h" ARRCON 2022 radj307)
 
-if (APPLE)
-	# Fix libstdc++ dynamic link failure on macOS by using apple's libc++ instead:
-	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -stdlib=libc++ -lc++abi")
-endif()
-
 add_executable(ARRCON "${SRCS}" "${_arrcon_rc}" "${CMAKE_CURRENT_BINARY_DIR}/rc/version.h" "${CMAKE_CURRENT_BINARY_DIR}/rc/copyright.h")
 
 set_property(TARGET ARRCON PROPERTY CXX_STANDARD 20)
@@ -67,15 +62,9 @@ if (WIN32)
 		GIT_TAG			origin/master
 	)
 	FetchContent_MakeAvailable("${libunistd_name}")
-
-#elseif(APPLE)
-#	set(ARRCON_LINK_TYPE -static)
-endif()
-if(NOT DEFINED ARRCON_LINK_TYPE)
-	set(ARRCON_LINK_TYPE PRIVATE)
 endif()
 
-target_link_libraries(ARRCON ${ARRCON_LINK_TYPE} TermAPI filelib "${libunistd_name}")
+target_link_libraries(ARRCON PRIVATE TermAPI filelib "${libunistd_name}")
 
 include(PackageInstaller)
 
