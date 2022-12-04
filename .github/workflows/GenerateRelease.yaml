@@ -61,7 +61,7 @@ jobs:
     - name:  Setup Project Dependencies
       run:   |
              if [ "$RUNNER_OS" == "Linux" ]; then
-                sudo apt-get install -y gcc-10
+                sudo apt-get install -y gcc-10 cmake ninja
              elif [ "$RUNNER_OS" == "macOS" ]; then
                 brew install gcc@10 cmake ninja
              elif [ "$RUNNER_OS" == "Windows" ]; then
