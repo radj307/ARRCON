@@ -69,6 +69,9 @@ jobs:
              fi
       shell: bash
 
+    - if:   ${{ runner.os == 'Windows' }}
+      uses: ilammy/msvc-dev-cmd@master
+
     # Configure CMake Cache
       # Windows
     - name:   Configure CMake (Windows)
