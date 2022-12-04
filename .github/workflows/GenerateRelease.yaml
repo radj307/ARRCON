@@ -87,10 +87,7 @@ jobs:
       # macOS
     - name:   Configure CMake (macOS)
       if:     ${{ runner.os == 'macOS' }}
-      run:    cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -G Ninja
-      env:
-        CC:   gcc
-        CXX:  g++
+      run:    cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_COMPILER=g++ -G Ninja
 
     # Build Binary
     - name: Build
