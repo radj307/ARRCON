@@ -70,7 +70,7 @@ jobs:
     - if:   ${{ runner.os == 'Linux' }}
       run:  sudo apt-get update && sudo apt-get install gcc-10 g++-10 zip unzip -y
     - if:   ${{ runner.os == 'macOS' }}
-      run:  brew install gcc-10 ninja cmake
+      run:  brew install gcc ninja cmake
       
     # Configure CMake Cache
       # Windows
