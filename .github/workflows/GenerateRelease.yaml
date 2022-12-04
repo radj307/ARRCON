@@ -49,12 +49,12 @@ jobs:
     runs-on: ${{matrix.os}}
     strategy:
       matrix:
-        os:         [ ubuntu-latest, windows-latest, macos-11 ]
+        os:         [ ubuntu-latest, windows-latest, macos-latest ]
       fail-fast:    true
 
     steps:
       # Check out the repository
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules:   recursive
         fetch-depth:  0
@@ -69,19 +69,28 @@ jobs:
       # gcc-10 g++-10 zip unzip (Linux)
     - if:   ${{ runner.os == 'Linux' }}
       run:  sudo apt-get update && sudo apt-get install gcc-10 g++-10 zip unzip -y
+    - if:   ${{ runner.os == 'macOS' }}
+      run:  brew install gcc-10 ninja cmake
       
     # Configure CMake Cache
       # Windows
     - name:   Configure CMake (Windows)
       if:     ${{ runner.os == 'Windows' }}
       run:    cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -G Ninja
-      # Linux/macOS
-    - name:   Configure CMake (Linux/macOS)
-      if:     ${{ runner.os != 'Windows' }}
+      # Linux
+    - name:   Configure CMake (Linux)
+      if:     ${{ runner.os == 'Linux' }}
       run:    cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -G Ninja
       env:
         CC:   gcc-10
         CXX:  g++-10
+      # macOS
+    - name:   Configure CMake (macOS)
+      if:     ${{ runner.os == 'macOS' }}
+      run:    cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -G Ninja
+      env:
+        CC:   gcc
+        CXX:  g++
 
     # Build Binary
     - name: Build
