@@ -53,23 +53,22 @@ jobs:
       fail-fast:    true
 
     steps:
-      # Check out the repository
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules:   recursive
         fetch-depth:  0
 
-      
-    # Set up platform dependencies
-      # Ninja
-    - uses: seanmiddleditch/gha-setup-ninja@master
-      # MSVC (Windows)
-    - if:   ${{ runner.os == 'Windows' }}
-      uses: ilammy/msvc-dev-cmd@v1
-      # gcc-10 g++-10 zip unzip (Linux)
-    - if:   ${{ runner.os == 'Linux' }}
-      run:  sudo apt-get update && sudo apt-get install gcc-10 g++-10 zip unzip -y
-      
+    - name:  Setup Project Dependencies
+      run:   |
+             if [ "$RUNNER_OS" == "Linux" ]; then
+                sudo apt-get install -y gcc-10
+             elif [ "$RUNNER_OS" == "macOS" ]; then
+                brew install gcc@10 cmake ninja
+             elif [ "$RUNNER_OS" == "Windows" ]; then
+                choco install ninja
+             fi
+      shell: bash
+
     # Configure CMake Cache
       # Windows
     - name:   Configure CMake (Windows)
