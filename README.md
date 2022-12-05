@@ -49,18 +49,25 @@ A lightweight cross-platform RCON client compatible with <b>any game using the S
     
 
 # Installation
-Get the latest version for your OS from the [releases](https://github.com/radj307/ARRCON/releases) page.
+Get the latest version for your OS from the [releases](https://github.com/radj307/ARRCON/releases) page.  
+If you're using the [Windows](#windows) or [MacOS](#macos) versions, see the additional information below.
 
-There is no installation process, simply extract the archive to a location of your choice, then run it using a terminal emulator.  
+There is no installation process required, simply extract the archive to a location of your choice, then run it using a terminal emulator.  
 If you want to be able to run ARRCON from any working directory without specifying its location, you must [add the location to your environment's PATH variable](https://github.com/radj307/ARRCON/wiki/Adding-To-Path).
 
-## Microsoft's Infinite Wisdom
+
+## Windows
 On newer versions of Windows, you may be required to "unblock" the executable before Windows will let you use it.  
 This is because the executable isn't signed with a Microsoft-approved signing certificate, which costs upwards of [$300/year](https://docs.microsoft.com/en-us/windows-hardware/drivers/dashboard/get-a-code-signing-certificate#step-2-buy-a-new-code-signing-certificate).  
 To unblock it, ___Right-Click___ on `ARRCON.exe` in the file explorer and click ___Properties___ at the bottom of the right-click menu.  
 ![](https://i.imgur.com/LKLZPVX.png)  
 Check the ___unblock___ box, then click ___Apply___.  
 
+## MacOS
+**If you're running macOS 10.9 or later, you must install `gcc` via [HomeBrew](https://brew.sh) or some other package manager!**  
+If homebrew is installed, you can run this command to install and setup `gcc` automatically: `brew install gcc`
+
+This is because Apple no longer includes `libstdc++` by default as of macOS 10.9 *(See [#11](https://github.com/radj307/ARRCON/issues/11))*, which is required for ARRCON to run.
 
 ## Building from Source
 See [here](https://github.com/radj307/ARRCON/wiki/Building-from-Source) for a brief guide on building ARRCON from source.
