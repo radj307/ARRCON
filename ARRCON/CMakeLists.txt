@@ -64,7 +64,15 @@ if (WIN32)
 	FetchContent_MakeAvailable("${libunistd_name}")
 endif()
 
-target_link_libraries(ARRCON PRIVATE TermAPI filelib "${libunistd_name}")
+if (APPLE)
+	set(_arrcon_linker_flags "-static -static-libgcc -static-libstdc++")
+endif()
+
+if (NOT DEFINED _arrcon_linker_flags)
+	set(_arrcon_linker_flags PRIVATE)
+endif()
+
+target_link_libraries(ARRCON ${_arrcon_linker_flags} TermAPI filelib "${libunistd_name}")
 
 include(PackageInstaller)
 
