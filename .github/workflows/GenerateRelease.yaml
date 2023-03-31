@@ -88,7 +88,7 @@ jobs:
     # Build Binary
     - name: Build
       run:  cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
-      
+
     # Create Packaged Release Archive
       # Windows
     - name:   Create Archive (Windows)
@@ -104,7 +104,7 @@ jobs:
               cd "${{github.workspace}}/build/${{env.PROJECT_NAME}}"
               zip -T9 "${{env.PROJECT_NAME}}-$(./${{env.PROJECT_NAME}} -vq)-${{runner.os}}.zip" "${{env.PROJECT_NAME}}"
       shell:  bash
-      
+
     # Upload Artifact
     - name:   Upload Artifact
       uses:   actions/upload-artifact@v2
@@ -112,16 +112,16 @@ jobs:
         name: latest-${{runner.os}}
         path: '${{github.workspace}}/build/${{env.PROJECT_NAME}}/*.zip'
 #:create-binaries
-      
+
   create-release:
     needs: create-binaries
     runs-on: ubuntu-latest
-    
+
     steps:
     # Download Artifacts
     - name: 'Download Build Artifacts'
       uses: actions/download-artifact@v2
-            
+
     # Retrieve the latest git tag if this was triggered by a tag
     - name: 'Get Release Tag'
       id:   get_version
@@ -129,14 +129,14 @@ jobs:
             if [ "${{github.event.inputs.tag}}" == "" ]; then TAG="${GITHUB_REF/refs\/tags\//}"; else TAG="${{github.event.inputs.tag}}" ; fi
             echo ::set-output name=VERSION::$TAG
             echo ::set-output name=NAME::"Release $TAG"
-      
+
     # Stage downloaded build artifacts for deployment
     - name:   'Stage Archives'
       run:    |
               cd ${{github.workspace}}
               if mv ./latest-*/* ./ ; then ls -lAgh ; else ls -lAghR ; fi
       shell:  bash
-      
+
     # Upload Release
     - name: 'Create Release'
       #if:   ${{ github.event_name == 'workflow_dispatch' }}
