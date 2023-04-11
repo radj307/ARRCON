@@ -62,6 +62,7 @@ jobs:
       run:   |
              if [ "$RUNNER_OS" == "Linux" ]; then
                 sudo apt-get install -y gcc-12 cmake ninja-build
+                gcc -v
              elif [ "$RUNNER_OS" == "macOS" ]; then
                 brew install gcc@10 cmake ninja
              elif [ "$RUNNER_OS" == "Windows" ]; then
@@ -82,8 +83,8 @@ jobs:
       if:     ${{ runner.os != 'Windows' }}
       run:    cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -G Ninja
       env:
-        CC:   gcc-10
-        CXX:  g++-10
+        CC:   gcc-12
+        CXX:  g++-12
 
     # Build Binary
     - name: Build
