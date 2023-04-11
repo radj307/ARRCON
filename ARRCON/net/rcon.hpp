@@ -34,9 +34,7 @@ namespace net::rcon {
 	 * @brief			Send a command to the connected RCON server.
 	 * @param sd		Socket to use.
 	 * @param command	Command string to send.
-	 * @returns			bool
-	 *\n				true	Received the "terminator" packet indicating that the message was received correctly.
-	 *\n				false	Didn't receive the "terminator" packet, indicating that something went wrong, or the current timeout is too short.
+	 * @returns			true when the "terminator" packet was received, indicating that the message was received correctly; otherwise false, indicating that something went wrong, or the current timeout is too short.
 	 */
 	inline bool command(const SOCKET& sd, const std::string& command)
 	{

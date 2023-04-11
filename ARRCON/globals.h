@@ -19,6 +19,10 @@
 #include <chrono>
 #include <atomic>
 #include <unistd.h>
+#undef read
+#undef write
+#undef min
+#undef max
 
  /// @brief	The default program name on each platform.
 inline constexpr const auto DEFAULT_PROGRAM_NAME{ "ARRCON" };
@@ -119,6 +123,9 @@ static struct {
 	/// @brief	Allows or disallows ARRCON from being able to create or delete files automatically, such as when the hostlist is empty.
 	bool autoDeleteHostlist{ true };
 
+	/// @brief	Determines whether or not blank passwords are allowed when connecting to a target.
+	bool allowBlankPassword{ false };
+
 	/// @brief	The name of the environment variable to check for the config directory
 	std::string EnvVar_CONFIG_DIR{ std::string(DEFAULT_PROGRAM_NAME) + "_CONFIG_DIR" };
 
@@ -138,6 +145,9 @@ static struct {
 
 	/// @brief	Amount of time before the select() function times out.
 	std::chrono::milliseconds select_timeout{ 250ll };
+
+	/// @brief	Whether to automatically adjust timeouts or not
+	bool auto_adjust_timeouts{ false };
 
 	/// @brief	Global socket connected to the RCON server.
 	SOCKET socket{ static_cast<SOCKET>(SOCKET_ERROR) };

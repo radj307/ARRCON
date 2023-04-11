@@ -5,6 +5,7 @@
  */
 #pragma once
 #include <sysarch.h>
+#include <term.hpp>
 #include "../globals.h"
 #include "rcon.hpp"
 
@@ -22,10 +23,41 @@
   * @brief		Handler function for OS signals. Passed to sigaction/signal to intercept interrupts and shut down the socket correctly.
   * @param sig	The signal thrown to prompt the calling of this function.
   */
-inline void sighandler(int sig) noexcept
+#ifdef OS_WIN
+BOOL WINAPI sighandler(DWORD sig) noexcept
+{
+	switch (sig) {
+	case CTRL_C_EVENT:
+		Global.connected.store(false);
+		return TRUE;
+	default:
+		return FALSE;
+	}
+}
+#else
+void sighandler(int sig) noexcept
 {
 	Global.connected.store(false);
-	printf("\n");
+}
+#endif
+
+inline std::istream& readline(std::istream& is, std::string& s)
+{
+	bool cancel{ false };
+	while (!cancel) {
+		if (term::kbhit()) {
+			const auto c{ term::getch() };
+			switch (c) {
+			case '\n':
+				cancel = true;
+				[[fallthrough]];
+			default:
+				s += static_cast<char>(c);
+				break;
+			}
+		}
+	}
+	return is;
 }
 
 /**
@@ -58,11 +90,22 @@ namespace mode {
 	 */
 	inline void interactive(const SOCKET& sd)
 	{
+	#ifdef OS_WIN
+		if (!SetConsoleCtrlHandler(sighandler, TRUE))
+			throw make_exception("Failed to install Windows Control+C handler!");
+	#else
 		// Register the interrupt handler:
-		struct sigaction action;
-		memset(&action, 0, sizeof(action));
+		struct sigaction action {};
+		struct sigaction oldAction;
+		//memset(&action, 0, sizeof(action));
 		action.sa_handler = sighandler;
-		sigaction(SIGINT, &action, 0);
+		sigemptyset(&action.sa_mask);
+		action.sa_flags = 0;
+
+		sigaction(SIGINT, &action, &oldAction);
+	#endif
+
+		bool hasTriedAutoAdjustingTimeout{ false };
 
 		// Begin interactive session:
 		if (!Global.no_prompt) {
@@ -72,26 +115,35 @@ namespace mode {
 			std::cout << "to quit.\n";
 		}
 
+		// check std::cin.good() for CTRL+C
 		while (Global.connected && std::cin.good()) {
 			std::cout << Global.custom_prompt;
 
 			std::string command;
 			std::getline(std::cin, command);
 
-			if (Global.allow_exit && str::tolower(command) == "exit")
+			if (Global.allow_exit && command == "exit")
 				break;
 
-			if (Global.connected.load()) {
+			if (Global.connected.load() && std::cin.good()) {
 				if (!command.empty()) {
-					if (!net::rcon::command(sd, command) && Global.enable_no_response_message && !Global.quiet)
+					if (!net::rcon::command(sd, command) && Global.enable_no_response_message && !Global.quiet) {
+						// nothing received:
+						if (!hasTriedAutoAdjustingTimeout && Global.auto_adjust_timeouts) {
+							if (const auto maxTime{ Global.select_timeout * 10 }, time{ net::wait_for_packet(sd, maxTime) };
+								time != maxTime) {
+								Global.select_timeout = std::chrono::milliseconds{ math::CeilToNearestMultiple(time.count(), Global.select_timeout.count()) } + Global.select_timeout;
+								hasTriedAutoAdjustingTimeout = true;
+							}
+						}
 						std::cerr << Global.palette.set(Color::ORANGE) << "[no response]" << Global.palette.reset() << '\n';
+					}
 				}
 				else std::cerr << Global.palette.set(Color::BLUE) << "[not sent: empty]" << Global.palette.reset() << '\n';
 			}
-			else std::cerr << Global.palette.set(Color::RED) << "[not sent: lost connection]" << '\n';
+			else std::cerr << Global.palette.set(Color::RED) << "[not sent: disconnected]" << '\n';
 		}
 		// Flush & reset colors once done.
 		(std::cout << Global.palette.reset()).flush();
 	}
-
 }

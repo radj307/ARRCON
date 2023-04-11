@@ -270,43 +270,4 @@ inline void handle_hostfile_arguments(const opt3::ArgManager& args, net::HostLis
 	if (do_exit)
 		std::exit(EXIT_SUCCESS);
 }
-
-/**
- * @brief		Handle commandline arguments.
- * @param args	Arguments from main()
- */
-inline void handle_arguments(const opt3::ArgManager& args, const std::filesystem::path& ini_path)
-{
-	// write-ini:
-	if (args.check<opt3::Option>("write-ini")) {
-		if (!ini_path.empty() && config::save_ini(ini_path)) {
-			std::cout << Global.palette.get_msg() << "Successfully wrote config: " << ini_path << std::endl;
-			std::exit(EXIT_SUCCESS);
-		}
-		else
-			throw permission_exception("handle_arguments()", ini_path, "Failed to open INI for writing!");
-	}
-	// update-ini
-	if (args.check<opt3::Option>("update-ini")) {
-		if (!ini_path.empty() && config::save_ini(ini_path, false)) {
-			std::cout << Global.palette.get_msg() << "Successfully updated config: " << ini_path << std::endl;
-			std::exit(EXIT_SUCCESS);
-		}
-		else
-			throw permission_exception("handle_arguments()", ini_path, "Failed to open INI for writing!");
-	}
-	// force interactive:
-	Global.force_interactive = args.check_any<opt3::Option, opt3::Flag>('t', 'i', "interactive");
-	// no-prompt
-	Global.no_prompt = args.check_any<opt3::Flag, opt3::Option>('Q', "no-prompt");
-	// command delay:
-	if (const auto arg{ args.getv_any<opt3::Flag, opt3::Option>('w', "wait") }; arg.has_value()) {
-		if (std::all_of(arg.value().begin(), arg.value().end(), isdigit))
-			Global.command_delay = std::chrono::milliseconds(std::abs(str::stoll(arg.value())));
-		else throw make_exception("Invalid delay value given: \"", arg.value(), "\", expected an integer.");
-	}
-	// scriptfiles:
-	for (const auto& scriptfile : args.getv_all<opt3::Option, opt3::Flag>('f', "file"))
-		Global.scriptfiles.emplace_back(scriptfile);
-}
 #pragma endregion ArgumentHandlers

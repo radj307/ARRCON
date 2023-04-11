@@ -288,4 +288,20 @@ namespace net {
 
 		return { spacket };
 	}
+
+	inline std::chrono::milliseconds wait_for_packet(const SOCKET& sd, std::chrono::milliseconds const& maxTime)
+	{
+		fd_set set;
+		FD_ZERO(&set);
+		FD_SET(sd, &set);
+
+		const auto timeout{ make_timeout(Global.select_timeout) };
+		const auto t0{ std::chrono::steady_clock::now() };
+		for (auto elapsed{ t0 - std::chrono::steady_clock::now() }; elapsed < maxTime; elapsed = t0 - std::chrono::steady_clock::now()) {
+			if (SELECT(sd + 1ull, &set, nullptr, nullptr, &timeout) == 1) {
+				return std::chrono::duration_cast<std::chrono::milliseconds>(elapsed);
+			}
+		}
+		return maxTime;
+	}
 }

@@ -9,15 +9,10 @@
 #include <signal.h>				///< signal handling
 #include <unistd.h>
 
-using namespace net;
-
 int main(const int argc, char** argv)
 {
+	using namespace net;
 	try {
-		// Fixes a "bug" with the Wezterm terminal emulator where characters have opaque black backgrounds when using transparent backgrounds.
-		Global.palette.setDefaultResetSequence(color::reset_f);
-
-		std::cout << term::EnableANSI; // enable ANSI escape sequences on windows
 		const opt3::ArgManager args{ argc, argv,
 			opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, 'H', "host"),
 			opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, 'S', "saved"),
@@ -62,9 +57,8 @@ int main(const int argc, char** argv)
 		// Argument:  [-v|--version] (mutually exclusive with help as it shows the version number as well)
 		else if (args.check_any<opt3::Flag, opt3::Option>('v', "version")) {
 			if (!Global.quiet) std::cout << DEFAULT_PROGRAM_NAME << " v";
-			std::cout << ARRCON_VERSION_EXTENDED;
-			if (!Global.quiet) std::cout << " (" << ARRCON_COPYRIGHT << ')';
-			std::cout << std::endl;
+			std::cout << ARRCON_VERSION_EXTENDED << std::endl;
+			if (!Global.quiet) std::cout << " (" << ARRCON_COPYRIGHT << ')' << std::endl;
 			return 0;
 		}
 		// Argument:  [--print-env]
@@ -107,7 +101,37 @@ int main(const int argc, char** argv)
 		// get the target server's connection information
 		Global.target = resolveTargetInfo(args, hosts);
 
-		handle_arguments(args, ini_path);
+		// write-ini:
+		if (args.check<opt3::Option>("write-ini")) {
+			if (!ini_path.empty() && config::save_ini(ini_path)) {
+				std::cout << Global.palette.get_msg() << "Successfully wrote config: " << ini_path << std::endl;
+				std::exit(EXIT_SUCCESS);
+			}
+			else
+				throw permission_exception("handle_arguments()", ini_path, "Failed to open INI for writing!");
+		}
+		// update-ini
+		if (args.check<opt3::Option>("update-ini")) {
+			if (!ini_path.empty() && config::save_ini(ini_path, false)) {
+				std::cout << Global.palette.get_msg() << "Successfully updated config: " << ini_path << std::endl;
+				std::exit(EXIT_SUCCESS);
+			}
+			else
+				throw permission_exception("handle_arguments()", ini_path, "Failed to open INI for writing!");
+		}
+		// force interactive:
+		Global.force_interactive = args.check_any<opt3::Option, opt3::Flag>('t', 'i', "interactive");
+		// no-prompt
+		Global.no_prompt = args.check_any<opt3::Flag, opt3::Option>('Q', "no-prompt");
+		// command delay:
+		if (const auto arg{ args.getv_any<opt3::Flag, opt3::Option>('w', "wait") }; arg.has_value()) {
+			if (std::all_of(arg.value().begin(), arg.value().end(), isdigit))
+				Global.command_delay = std::chrono::milliseconds(std::abs(str::stoll(arg.value())));
+			else throw make_exception("Invalid delay value given: \"", arg.value(), "\", expected an integer.");
+		}
+		// scriptfiles:
+		for (const auto& scriptfile : args.getv_all<opt3::Option, opt3::Flag>('f', "file"))
+			Global.scriptfiles.emplace_back(scriptfile);
 
 		handle_hostfile_arguments(args, hosts, hostfile_path);
 
@@ -125,16 +149,20 @@ int main(const int argc, char** argv)
 		Global.socket = net::connect(Global.target.hostname, Global.target.port);
 
 		// set & check if the socket was connected successfully
-		if (!(Global.connected = (Global.socket != static_cast<SOCKET>(SOCKET_ERROR))))
+		Global.connected = Global.socket != static_cast<SOCKET>(SOCKET_ERROR);
+		if (!Global.connected)
 			throw connection_exception("main()", "Socket descriptor was set to (" + std::to_string(Global.socket) + ") after successfully initializing the connection.", Global.target.hostname, Global.target.port, LAST_SOCKET_ERROR_CODE(), net::getLastSocketErrorMessage());
 
-		if (Global.target.password.empty())
+		if (!Global.allowBlankPassword && Global.target.password.empty())
 			throw make_exception("Password cannot be blank!");
 
-		// authenticate with the server, run queued commands, and open an interactive session if necessary.
+		// authenticate with the server
 		if (rcon::authenticate(Global.socket, Global.target.password)) {
-			// authentication succeeded, run commands
-			if (mode::commandline(commands) == 0ull || Global.force_interactive)
+			// authentication succeeded, run queued commands, and open an interactive session if necessary.
+			const bool hasCommands = !commands.empty();
+			if (hasCommands)
+				mode::commandline(commands);
+			if (!hasCommands || Global.force_interactive)
 				mode::interactive(Global.socket); // if no commands were executed from the commandline or if the force interactive flag was set
 		}
 		else throw badpass_exception(Global.target.hostname, Global.target.port, LAST_SOCKET_ERROR_CODE(), net::getLastSocketErrorMessage());

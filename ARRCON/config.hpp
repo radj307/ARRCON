@@ -12,25 +12,25 @@
 #include <envpath.hpp>
 
 #include <str.hpp>
-#include <INIRedux.hpp>
+#include <simpleINI.hpp>
 
-/**
- * @namespace	config
- * @brief		Contains functions and objects used to interact with ARRCON's configuration files.
- */
-namespace config {	
+ /**
+  * @namespace	config
+  * @brief		Contains functions and objects used to interact with ARRCON's configuration files.
+  */
+namespace config {
 	/**
 	 * @namespace	header
 	 * @brief		Contains constants that correspond to the names of headers in ARRCON's configuration file.
 	 */
 	namespace header {
-		inline constexpr const auto 
+		inline constexpr const auto
 			// Appearance-related keys
-			APPEARANCE{ "appearance" }, 
+			APPEARANCE{ "appearance" },
 			// Timing-related keys
-			TIMING{ "timing" }, 
+			TIMING{ "timing" },
 			// Target-related keys
-			TARGET{ "target" }, 
+			TARGET{ "target" },
 			// Misc keys
 			MISCELLANEOUS{ "miscellaneous" };
 	}
@@ -83,40 +83,48 @@ namespace config {
 		if (!file::exists(path))
 			return false;
 
-		// Read the ini:
-		const auto ini{ file::INI(path) };
+		try {
+			// Read the ini:
+			ini::INI ini{ path };
 
-		if (ini.empty())
-			return false;
+			//const auto ini{ file::INI(path) };
 
-		// Appearance Header:
-		Global.no_prompt = ini.checkv(header::APPEARANCE, "bDisablePrompt", true);
-		Global.enable_bukkit_color_support = str::string_to_bool<bool>(ini.getvs(header::APPEARANCE, "bEnableBukkitColors").value_or(""));
-		if (ini.checkv(header::APPEARANCE, "bDisableColors", "true", false)) {
-			Global.palette.setActive(false);
-			Global.enable_bukkit_color_support = false;
-		}
-		Global.custom_prompt = ini.getvs(header::APPEARANCE, "sCustomPrompt").value_or("");
+			if (ini.empty())
+				return false;
 
-		// Timing Header:
-		using namespace std::chrono_literals;
-		const auto to_ms{ [](const std::optional<std::string>& str, const std::chrono::milliseconds& def) -> std::chrono::milliseconds { return ((str.has_value() && std::all_of(str.value().begin(), str.value().end(), isdigit)) ? std::chrono::milliseconds(str::stoi(str.value())) : def); } };
-		Global.command_delay = to_ms(ini.getvs(header::TIMING, "iCommandDelay"), Global.command_delay);
-		Global.receive_delay = to_ms(ini.getvs(header::TIMING, "iReceiveDelay"), Global.receive_delay);
-		Global.select_timeout = to_ms(ini.getvs(header::TIMING, "iSelectTimeout"), Global.select_timeout);
+			// Appearance Header:
+			Global.no_prompt = ini.checkv(header::APPEARANCE, "bDisablePrompt", true);
+			
+			Global.enable_bukkit_color_support = ini.checkv(header::APPEARANCE, "bEnableBukkitColors", true);
+			if (ini.checkv(header::APPEARANCE, "bDisableColors", "true")) {
+				Global.palette.setActive(false);
+				Global.enable_bukkit_color_support = false;
+			}
+			
+			Global.custom_prompt = ini.get(header::APPEARANCE, "sCustomPrompt").value_or("");
 
-		// Target Header:
-		Global.target.hostname = ini.getvs(header::TARGET, "sDefaultHost").value_or(Global.target.hostname);
-		Global.target.port = ini.getvs(header::TARGET, "sDefaultPort").value_or(Global.target.port);
-		Global.target.password = ini.getvs(header::TARGET, "sDefaultPass").value_or(Global.target.password);
-		Global.allow_no_args = ini.checkv(header::TARGET, "bAllowNoArgs", true);
+			// Timing Header:
+			using namespace std::chrono_literals;
+			const auto to_ms{ [](const std::optional<std::string>& str, const std::chrono::milliseconds& def) -> std::chrono::milliseconds { return ((str.has_value() && std::all_of(str.value().begin(), str.value().end(), isdigit)) ? std::chrono::milliseconds(str::stoi(str.value())) : def); } };
+			Global.command_delay = to_ms(ini.get(header::TIMING, "iCommandDelay"), Global.command_delay);
+			Global.receive_delay = to_ms(ini.get(header::TIMING, "iReceiveDelay"), Global.receive_delay);
+			Global.select_timeout = to_ms(ini.get(header::TIMING, "iSelectTimeout"), Global.select_timeout);
+			Global.auto_adjust_timeouts = ini.checkv(header::TIMING, "bAutoAdjustTimeout", true);
 
-		// Miscellaneous Header:
-		Global.allow_exit = ini.checkv(header::MISCELLANEOUS, "bInteractiveAllowExitKeyword", true);
-		Global.enable_no_response_message = ini.checkv(header::MISCELLANEOUS, "bEnableNoResponseMessage", true);
-		Global.autoDeleteHostlist = ini.checkv(header::MISCELLANEOUS, "bAutoDeleteHostlist", true);
+			// Target Header:
+			Global.target.hostname = ini.get(header::TARGET, "sDefaultHost").value_or(Global.target.hostname);
+			Global.target.port = ini.get(header::TARGET, "sDefaultPort").value_or(Global.target.port);
+			Global.target.password = ini.get(header::TARGET, "sDefaultPass").value_or(Global.target.password);
+			Global.allow_no_args = ini.checkv(header::TARGET, "bAllowNoArgs", true);
+			Global.allowBlankPassword = ini.checkv(header::TARGET, "bAllowBlankPassword", true);
 
-		return true;
+			// Miscellaneous Header:
+			Global.allow_exit = ini.checkv(header::MISCELLANEOUS, "bInteractiveAllowExitKeyword", true);
+			Global.enable_no_response_message = ini.checkv(header::MISCELLANEOUS, "bEnableNoResponseMessage", true);
+			Global.autoDeleteHostlist = ini.checkv(header::MISCELLANEOUS, "bAutoDeleteHostlist", true);
+
+			return true;
+		} catch (...) { return false; }
 	}
 
 	/**
@@ -130,7 +138,7 @@ namespace config {
 	inline bool save_ini(const std::filesystem::path& path, const bool& use_defaults = true)
 	{
 		std::filesystem::create_directories(std::filesystem::path(path).remove_filename());
-		#pragma warning (disable:26800) // use of a moved-from object: ss
+	#pragma warning (disable:26800) // use of a moved-from object: ss
 		std::stringstream ss{};
 		if (use_defaults) {
 			ss // use defaults
@@ -139,6 +147,7 @@ namespace config {
 				<< "sDefaultPort = \"27015\"\n"
 				<< "sDefaultPass = \"\"\n"
 				<< "bAllowNoArgs = false\n"
+				<< "bAllowBlankPassword = false\n"
 				<< '\n'
 				<< '[' << ::config::header::APPEARANCE << ']' << '\n'
 				<< "bDisablePrompt = false\n"
@@ -150,6 +159,7 @@ namespace config {
 				<< "iCommandDelay = 0\n"
 				<< "iReceiveDelay = 10\n"
 				<< "iSelectTimeout = 500\n"
+				<< "bAutoAdjustTimeout = false\n"
 				<< '\n'
 				<< '[' << ::config::header::MISCELLANEOUS << ']' << '\n'
 				<< "bInteractiveAllowExitKeyword = true\n"
@@ -164,6 +174,7 @@ namespace config {
 				<< "sDefaultPort = \"" << Global.target.port << "\"\n"
 				<< "sDefaultPass = \"" << Global.target.password << "\"\n"
 				<< "bAllowNoArgs = " << Global.allow_no_args << '\n'
+				<< "bAllowBlankPassword = " << Global.allowBlankPassword << '\n'
 				<< '\n'
 				<< '[' << ::config::header::APPEARANCE << ']' << '\n'
 				<< "bDisablePrompt = " << Global.no_prompt << '\n'
@@ -175,6 +186,7 @@ namespace config {
 				<< "iCommandDelay = " << Global.command_delay.count() << '\n'
 				<< "iReceiveDelay = " << Global.receive_delay.count() << '\n'
 				<< "iSelectTimeout = " << Global.select_timeout.count() << '\n'
+				<< "bAutoAdjustTimeout = " << Global.auto_adjust_timeouts << '\n'
 				<< '\n'
 				<< '[' << ::config::header::MISCELLANEOUS << ']' << '\n'
 				<< "bInteractiveAllowExitKeyword = " << Global.allow_exit << '\n'
@@ -183,7 +195,7 @@ namespace config {
 				<< '\n';
 		}
 		return file::write_to(path, std::move(ss));
-		#pragma warning (default:26800) // use of a moved-from object: ss
+	#pragma warning (default:26800) // use of a moved-from object: ss
 	}
 
 	/**
@@ -195,10 +207,7 @@ namespace config {
 	inline auto save_hostfile(const net::HostList& hostlist, const std::filesystem::path& path)
 	{
 		std::filesystem::create_directories(std::filesystem::path(path).remove_filename());
-		#pragma warning (disable:26800) // use of a moved-from object: ss
-		std::stringstream ss;
-		ss << hostlist;
-		return file::write_to(path, std::move(ss), false);
-		#pragma warning (default:26800) // use of a moved-from object: ss
+	#undef write
+		return file::write(path, hostlist);
 	}
 }
