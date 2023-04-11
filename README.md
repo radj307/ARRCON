@@ -14,9 +14,10 @@ A lightweight cross-platform RCON client compatible with <b>any game using the S
   <a href="https://github.com/radj307/ARRCON/releases"><img alt="Downloads" src="https://img.shields.io/github/downloads/radj307/ARRCON/total?label=Downloads&style=flat"></a>
 </p>
 <p align="center">
-  <a href="https://github.com/radj307/ARRCON/actions/workflows/Windows.yml"><img alt="Windows Status" src="https://img.shields.io/github/workflow/status/radj307/ARRCON/Windows%20Smoketest?label=Windows&logo=github&style=flat"></a>
-  <a href="https://github.com/radj307/ARRCON/actions/workflows/Linux.yml"><img alt="Linux Status" src="https://img.shields.io/github/workflow/status/radj307/ARRCON/Linux%20Smoketest?label=Linux&logo=github&style=flat"></a>
-  <a href="https://github.com/radj307/ARRCON/actions/workflows/Windows.yml"><img alt="macOS Status" src="https://img.shields.io/github/workflow/status/radj307/ARRCON/macOS%20Smoketest?label=macOS&logo=github&style=flat"></a>
+  <a href="https://github.com/radj307/ARRCON/actions/workflows/Windows.yml"><img alt="Windows Workflow Status" src="https://img.shields.io/github/actions/workflow/status/radj307/ARRCON/Windows.yml?label=Windows&logo=github&style=flat"></a>
+  <a href="https://github.com/radj307/ARRCON/actions/workflows/Linux.yml"><img alt="Linux Workflow Status" src="https://img.shields.io/github/actions/workflow/status/radj307/ARRCON/Linux.yml?label=Linux&logo=github"></a>
+  <a href="https://github.com/radj307/ARRCON/actions/workflows/Windows.yml"><img alt="macOS Workflow Status" src="https://img.shields.io/github/actions/workflow/status/radj307/ARRCON/macOS.yml?label=macOS&logo=github"></a>
+  <a href="https://www.codefactor.io/repository/github/radj307/arrcon"><img alt="CodeFactor Grade" src="https://img.shields.io/codefactor/grade/github/radj307/ARRCON?label=Code%20Quality"></a>
 </p>
 <p align="center">
   <a href="https://github.com/radj307/ARRCON/releases">Releases</a>&nbsp&nbsp|&nbsp&nbsp<a href="https://github.com/radj307/ARRCON/wiki">Wiki</a>&nbsp&nbsp|&nbsp&nbsp<a href="https://github.com/radj307/ARRCON/issues">Issues</a>
