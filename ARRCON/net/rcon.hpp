@@ -8,6 +8,8 @@
 #include "net.hpp"
 #include "../packet-color.hpp"
 
+#define PERMISSIVE_AUTHENTICATION true
+
  /**
   * @namespace	rcon
   * @brief		Contains functions used to interact with the RCON server.
@@ -25,8 +27,10 @@ namespace net::rcon {
 		packet::Packet packet{ pid, packet::Type::SERVERDATA_AUTH, pass };
 
 		if (net::send_packet(sd, packet)) {
-			packet = net::recv_packet(sd);
-			return packet.id == pid;
+			try {
+				packet = net::recv_packet(sd);
+				return packet.id == pid || (PERMISSIVE_AUTHENTICATION && packet.id != -1);
+			} catch (const socket_except&) {}
 		}
 		return false;
 	}
