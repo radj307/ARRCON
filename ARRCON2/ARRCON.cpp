@@ -120,6 +120,10 @@ namespace net {
 			tcp::socket socket;
 			int32_t current_packetid{ PACKETID_MIN };
 
+			/**
+			 * @brief	Gets the next pseudo-unique packet ID.
+			 * @returns	A pseudo-unique packet ID number.
+			 */
 			int32_t get_next_packet_id()
 			{
 				if (current_packetid == PACKETID_MAX)
@@ -127,6 +131,12 @@ namespace net {
 				return current_packetid++;
 			}
 
+			/**
+			 * @brief			Creates a packet buffer from the specified header and body.
+			 * @param header  -	The pre-constructed packet header to use.
+			 * @param body	  -	The body string to use.
+			 * @returns			A buffer containing the packet's raw bytes.
+			 */
 			buffer build_packet(packet_header const& header, std::string const& body)
 			{
 				// create a buffer with 2 extra bytes for the packet terminator bytes
@@ -139,6 +149,11 @@ namespace net {
 				std::memcpy(&buf[0] + sizeof(packet_header), body.c_str(), body.size());
 
 				return buf;
+			}
+
+			buffer build_terminator_packet(int32_t const id)
+			{
+				return build_packet(packet_header{ get_packet_size(0), id, (int32_t)PacketType::SERVERDATA_RESPONSE_VALUE }, "");
 			}
 
 			/**
@@ -170,9 +185,14 @@ namespace net {
 				const auto targets{ resolve_targets(ioContext, host, port) };
 
 				// connect the socket
-				const auto endpoint{ boost::asio::connect(socket, targets) }; //< connect() throws on error
+				try {
+					const auto endpoint{ boost::asio::connect(socket, targets) }; //< connect() throws on error
 
-				// TODO: write log message; successfully connected to endpoint
+					// TODO: write log message; successfully connected to endpointe
+				} catch (boost::system::system_error const& ex) {
+					throw make_exception("Failed to connect to \"", host, ':', port, "\". Original exception: ", ex.what());
+				}
+
 
 				// authenticate with the server
 				if (!authenticate(password)) {
@@ -198,9 +218,22 @@ namespace net {
 					throw make_exception("Failed to send packet for command \"", command, "\"!");
 				}
 
-				const auto [header, body] { recv() };
+				const auto termPacketId{ get_next_packet_id() };
+				const buffer termPacket{ build_terminator_packet(termPacketId) };
 
-				return bytes_to_string(body);
+				if (boost::asio::write(socket, boost::asio::buffer(termPacket)) != termPacket.size()) {
+					// TODO: write log message; failed to send terminator packet
+					throw make_exception("Failed to send terminator packet for command \"", command, "\"!");
+				}
+
+				// receive all of the packets & concatenate them
+				std::stringstream ss;
+
+				for (std::pair<packet_header, buffer> response{ recv() }; response.first.id != termPacketId; response = recv()) {
+					ss << bytes_to_string(response.second);
+				}
+
+				return ss.str();
 			}
 
 			bool authenticate(std::string_view password)
@@ -208,14 +241,15 @@ namespace net {
 				const buffer p{ build_packet(packet_header{ get_packet_size(password.size()), 1, (int32_t)PacketType::SERVERDATA_AUTH }, password.data()) };
 
 				if (boost::asio::write(socket, boost::asio::buffer(p)) != p.size()) {
-					// TODO: write log message; failed to send authentication buffer
+					// TODO: write log message; failed to send authentication packet
 					return false;
 				}
 
+				// receive response
 				const auto& [auth_response_header, _] { recv() };
 
 				if (auth_response_header.id == -1) {
-					throw make_exception("Authentication refused by server!");
+					throw make_exception("Authentication refused by server! (Incorrect password)");
 				}
 				else return true;
 			}
@@ -251,16 +285,11 @@ int main(const int argc, char** argv)
 		const auto port{ args.getv_any<opt3::Flag, opt3::Option>('P', "port").value() };
 		const auto pass{ args.getv_any<opt3::Flag, opt3::Option>('p', "pass", "password").value() };
 
-		using boost::asio::io_context;
-		using boost::asio::ip::tcp;
+		net::rcon::RconClient client{ host, port, pass };
 
-		using namespace net;
-		using namespace net::rcon;
-
-		RconClient client{ host, port, pass };
-		
-		const auto response{ client.command("info") };
-		std::cout << response << std::endl;
+		std::cout
+			<< client.command("listgamemodeproperties") << std::endl
+			;
 
 		return 0;
 	} catch (std::exception const& ex) {
