@@ -19,7 +19,7 @@ A lightweight cross-platform RCON client compatible with <b>any game using the S
   <a href="https://github.com/radj307/ARRCON/actions/workflows/Windows.yml"><img alt="macOS Workflow Status" src="https://img.shields.io/github/actions/workflow/status/radj307/ARRCON/macOS.yml?label=macOS&logo=github"></a>
 </p>
 <p align="center">
-  <a href="https://github.com/radj307/ARRCON/releases">Releases</a>&nbsp&nbsp|&nbsp&nbsp<a href="https://github.com/radj307/ARRCON/wiki">Wiki</a>&nbsp&nbsp|&nbsp&nbsp<a href="https://github.com/radj307/ARRCON/issues">Issues</a>
+  <a href="https://github.com/radj307/ARRCON/releases">Downloads</a>&nbsp&nbsp|&nbsp&nbsp<a href="https://github.com/radj307/ARRCON/wiki">Wiki</a>&nbsp&nbsp|&nbsp&nbsp<a href="https://github.com/radj307/ARRCON/issues">Issues</a>
 </p>
 
 
