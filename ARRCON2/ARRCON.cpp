@@ -110,6 +110,7 @@ int main(const int argc, char** argv)
 	}
 
 BREAK:
+	// reset clog buffer to its original state
 	std::clog.rdbuf(original_clog_rdbuf);
 
 	return rc;

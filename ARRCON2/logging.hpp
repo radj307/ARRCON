@@ -3,10 +3,12 @@
 #include <strcore.hpp>	//< for str::stringify
 #include <var.hpp>		//< for var::streamable
 
+// Boost
+#include <boost/date_time/posix_time/posix_time.hpp> //< for boost::posix_time
+
 // STL
 #include <cstdint>		//< for sized integer types
 #include <ostream>		//< for std::ostream
-#include <chrono>		//< for std::chrono::utc_clock
 
 #define LM_TIMESTAMP 29
 #define LM_LEVEL 12
@@ -57,7 +59,7 @@ struct MessageHeader {
 
 	friend std::ostream& operator<<(std::ostream& os, const MessageHeader& m)
 	{
-		const auto timestamp{ str::stringify(std::chrono::utc_clock::now()) };
+		const auto timestamp{ boost::posix_time::to_iso_string(boost::posix_time::second_clock::universal_time()) };
 		const auto level{ str::stringify(m.level) };
 		return os
 			<< timestamp << indent(LM_TIMESTAMP, timestamp.size())
