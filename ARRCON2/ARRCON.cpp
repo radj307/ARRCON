@@ -49,7 +49,7 @@ struct print_help {
 			<< "  -v, --version               Prints the current version number, then exits." << '\n'
 			<< "  -q, --quiet                 Silent/Quiet mode; prevents or minimizes console output." << '\n'
 			<< "  -i, --interactive           Starts an interactive command shell after sending any scripted commands." << '\n'
-			<< "  -w, --wait <ms>             Wait for \"<ms>\" milliseconds between sending each command in mode [2]." << '\n'
+			<< "  -w, --wait <ms>             Wait for \"<ms>\" milliseconds between sending each command in oneshot mode." << '\n'
 			<< "  -n, --no-color              Disable colorized console output." << '\n'
 			<< "  -Q, --no-prompt             Disables the prompt in interactive mode, and command echo in commandline mode." << '\n'
 			<< "      --print-env             Prints all recognized environment variables, their values, and descriptions." << '\n'
@@ -61,24 +61,6 @@ struct print_help {
 };
 
 void main_impl(opt3::ArgManager const&);
-
-// terminal color synchronizer
-color::sync csync{};
-
-struct InputPrompt {
-	std::string hostname;
-	bool enable;
-
-	InputPrompt(std::string const& hostname, bool const enable) : hostname{ hostname }, enable{ enable } {}
-
-	friend std::ostream& operator<<(std::ostream& os, const InputPrompt& p)
-	{
-		if (!p.enable)
-			return os;
-
-		return os << csync(color::green) << csync(color::bold) << "RCON@" << p.hostname << '>' << csync(color::reset_all) << ' ';
-	}
-};
 
 int main(const int argc, char** argv)
 {
@@ -129,6 +111,24 @@ BREAK:
 
 	return rc;
 }
+
+// terminal color synchronizer
+color::sync csync{};
+
+struct InputPrompt {
+	std::string hostname;
+	bool enable;
+
+	InputPrompt(std::string const& hostname, bool const enable) : hostname{ hostname }, enable{ enable } {}
+
+	friend std::ostream& operator<<(std::ostream& os, const InputPrompt& p)
+	{
+		if (!p.enable)
+			return os;
+
+		return os << csync(color::green) << csync(color::bold) << "RCON@" << p.hostname << '>' << csync(color::reset_all) << ' ';
+	}
+};
 
 void main_impl(opt3::ArgManager const& args)
 {
@@ -183,6 +183,7 @@ void main_impl(opt3::ArgManager const& args)
 		commands.insert(commands.end(), parameters.begin(), parameters.end());
 	}
 
+	// prompt printer object "RCON@...>"
 	InputPrompt prompt{ target_host, !args.check_any<opt3::Flag, opt3::Option>('Q', "no-prompt") };
 
 	const bool commandsProvided{ !commands.empty() };
@@ -213,6 +214,12 @@ void main_impl(opt3::ArgManager const& args)
 		}
 	}
 	if (!commandsProvided || args.check_any<opt3::Flag, opt3::Option>('i', "interactive")) {
+		if (prompt.enable) {
+			std::cout << "Authentication Successful.\nUse <Ctrl + C> ";
+
+			std::cout << "to quit.\n";
+		}
+
 		// interactive mode
 		while (true) {
 			if (!quiet) std::cout << prompt;
