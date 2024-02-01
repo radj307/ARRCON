@@ -60,6 +60,9 @@ struct print_help {
 	}
 };
 
+// terminal color synchronizer
+color::sync csync{};
+
 void main_impl(opt3::ArgManager const&);
 
 int main(const int argc, char** argv)
@@ -111,9 +114,6 @@ BREAK:
 
 	return rc;
 }
-
-// terminal color synchronizer
-color::sync csync{};
 
 struct InputPrompt {
 	std::string hostname;
