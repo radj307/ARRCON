@@ -1,11 +1,16 @@
+// CMake
 #include "version.h"
 #include "copyright.h"
 
-//#include "net/RconClient.hpp"
+// ARRCON
+#include "net/rcon.hpp"
+#include "config.hpp"
 
 // 307lib
-#include <opt3.hpp>
-#include <color-sync.hpp>	//< for color::sync
+#include <opt3.hpp>					//< for commandline argument parser & manager
+#include <color-sync.hpp>			//< for color::sync
+#include <envpath.hpp>				//< for env::PATH
+#include <hasPendingDataSTDIN.h>	//< for hasPendingDataSTDIN
 
 // STL
 #include <filesystem>	//< for std::filesystem
@@ -40,8 +45,8 @@ struct print_help {
 			<< "  -l, --list-hosts            Show a list of all saved hosts, then exit." << '\n'
 			<< '\n'
 			<< "OPTIONS:\n"
-			<< "  -h, --help                  Show the help display, then exit." << '\n'
-			<< "  -v, --version               Print the current version number, then exit." << '\n'
+			<< "  -h, --help                  Show this help display, then exits." << '\n'
+			<< "  -v, --version               Prints the current version number, then exits." << '\n'
 			<< "  -q, --quiet                 Silent/Quiet mode; prevents or minimizes console output." << '\n'
 			<< "  -i, --interactive           Starts an interactive command shell after sending any scripted commands." << '\n'
 			<< "  -w, --wait <ms>             Wait for \"<ms>\" milliseconds between sending each command in mode [2]." << '\n'
@@ -55,219 +60,36 @@ struct print_help {
 	}
 };
 
+void main_impl(opt3::ArgManager const&);
+
 // terminal color synchronizer
 color::sync csync{};
 
-#include <boost/asio.hpp>
+struct InputPrompt {
+	std::string hostname;
+	bool enable;
 
-namespace net {
-	using boost::asio::io_context;
-	using boost::asio::ip::tcp;
+	InputPrompt(std::string const& hostname, bool const enable) : hostname{ hostname }, enable{ enable } {}
 
-	/**
-	 * @brief				Resolves a target endpoint from the specified host and port.
-	 * @param io_context  -	The io_context to use.
-	 * @param host		  -	The target hostname.
-	 * @param port		  -	The target port number.
-	 * @returns				The resolved target when successful; otherwise, std::nullopt.
-	 */
-	tcp::resolver::results_type resolve_targets(io_context& io_context, std::string_view host, std::string_view port)
+	friend std::ostream& operator<<(std::ostream& os, const InputPrompt& p)
 	{
-		return tcp::resolver(io_context).resolve(host, port);
+		if (!p.enable)
+			return os;
+
+		return os << csync(color::green) << csync(color::bold) << "RCON@" << p.hostname << '>' << csync(color::reset_all) << ' ';
 	}
-
-	namespace rcon {
-		enum class PacketType : int32_t {
-			SERVERDATA_AUTH = 3,
-			SERVERDATA_AUTH_RESPONSE = 2,
-			SERVERDATA_EXECCOMMAND = 2,
-			SERVERDATA_RESPONSE_VALUE = 0,
-		};
-
-		inline constexpr const int32_t PACKETID_MIN{ 1 };
-		inline constexpr const int32_t PACKETID_MAX{ std::numeric_limits<int32_t>::max() };
-
-		struct packet_header {
-			int32_t size{ 0 };
-			int32_t id{ 0 };
-			int32_t type{ 0 };
-		};
-
-		inline constexpr int32_t get_packet_size(size_t const bodySize)
-		{
-			// 4 packet size bytes aren't included vvvvvvv
-			return (sizeof(packet_header) - sizeof(int32_t)) + bodySize + 2;
-		}
-
-		/// @brief	Minimum possible size of an RCON packet.
-		inline constexpr const int32_t PACKETSZ_MIN{ sizeof(packet_header) + 2 };
-		/// @brief	Maximum number of bytes that can be sent in a single packet, before being split between multiple packets.
-		inline constexpr const int32_t PACKETSZ_MAX_SEND{ 4096 };
-
-		inline std::string bytes_to_string(std::vector<uint8_t> const& bytes)
-		{
-			std::string s{ bytes.size(), 0, std::allocator<char>() };
-
-			std::memcpy(const_cast<char*>(s.c_str()), bytes.data(), bytes.size());
-
-			return s;
-		}
-
-		class RconClient {
-			using buffer = std::vector<uint8_t>;
-
-			io_context ioContext;
-			tcp::socket socket;
-			int32_t current_packetid{ PACKETID_MIN };
-
-			/**
-			 * @brief	Gets the next pseudo-unique packet ID.
-			 * @returns	A pseudo-unique packet ID number.
-			 */
-			int32_t get_next_packet_id()
-			{
-				if (current_packetid == PACKETID_MAX)
-					current_packetid = PACKETID_MIN;
-				return current_packetid++;
-			}
-
-			/**
-			 * @brief			Creates a packet buffer from the specified header and body.
-			 * @param header  -	The pre-constructed packet header to use.
-			 * @param body	  -	The body string to use.
-			 * @returns			A buffer containing the packet's raw bytes.
-			 */
-			buffer build_packet(packet_header const& header, std::string const& body)
-			{
-				// create a buffer with 2 extra bytes for the packet terminator bytes
-				buffer buf(sizeof(packet_header) + body.size() + 2, 0, std::allocator<uint8_t>());
-
-				// copy the buffer header into the buffer
-				std::memcpy(&buf[0], &header, sizeof(packet_header));
-
-				// copy the buffer body into the buffer
-				std::memcpy(&buf[0] + sizeof(packet_header), body.c_str(), body.size());
-
-				return buf;
-			}
-
-			buffer build_terminator_packet(int32_t const id)
-			{
-				return build_packet(packet_header{ get_packet_size(0), id, (int32_t)PacketType::SERVERDATA_RESPONSE_VALUE }, "");
-			}
-
-			/**
-			 * @brief	Receives a single packet.
-			 * @returns	A pair containing the packet header and the packet body.
-			 */
-			std::pair<packet_header, buffer> recv()
-			{
-				// read the packet header
-				packet_header header{};
-				boost::asio::mutable_buffer buf(&header, sizeof(packet_header));
-				boost::asio::read(socket, buf); //< TODO: validate received byte count
-
-				// read the packet body
-				const auto bodySize{ header.size - (sizeof(packet_header) - sizeof(int32_t)) };
-				buffer body_buffer{ bodySize, 0, std::allocator<uint8_t>() };
-				boost::asio::read(socket, boost::asio::buffer(body_buffer)); //< TODO: validate received byte count
-
-				// remove the null terminators from the body buffer
-				body_buffer.erase(std::remove(body_buffer.begin(), body_buffer.end(), '\0'), body_buffer.end());
-
-				return std::make_pair(header, body_buffer);
-			}
-
-		public:
-			RconClient(std::string_view host, std::string_view port, std::string_view password) noexcept(false) : socket{ ioContext }
-			{
-				// resolve the target endpoint
-				const auto targets{ resolve_targets(ioContext, host, port) };
-
-				// connect the socket
-				try {
-					const auto endpoint{ boost::asio::connect(socket, targets) }; //< connect() throws on error
-
-					// TODO: write log message; successfully connected to endpointe
-				} catch (boost::system::system_error const& ex) {
-					throw make_exception("Failed to connect to \"", host, ':', port, "\". Original exception: ", ex.what());
-				}
-
-
-				// authenticate with the server
-				if (!authenticate(password)) {
-					// throw authentication failure exception
-					throw make_exception("Authentication failed!");
-				}
-
-				// TODO: write log message; successfully authenticated with server
-			}
-			~RconClient()
-			{
-				ioContext.run(); //< wait for async operations to finish
-				socket.close(); //< close the socket
-			}
-
-			std::string command(std::string const& command)
-			{
-				const auto packetId{ get_next_packet_id() };
-				const buffer packet{ build_packet(packet_header{ get_packet_size(command.size()), packetId, (int32_t)PacketType::SERVERDATA_EXECCOMMAND }, command) };
-
-				if (boost::asio::write(socket, boost::asio::buffer(packet)) != packet.size()) {
-					// TODO: write log message; failed to send packet
-					throw make_exception("Failed to send packet for command \"", command, "\"!");
-				}
-
-				const auto termPacketId{ get_next_packet_id() };
-				const buffer termPacket{ build_terminator_packet(termPacketId) };
-
-				if (boost::asio::write(socket, boost::asio::buffer(termPacket)) != termPacket.size()) {
-					// TODO: write log message; failed to send terminator packet
-					throw make_exception("Failed to send terminator packet for command \"", command, "\"!");
-				}
-
-				// receive all of the packets & concatenate them
-				std::stringstream ss;
-
-				for (std::pair<packet_header, buffer> response{ recv() }; response.first.id != termPacketId; response = recv()) {
-					ss << bytes_to_string(response.second);
-				}
-
-				return ss.str();
-			}
-
-			bool authenticate(std::string_view password)
-			{
-				const buffer p{ build_packet(packet_header{ get_packet_size(password.size()), 1, (int32_t)PacketType::SERVERDATA_AUTH }, password.data()) };
-
-				if (boost::asio::write(socket, boost::asio::buffer(p)) != p.size()) {
-					// TODO: write log message; failed to send authentication packet
-					return false;
-				}
-
-				// receive response
-				const auto& [auth_response_header, _] { recv() };
-
-				if (auth_response_header.id == -1) {
-					throw make_exception("Authentication refused by server! (Incorrect password)");
-				}
-				else return true;
-			}
-
-			void flush()
-			{
-				const auto bytes{ socket.available() };
-				if (bytes == 0) return;
-
-				buffer p{ bytes, 0, std::allocator<uint8_t>() };
-				boost::asio::read(socket, boost::asio::buffer(p));
-			}
-		};
-	}
-}
+};
 
 int main(const int argc, char** argv)
 {
+	// swap the std::clog buffer
+	const auto original_clog_rdbuf{ std::clog.rdbuf() };
+
+	// TODO: implement this properly:
+	std::clog.rdbuf(nullptr);
+
+	int rc{ -1 };
+
 	try {
 		const opt3::ArgManager args{ argc, argv,
 			// define capturing args:
@@ -281,22 +103,125 @@ int main(const int argc, char** argv)
 			opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, "remove-host"),
 		};
 
-		const auto host{ args.getv_any<opt3::Flag, opt3::Option>('H', "host", "hostname").value() };
-		const auto port{ args.getv_any<opt3::Flag, opt3::Option>('P', "port").value() };
-		const auto pass{ args.getv_any<opt3::Flag, opt3::Option>('p', "pass", "password").value() };
+		// get the executable's location & name
+		const auto& [programPath, programName] { env::PATH().resolve_split(argv[0]) };
 
-		net::rcon::RconClient client{ host, port, pass };
+		// -h|--help
+		if (args.empty() || args.check_any<opt3::Flag, opt3::Option>('h', "help")) {
+			std::cout << print_help(programName.generic_string());
+			rc = 0;
+			goto BREAK;
+		}
 
-		std::cout
-			<< client.command("listgamemodeproperties") << std::endl
-			;
+		main_impl(args); //< INVOKE MAIN IMPLEMENTATION
 
-		return 0;
+		rc = 0;
 	} catch (std::exception const& ex) {
 		std::cerr << csync.get_fatal() << ex.what() << std::endl;
-		return 1;
+		rc = 1;
 	} catch (...) {
 		std::cerr << csync.get_fatal() << "An undefined exception occurred!" << std::endl;
-		return 1;
+		rc = 1;
+	}
+
+BREAK:
+	std::clog.rdbuf(original_clog_rdbuf);
+
+	return rc;
+}
+
+void main_impl(opt3::ArgManager const& args)
+{
+	// -q|--quiet
+	const bool quiet{ args.check_any<opt3::Flag, opt3::Option>('q', "quiet") };
+
+	// -v|--version
+	if (args.check_any<opt3::Flag, opt3::Option>('v', "version")) {
+		if (!quiet) std::cout << "ARRCON v";
+		std::cout << ARRCON_VERSION_EXTENDED;
+		if (!quiet) std::cout << std::endl << ARRCON_COPYRIGHT;
+		std::cout << std::endl;
+		return;
+	}
+
+	// -n|--no-color
+	csync.setEnabled(!args.check_any<opt3::Flag, opt3::Option>('n', "no-color"));
+
+	// TODO: Move this elsewhere vvv
+	static constexpr char const* const DEFAULT_TARGET_HOST{ "127.0.0.1" };
+	static constexpr char const* const DEFAULT_TARGET_PORT{ "27015" };
+	static constexpr char const* const DEFAULT_TARGET_PASS{ "" };
+
+	// get the target server info
+	const std::string target_host{ args.getv_any<opt3::Flag, opt3::Option>('H', "host", "hostname").value_or(DEFAULT_TARGET_HOST) };
+	const std::string target_port{ args.getv_any<opt3::Flag, opt3::Option>('P', "port").value_or(DEFAULT_TARGET_PORT) };
+	const std::string target_pass{ args.getv_any<opt3::Flag, opt3::Option>('p', "pass", "password").value_or(DEFAULT_TARGET_PASS) };
+
+	// validate & log the target host information
+	std::clog << MessageHeader(LogLevel::Info) << "Target Host: \"" << target_host << ':' << target_port << '\"' << std::endl;
+
+	// initialize and connect the client
+	net::rcon::RconClient client{ target_host, target_port };
+
+	// authenticate with the server
+	if (!client.authenticate(target_pass)) {
+		throw make_exception("Authentication failed due to incorrect password!");
+	}
+
+	// get the list of commands from the commandline
+	std::vector<std::string> commands;
+
+	// get commands from STDIN
+	if (hasPendingDataSTDIN()) {
+		for (std::string buf; std::getline(std::cin, buf);) {
+			commands.emplace_back(buf);
+		}
+	}
+	// get commands from the commandline
+	if (const auto parameters{ args.getv_all<opt3::Parameter>() };
+		!parameters.empty()) {
+		commands.insert(commands.end(), parameters.begin(), parameters.end());
+	}
+
+	InputPrompt prompt{ target_host, !args.check_any<opt3::Flag, opt3::Option>('Q', "no-prompt") };
+
+	const bool commandsProvided{ !commands.empty() };
+	if (commandsProvided) {
+		// get the command delay, if one was specified
+		std::chrono::milliseconds commandDelay;
+		bool useCommandDelay{ false };
+		if (const auto waitArg{ args.getv_any<opt3::Flag, opt3::Option>('w', "wait") }; waitArg.has_value()) {
+			commandDelay = std::chrono::milliseconds{ str::tonumber<uint64_t>(waitArg.value()) };
+			useCommandDelay = true;
+		}
+
+		// oneshot mode
+		bool fst{ true };
+		for (const auto& command : commands) {
+			// wait for the specified number of milliseconds
+			if (useCommandDelay) {
+				if (fst) fst = false;
+				else std::this_thread::sleep_for(commandDelay);
+			}
+
+			// print the prompt & echo the command
+			if (!quiet)
+				std::cout << prompt << command << '\n';
+
+			// execute the command and print the result
+			std::cout << str::trim(client.command(command)) << std::endl;
+		}
+	}
+	if (!commandsProvided || args.check_any<opt3::Flag, opt3::Option>('i', "interactive")) {
+		// interactive mode
+		while (true) {
+			if (!quiet) std::cout << prompt;
+
+			std::string input;
+			std::getline(std::cin, input);
+
+			// execute the command and print the result
+			std::cout << str::trim(client.command(input)) << std::endl;
+		}
 	}
 }
