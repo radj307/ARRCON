@@ -7,7 +7,7 @@
 <p align="center">
 A lightweight cross-platform RCON client compatible with <b>any game using the Source RCON Protocol</b>.<br/>
 <p align="center">
-  <a href="https://github.com/radj307/ARRCON/releases"><img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/radj307/ARRCON?label=Latest+Version&style=flat"></a>
+  <a href="https://github.com/radj307/ARRCON/releases/latest"><img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/radj307/ARRCON?label=Latest+Version&style=flat"></a>
   <nobr/>
   <a href="https://github.com/awesome-selfhosted/awesome-selfhosted#games---administrative-utilities--control-panels"><img alt="Mentioned in Awesome-Selfhosted" src="https://awesome.re/mentioned-badge.svg"></a>
   <nobr/>
