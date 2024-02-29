@@ -138,15 +138,11 @@ namespace net::packet {
 		 */
 		serialized_packet serialize() const
 		{
-			serialized_packet s{ 0, 0, 0, {0x00} };
+			serialized_packet s{};
 			s.size = size;
 			s.id = id;
 			s.type = type;
-			#ifdef OS_WIN
-			strncpy_s(s.body, body.c_str(), body.size());
-			#else
-			strncpy(s.body, body.c_str(), body.size());
-			#endif
+			strncpy(s.body, body.c_str(), body.size()); //< don't use strncpy_s on windows or it sets the remaining packet bytes to -2 (0xFE) instead of 0
 			return s;
 		}
 
