@@ -6,7 +6,7 @@
 #include "net/rcon.hpp"
 #include "config.hpp"
 #include "helpers/print_input_prompt.h"
-#include "helpers/bukkit-colors.hpp"
+#include "helpers/bukkit-colors.h"
 
 // 307lib
 #include <opt3.hpp>					//< for commandline argument parser & manager
@@ -161,8 +161,8 @@ int main_impl(const int argc, char** argv)
 	// get the list of commands from the commandline
 	std::vector<std::string> commands;
 
-	// get commands from STDIN
 	if (hasPendingDataSTDIN()) {
+		// get commands from STDIN
 		for (std::string buf; std::getline(std::cin, buf);) {
 			commands.emplace_back(buf);
 		}
@@ -176,8 +176,7 @@ int main_impl(const int argc, char** argv)
 	const bool disablePromptAndEcho{ args.check_any<opt3::Flag, opt3::Option>('Q', "no-prompt") };
 
 	// Oneshot Mode
-	const bool oneshotCommandsWereSpecified{ !commands.empty() };
-	if (oneshotCommandsWereSpecified) {
+	if (!commands.empty()) {
 		// get the command delay, if one was specified
 		std::chrono::milliseconds commandDelay;
 		bool useCommandDelay{ false };
@@ -208,10 +207,10 @@ int main_impl(const int argc, char** argv)
 	}
 
 	bool disableExitKeyword{ args.check_any<opt3::Option>("no-exit") };
-	bool allowEmptyCommands{ args.check_any<opt3::Option>("allow-empty")};
+	bool allowEmptyCommands{ args.check_any<opt3::Option>("allow-empty") };
 
 	// Interactive mode
-	if (!oneshotCommandsWereSpecified || args.check_any<opt3::Flag, opt3::Option>('i', "interactive")) {
+	if (commands.empty() || args.check_any<opt3::Flag, opt3::Option>('i', "interactive")) {
 		if (!disablePromptAndEcho) {
 			std::cout << "Authentication Successful.\nUse <Ctrl + C>";
 			if (!disableExitKeyword) std::cout << " or type \"exit\"";
@@ -220,7 +219,7 @@ int main_impl(const int argc, char** argv)
 
 		// interactive mode input loop
 		while (true) {
-			if (!quiet) // print the shell-esque prompt
+			if (!quiet && !disablePromptAndEcho) // print the shell prompt
 				print_input_prompt(std::cout, target_host, csync);
 
 			// get user input
