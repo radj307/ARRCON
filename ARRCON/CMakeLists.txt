@@ -64,6 +64,11 @@ FetchContent_Declare(
 #set(BOOST_INCLUDE_LIBRARIES asio stacktrace)
 FetchContent_MakeAvailable(Boost)
 
+if (APPLE)
+	# Fix Boost::Stacktrace
+	target_compile_options(ARRCON PRIVATE "-D_GNU_SOURCE")
+endif()
+
 target_link_libraries(ARRCON PRIVATE TermAPI filelib Boost::asio)
 
 # Link Boost::Stacktrace
