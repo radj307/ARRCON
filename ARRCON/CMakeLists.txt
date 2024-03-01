@@ -1,4 +1,4 @@
-﻿# ARRCON/ARRCON
+# ARRCON/ARRCON
 cmake_minimum_required (VERSION 3.22)
 
 file(GLOB_RECURSE HEADERS
@@ -54,19 +54,29 @@ target_include_directories(ARRCON PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/rc")
 
 target_sources(ARRCON PRIVATE "${HEADERS}")
 
-# Setup libunistd
-if (WIN32)
-	include(FetchContent)
-	set(libunistd_name "libunistd")
-	FetchContent_Declare(
-		"${libunistd_name}"
-		GIT_REPOSITORY	https://github.com/robinrowe/libunistd.git
-		GIT_TAG			origin/master
-	)
-	FetchContent_MakeAvailable("${libunistd_name}")
-endif()
+# Setup Boost
+include(FetchContent)
+FetchContent_Declare(
+	Boost
+	GIT_REPOSITORY	https://github.com/boostorg/boost.git
+	GIT_TAG			boost-1.84.0
+)
+#set(BOOST_INCLUDE_LIBRARIES asio stacktrace)
+FetchContent_MakeAvailable(Boost)
 
-target_link_libraries(ARRCON PRIVATE TermAPI filelib "${libunistd_name}")
+target_link_libraries(ARRCON PRIVATE TermAPI filelib Boost::asio)
+
+# Link Boost::Stacktrace
+if(ARRCON_DISABLE_STACKTRACE)
+	# Disable stacktrace
+	target_link_libraries(ARRCON PRIVATE boost_stacktrace_noop)	
+elseif(MSVC)
+	# Use COM stacktrace
+	target_link_libraries(ARRCON PRIVATE boost_stacktrace_windbg ole32 dbgeng)
+else()
+	# Use POSIX backtrace
+	target_link_libraries(ARRCON PRIVATE boost_stacktrace_backtrace dl backtrace)
+endif()
 
 include(PackageInstaller)
 

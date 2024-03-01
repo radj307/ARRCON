@@ -10,8 +10,10 @@
 #include <cstdint>		//< for sized integer types
 #include <ostream>		//< for std::ostream
 
-#define LM_TIMESTAMP 29
-#define LM_LEVEL 12
+// the margin size for the timestamp
+#define LM_TIMESTAMP 17
+// the margin size for the message level
+#define LM_LEVEL 10
 
 enum class LogLevel : uint8_t {
 	/// @brief	Situational debugging information.
@@ -67,35 +69,31 @@ struct MessageHeader {
 	}
 };
 
-class LogWriter {
-	std::ostream& output_target;
-	LogLevel filter;
+/**
+ * @class	Logger
+ * @brief	Manager object that handles swapping the read buffer of std::clog with another one.
+ *			The read buffer is swapped back in the destructor.
+ */
+class Logger {
+	std::streambuf* original_clog_rdbuf;
 
 public:
-	LogWriter(std::ostream& os, LogLevel const filter) : output_target{ os }, filter{ filter } {}
-
-#pragma region Filter
-
-	// Gets the current message filter
-	LogLevel get_filter() const { return filter; }
-	// Sets the message filter
-	void set_filter(LogLevel const newFilter) { filter = newFilter; }
-	// Adds the specified log level to the message filter
-	LogLevel add_filter(LogLevel const level) { return filter = static_cast<LogLevel>(static_cast<int32_t>(filter) | static_cast<int32_t>(level)); }
-	// Removes the specified log level from the message filter
-	LogLevel remove_filter(LogLevel const level) { return filter = static_cast<LogLevel>(static_cast<int32_t>(filter) & ~static_cast<int32_t>(level)); }
-
-#pragma endregion Filter
-
-	/// @brief	Gets the log's read buffer
-	std::streambuf* rdbuf()
+	Logger(std::streambuf* rdbuf) : original_clog_rdbuf{ std::clog.rdbuf() }
 	{
-		return output_target.rdbuf();
+		// swap clog rdbuf
+		std::clog.rdbuf(rdbuf);
+	}
+	~Logger()
+	{
+		// reset clog rdbuf
+		std::clog.rdbuf(original_clog_rdbuf);
 	}
 
-	friend LogWriter& operator<<(LogWriter& lw, auto&& data)
+	/**
+	 * @brief	Prints a header line that indicates the segments of a log message.
+	 */
+	void print_header() const
 	{
-		lw.output_target << std::forward<decltype(data)>(data);
-		return lw;
+		std::clog << "YYYYMMDDTHHMMSS" << indent(LM_TIMESTAMP, 15) << "LEVEL" << indent(LM_LEVEL, 5) << "MESSAGE" << std::endl;
 	}
 };

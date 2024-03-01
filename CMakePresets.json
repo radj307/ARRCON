@@ -127,6 +127,9 @@
   ],
   "buildPresets": [
     {
+      "name": "default-build"
+    },
+    {
       "name": "release-clean",
       "hidden": true,
       "cleanFirst": true,

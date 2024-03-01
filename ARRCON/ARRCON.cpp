@@ -5,6 +5,8 @@
 // ARRCON
 #include "net/rcon.hpp"
 #include "config.hpp"
+#include "helpers/print_input_prompt.h"
+#include "helpers/bukkit-colors.hpp"
 
 // 307lib
 #include <opt3.hpp>					//< for commandline argument parser & manager
@@ -49,13 +51,16 @@ struct print_help {
 			<< "  -v, --version               Prints the current version number, then exits." << '\n'
 			<< "  -q, --quiet                 Silent/Quiet mode; prevents or minimizes console output." << '\n'
 			<< "  -i, --interactive           Starts an interactive command shell after sending any scripted commands." << '\n'
-			<< "  -w, --wait <ms>             Wait for \"<ms>\" milliseconds between sending each command in oneshot mode." << '\n'
-			<< "  -n, --no-color              Disable colorized console output." << '\n'
-			<< "  -Q, --no-prompt             Disables the prompt in interactive mode, and command echo in commandline mode." << '\n'
-			<< "      --print-env             Prints all recognized environment variables, their values, and descriptions." << '\n'
-			<< "      --write-ini             (Over)write the INI file with the default configuration values & exit." << '\n'
-			<< "      --update-ini            Writes the current configuration values to the INI file, and adds missing keys." << '\n'
-			<< "  -f, --file <file>           Load the specified file and run each line as a command." << '\n'
+			<< "  -w, --wait <ms>             Sets the number of milliseconds to wait between sending each queued command. Default: 0" << '\n'
+			<< "  -t, --timeout <ms>          Sets the number of milliseconds to wait for a response before timing out. Default: 3000" << '\n'
+			<< "  -n, --no-color              Disables colorized console output." << '\n'
+			<< "  -Q, --no-prompt             Disables the prompt in interactive mode and/or command echo in commandline mode." << '\n'
+			<< "      --no-exit               Disables handling the \"exit\" keyword in interactive mode." << '\n'
+			<< "      --allow-empty           Enables sending empty (whitespace-only) commands to the server in interactive mode." << '\n'
+			//	<< "      --print-env             Prints all recognized environment variables, their values, and descriptions." << '\n'
+			//	<< "      --write-ini             (Over)write the INI file with the default configuration values & exit." << '\n'
+			//	<< "      --update-ini            Writes the current configuration values to the INI file, and adds missing keys." << '\n'
+			//	<< "  -f, --file <file>           Load the specified file and run each line as a command." << '\n'
 			;
 	}
 };
@@ -63,76 +68,57 @@ struct print_help {
 // terminal color synchronizer
 color::sync csync{};
 
-void main_impl(opt3::ArgManager const&);
+int main_impl(const int, char**);
 
 int main(const int argc, char** argv)
 {
-	// swap the std::clog buffer
-	const auto original_clog_rdbuf{ std::clog.rdbuf() };
-
-	// TODO: implement this properly:
-	std::clog.rdbuf(nullptr);
-
-	int rc{ -1 };
-
 	try {
-		const opt3::ArgManager args{ argc, argv,
-			// define capturing args:
-			opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, 'H', "host", "hostname"),
-			opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, 'S', "saved"),
-			opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, 'P', "port"),
-			opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, 'p', "pass", "password"),
-			opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, 'w', "wait"),
-			opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, 'f', "file"),
-			opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, "save-host"),
-			opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, "remove-host"),
-		};
-
-		// get the executable's location & name
-		const auto& [programPath, programName] { env::PATH().resolve_split(argv[0]) };
-
-		// -h|--help
-		if (args.empty() || args.check_any<opt3::Flag, opt3::Option>('h', "help")) {
-			std::cout << print_help(programName.generic_string());
-			rc = 0;
-			goto BREAK;
-		}
-
-		main_impl(args); //< INVOKE MAIN IMPLEMENTATION
-
-		rc = 0;
+		return main_impl(argc, argv);
 	} catch (std::exception const& ex) {
 		std::cerr << csync.get_fatal() << ex.what() << std::endl;
-		rc = 1;
+
+		// try getting a stacktrace for this exception and print it
+		if (const auto* trace = boost::get_error_info<traced_exception>(ex))
+			std::cerr << "Stacktrace:\n" << *trace;
+
+		return 1;
 	} catch (...) {
-		std::cerr << csync.get_fatal() << "An undefined exception occurred!" << std::endl;
-		rc = 1;
+		std::cerr << csync.get_fatal() << "An undefined error occurred!" << std::endl;
+		return 1;
 	}
-
-BREAK:
-	// reset clog buffer to its original state
-	std::clog.rdbuf(original_clog_rdbuf);
-
-	return rc;
 }
 
-struct InputPrompt {
-	std::string hostname;
-	bool enable;
-
-	InputPrompt(std::string const& hostname, bool const enable) : hostname{ hostname }, enable{ enable } {}
-
-	friend std::ostream& operator<<(std::ostream& os, const InputPrompt& p)
-	{
-		if (!p.enable)
-			return os;
-
-		return os << csync(color::green) << csync(color::bold) << "RCON@" << p.hostname << '>' << csync(color::reset_all) << ' ';
-	}
-};
-
-void main_impl(opt3::ArgManager const& args)
+int main_impl(const int argc, char** argv)
 {
+	const opt3::ArgManager args{ argc, argv,
+		// define capturing args:
+		opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, 'H', "host", "hostname"),
+		opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, 'S', "saved"),
+		opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, 'P', "port"),
+		opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, 'p', "pass", "password"),
+		opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, 'w', "wait"),
+		opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, 't', "timeout"),
+		opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, 'f', "file"),
+		opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, "save-host"),
+		opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, "remove-host"),
+	};
+
+	// get the executable's location & name
+	const auto& [programPath, programName] { env::PATH().resolve_split(argv[0]) };
+	config::Locator locator{ programPath, std::filesystem::path{ programName }.replace_extension() };
+
+	/// setup the log
+	// log file stream
+	std::ofstream logfs(locator.from_extension(".log"));
+	// log manager object
+	Logger logManager{ logfs.rdbuf() };
+
+	// -h|--help
+	if (args.empty() || args.check_any<opt3::Flag, opt3::Option>('h', "help")) {
+		std::cout << print_help(programName.generic_string());
+		return 0;
+	}
+
 	// -q|--quiet
 	const bool quiet{ args.check_any<opt3::Flag, opt3::Option>('q', "quiet") };
 
@@ -142,7 +128,7 @@ void main_impl(opt3::ArgManager const& args)
 		std::cout << ARRCON_VERSION_EXTENDED;
 		if (!quiet) std::cout << std::endl << ARRCON_COPYRIGHT;
 		std::cout << std::endl;
-		return;
+		return 0;
 	}
 
 	// -n|--no-color
@@ -164,6 +150,9 @@ void main_impl(opt3::ArgManager const& args)
 	// initialize and connect the client
 	net::rcon::RconClient client{ target_host, target_port };
 
+	// -t|--timeout
+	client.set_timeout(args.castgetv_any<int, opt3::Flag, opt3::Option>([](auto&& arg) { return str::stoi(std::forward<decltype(arg)>(arg)); }, 't', "timeout").value_or(3000));
+
 	// authenticate with the server
 	if (!client.authenticate(target_pass)) {
 		throw make_exception("Authentication failed due to incorrect password!");
@@ -184,11 +173,11 @@ void main_impl(opt3::ArgManager const& args)
 		commands.insert(commands.end(), parameters.begin(), parameters.end());
 	}
 
-	// prompt printer object "RCON@...>"
-	InputPrompt prompt{ target_host, !args.check_any<opt3::Flag, opt3::Option>('Q', "no-prompt") };
+	const bool disablePromptAndEcho{ args.check_any<opt3::Flag, opt3::Option>('Q', "no-prompt") };
 
-	const bool commandsProvided{ !commands.empty() };
-	if (commandsProvided) {
+	// Oneshot Mode
+	const bool oneshotCommandsWereSpecified{ !commands.empty() };
+	if (oneshotCommandsWereSpecified) {
 		// get the command delay, if one was specified
 		std::chrono::milliseconds commandDelay;
 		bool useCommandDelay{ false };
@@ -206,30 +195,63 @@ void main_impl(opt3::ArgManager const& args)
 				else std::this_thread::sleep_for(commandDelay);
 			}
 
-			// print the prompt & echo the command
-			if (!quiet)
-				std::cout << prompt << command << '\n';
+			if (!quiet) {
+				if (!disablePromptAndEcho) // print the shell prompt
+					print_input_prompt(std::cout, target_host, csync);
+				// echo the command
+				std::cout << command << '\n';
+			}
 
 			// execute the command and print the result
 			std::cout << str::trim(client.command(command)) << std::endl;
 		}
 	}
-	if (!commandsProvided || args.check_any<opt3::Flag, opt3::Option>('i', "interactive")) {
-		if (prompt.enable) {
-			std::cout << "Authentication Successful.\nUse <Ctrl + C> ";
 
-			std::cout << "to quit.\n";
+	bool disableExitKeyword{ args.check_any<opt3::Option>("no-exit") };
+	bool allowEmptyCommands{ args.check_any<opt3::Option>("allow-empty")};
+
+	// Interactive mode
+	if (!oneshotCommandsWereSpecified || args.check_any<opt3::Flag, opt3::Option>('i', "interactive")) {
+		if (!disablePromptAndEcho) {
+			std::cout << "Authentication Successful.\nUse <Ctrl + C>";
+			if (!disableExitKeyword) std::cout << " or type \"exit\"";
+			std::cout << " to quit.\n";
 		}
 
-		// interactive mode
+		// interactive mode input loop
 		while (true) {
-			if (!quiet) std::cout << prompt;
+			if (!quiet) // print the shell-esque prompt
+				print_input_prompt(std::cout, target_host, csync);
 
-			std::string input;
-			std::getline(std::cin, input);
+			// get user input
+			std::string str;
+			std::getline(std::cin, str);
 
-			// execute the command and print the result
-			std::cout << str::trim(client.command(input)) << std::endl;
+			// validate the input
+			if (!allowEmptyCommands && str::trim(str).empty()) {
+				std::cerr << csync(color::cyan) << "[not sent: empty]" << csync() << '\n';
+				continue;
+			}
+			// check for the exit keyword
+			else if (!disableExitKeyword && str == "exit")
+				break; //< exit on keyword input
+
+			// send the command and get the response
+			str = str::trim(client.command(str));
+
+			if (str.empty()) {
+				// response is empty
+				std::cerr << csync(color::orange) << "[no response]" << csync() << '\n';
+			}
+			else {
+				// replace minecraft bukkit color codes with ANSI sequences
+				str = mc_color::replace_color_codes(str);
+
+				// print the response
+				std::cout << str << std::endl;
+			}
 		}
 	}
+
+	return 0;
 }
