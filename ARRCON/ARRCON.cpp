@@ -264,6 +264,8 @@ int main_impl(const int argc, char** argv)
 	// validate & log the target host information
 	std::clog << MessageHeader(LogLevel::Info) << "Target Host: \"" << target.host << ':' << target.port << '\"' << std::endl;
 
+	// TODO: add a check for blank passwords
+
 	// initialize and connect the client
 	net::rcon::RconClient client{ target.host, target.port };
 
@@ -342,6 +344,14 @@ int main_impl(const int argc, char** argv)
 			// get user input
 			std::string str;
 			std::getline(std::cin, str);
+
+			// check for buffered data
+			if (const auto& buffer_size{ client.buffer_size() }; buffer_size > 0) {
+				std::clog << MessageHeader(LogLevel::Warning) << "The buffer contains " << buffer_size << " unexpected bytes! Dumping the buffer to STDOUT." << std::endl;
+
+				// print the buffered data before continuing
+				std::cout << str::trim(net::rcon::bytes_to_string(client.flush())) << std::endl;
+			}
 
 			// validate the input
 			if (!allowEmptyCommands && str::trim(str).empty()) {

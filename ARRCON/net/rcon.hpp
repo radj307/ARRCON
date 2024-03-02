@@ -304,14 +304,15 @@ namespace net {
 				else return true;
 			}
 
-			/// @brief	Empties the buffer and discards its contents.
-			void flush()
+			/// @brief	Empties the buffer and returns its contents.
+			buffer flush()
 			{
 				const auto bytes{ socket.available() };
 				if (bytes == 0) return;
 
 				buffer p{ bytes, 0, std::allocator<uint8_t>() };
 				boost::asio::read(socket, boost::asio::buffer(p));
+				return p;
 			}
 
 			/**
@@ -321,6 +322,15 @@ namespace net {
 			void set_timeout(int timeout_ms)
 			{
 				socket.set_option(boost::asio::detail::socket_option::integer<SOL_SOCKET, SO_RCVTIMEO>{ timeout_ms });
+			}
+
+			/**
+			 * @brief		Gets the current size of the socket's data buffer.
+			 * @returns		The number of bytes that haven't been read from the buffer yet.
+			 */
+			size_t buffer_size()
+			{
+				return socket.available();
 			}
 		};
 	}
