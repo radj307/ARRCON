@@ -7,6 +7,7 @@
 #include "config.hpp"
 #include "helpers/print_input_prompt.h"
 #include "helpers/bukkit-colors.h"
+#include "helpers/FileLocator.hpp"
 
 // 307lib
 #include <opt3.hpp>					//< for commandline argument parser & manager
@@ -41,10 +42,10 @@ struct print_help {
 			<< "  -H, --host  <Host>          RCON Server IP/Hostname." << '\n'//"  (Default: \"" /*<< Global.DEFAULT_TARGET.hostname*/ << "\")" << '\n'
 			<< "  -P, --port  <Port>          RCON Server Port." << '\n'//"         (Default: \"" /*<< Global.DEFAULT_TARGET.port*/ << "\")" << '\n'
 			<< "  -p, --pass  <Pass>          RCON Server Password." << '\n'
-			//<< "  -S, --saved <Host>          Use a saved host's connection information, if it isn't overridden by arguments." << '\n'
-			//<< "      --save-host <H>         Create a new saved host named \"<H>\" using the current [Host/Port/Pass] value(s)." << '\n'
-			//<< "      --remove-host <H>       Remove an existing saved host named \"<H>\" from the list, then exit." << '\n'
-			//<< "  -l, --list-hosts            Show a list of all saved hosts, then exit." << '\n'
+			<< "  -S, --saved <Host>          Use a saved host's connection information, if it isn't overridden by arguments." << '\n'
+			<< "      --save-host <H>         Create a new saved host named \"<H>\" using the current [Host/Port/Pass] value(s)." << '\n'
+			<< "      --remove-host <H>       Remove an existing saved host named \"<H>\" from the list, then exit." << '\n'
+			<< "  -l, --list-hosts            Show a list of all saved hosts, then exit." << '\n'
 			<< '\n'
 			<< "OPTIONS:\n"
 			<< "  -h, --help                  Show this help display, then exits." << '\n'
@@ -77,9 +78,13 @@ int main(const int argc, char** argv)
 	} catch (std::exception const& ex) {
 		std::cerr << csync.get_fatal() << ex.what() << std::endl;
 
+	#ifndef OS_MAC //< see exceptions.hpp for more information on MacOS stacktrace compat
+
 		// try getting a stacktrace for this exception and print it
 		if (const auto* trace = boost::get_error_info<traced_exception>(ex))
 			std::cerr << "Stacktrace:\n" << *trace;
+
+	#endif
 
 		return 1;
 	} catch (...) {
@@ -87,6 +92,10 @@ int main(const int argc, char** argv)
 		return 1;
 	}
 }
+
+static constexpr char const* const DEFAULT_TARGET_HOST{ "127.0.0.1" };
+static constexpr char const* const DEFAULT_TARGET_PORT{ "27015" };
+static constexpr char const* const DEFAULT_TARGET_PASS{ "" };
 
 int main_impl(const int argc, char** argv)
 {
@@ -105,11 +114,11 @@ int main_impl(const int argc, char** argv)
 
 	// get the executable's location & name
 	const auto& [programPath, programName] { env::PATH().resolve_split(argv[0]) };
-	config::Locator locator{ programPath, std::filesystem::path{ programName }.replace_extension() };
+	FileLocator locator{ programPath, std::filesystem::path{ programName }.replace_extension() };
 
 	/// setup the log
 	// log file stream
-	std::ofstream logfs(locator.from_extension(".log"));
+	std::ofstream logfs{ locator.from_extension(".log") };
 	// log manager object
 	Logger logManager{ logfs.rdbuf() };
 
@@ -134,27 +143,135 @@ int main_impl(const int argc, char** argv)
 	// -n|--no-color
 	csync.setEnabled(!args.check_any<opt3::Flag, opt3::Option>('n', "no-color"));
 
-	// TODO: Move this elsewhere vvv
-	static constexpr char const* const DEFAULT_TARGET_HOST{ "127.0.0.1" };
-	static constexpr char const* const DEFAULT_TARGET_PORT{ "27015" };
-	static constexpr char const* const DEFAULT_TARGET_PASS{ "" };
+	/// Select a target server & operate on the hosts file
+	const auto hostsfile_path{ locator.from_extension(".hosts") };
+	std::optional<config::SavedHosts> hostsfile;
 
-	// get the target server info
-	const std::string target_host{ args.getv_any<opt3::Flag, opt3::Option>('H', "host", "hostname").value_or(DEFAULT_TARGET_HOST) };
-	const std::string target_port{ args.getv_any<opt3::Flag, opt3::Option>('P', "port").value_or(DEFAULT_TARGET_PORT) };
-	const std::string target_pass{ args.getv_any<opt3::Flag, opt3::Option>('p', "pass", "password").value_or(DEFAULT_TARGET_PASS) };
+	// --rm-host|--remove-host
+	if (const auto& arg_removeHost{ args.getv_any<opt3::Option>("rm-host", "remove-host") }; arg_removeHost.has_value()) {
+		if (!std::filesystem::exists(hostsfile_path))
+			throw make_exception("The hosts file hasn't been created yet. (Use \"--save-host\" to create one)");
+
+		// load the hosts file
+		ini::INI ini(hostsfile_path);
+
+		// remove the specified entry
+		if (const auto it{ ini.find(arg_removeHost.value()) }; it != ini.end())
+			ini.erase(it);
+		else
+			throw make_exception("The specified saved host \"", arg_removeHost.value(), "\" doesn't exist! (Use \"--list-hosts\" to see a list of saved hosts.)");
+
+		// save the hosts file
+		if (ini.write(hostsfile_path)) {
+			std::cout << "Successfully removed \"" << csync(color::yellow) << arg_removeHost.value() << csync() << "\" from the hosts list.\n";
+			return 0;
+		}
+		else throw make_exception("Failed to save hosts file to ", hostsfile_path, '!');
+	}
+	// --list-hosts
+	else if (args.check_any<opt3::Option>("list-hosts", "list-host")) {
+		if (!std::filesystem::exists(hostsfile_path))
+			throw make_exception("The hosts file hasn't been created yet. (Use \"--save-host\" to create one)");
+
+		// load the hosts file
+		if (!hostsfile.has_value())
+			hostsfile = config::SavedHosts(hostsfile_path);
+
+		if (hostsfile->empty())
+			throw make_exception("The hosts file doesn't have any entries yet. (Use \"--save-host\" to create one)");
+
+		// if quiet was specified, get the length of the longest saved host name
+		size_t longestNameLength{};
+		if (quiet) {
+			for (const auto& [name, _] : *hostsfile) {
+				if (name.size() > longestNameLength)
+					longestNameLength = name.size();
+			}
+		}
+
+		// print out the hosts list
+		for (const auto& [name, info] : *hostsfile) {
+			if (!quiet) {
+				std::cout
+					<< csync(color::yellow) << name << csync() << '\n'
+					<< "    Hostname:  \"" << info.host << "\"\n"
+					<< "    Port:      \"" << info.port << "\"\n"
+					;
+			}
+			else {
+				std::cout
+					<< csync(color::yellow) << name << csync()
+					<< indent(longestNameLength + 2, name.size())
+					<< "( " << info.host << ':' << info.port << " )\n"
+					;
+			}
+		}
+
+		return 0;
+	}
+
+	/// get the target connection info:
+	net::rcon::target_info target{ DEFAULT_TARGET_HOST, DEFAULT_TARGET_PORT, DEFAULT_TARGET_PASS };
+
+	// -S|--saved|--server
+	if (const auto& arg_saved{ args.getv_any<opt3::Flag, opt3::Option>('S', "saved", "server") }; arg_saved.has_value()) {
+		if (!std::filesystem::exists(hostsfile_path))
+			throw make_exception("The hosts file hasn't been created yet. (Use \"--save-host\" to create one)");
+
+		// load the hosts file
+		if (!hostsfile.has_value())
+			hostsfile = config::SavedHosts(hostsfile_path);
+
+		// try getting the specified saved target's info
+		if (const auto savedTarget{ hostsfile->get_host(arg_saved.value()) }; savedTarget.has_value()) {
+			target = savedTarget.value();
+		}
+		else throw make_exception("The specified saved host \"", arg_saved.value(), "\" doesn't exist! (Use \"--list-hosts\" to see a list of saved hosts.)");
+	}
+	// -H|--host|--hostname
+	if (const auto& arg_hostname{ args.getv_any<opt3::Flag, opt3::Option>('H', "host", "hostname") }; arg_hostname.has_value())
+		target.host = arg_hostname.value();
+	// -P|--port
+	if (const auto& arg_port{ args.getv_any<opt3::Flag, opt3::Option>('P', "port") }; arg_port.has_value())
+		target.port = arg_port.value();
+	// -p|--pass|--password
+	if (const auto& arg_password{ args.getv_any<opt3::Flag, opt3::Option>('p', "pass", "password") }; arg_password.has_value())
+		target.pass = arg_password.value();
+
+	// --save-host
+	if (const auto& arg_saveHost{ args.getv_any<opt3::Option>("save-host") }; arg_saveHost.has_value()) {
+		// load the hosts file
+		if (!hostsfile.has_value()) {
+			hostsfile = std::filesystem::exists(hostsfile_path)
+				? config::SavedHosts(hostsfile_path)
+				: config::SavedHosts();
+		}
+
+		// TODO: Improve feedback when target already exists, maybe prompt the user if changes are going to be made
+		// set the target
+		(*hostsfile)[arg_saveHost.value()] = target;
+
+		// write to disk
+		ini::INI ini;
+		hostsfile->export_to(ini);
+		if (ini.write(hostsfile_path)) {
+			std::cout << "Successfully added \"" << csync(color::yellow) << arg_saveHost.value() << csync() << "\" to the hosts list.\n";
+			return 0;
+		}
+		else throw make_exception("Failed to save hosts file to ", hostsfile_path, '!');
+	}
 
 	// validate & log the target host information
-	std::clog << MessageHeader(LogLevel::Info) << "Target Host: \"" << target_host << ':' << target_port << '\"' << std::endl;
+	std::clog << MessageHeader(LogLevel::Info) << "Target Host: \"" << target.host << ':' << target.port << '\"' << std::endl;
 
 	// initialize and connect the client
-	net::rcon::RconClient client{ target_host, target_port };
+	net::rcon::RconClient client{ target.host, target.port };
 
 	// -t|--timeout
 	client.set_timeout(args.castgetv_any<int, opt3::Flag, opt3::Option>([](auto&& arg) { return str::stoi(std::forward<decltype(arg)>(arg)); }, 't', "timeout").value_or(3000));
 
 	// authenticate with the server
-	if (!client.authenticate(target_pass)) {
+	if (!client.authenticate(target.pass)) {
 		throw make_exception("Authentication failed due to incorrect password!");
 	}
 
@@ -196,7 +313,7 @@ int main_impl(const int argc, char** argv)
 
 			if (!quiet) {
 				if (!disablePromptAndEcho) // print the shell prompt
-					print_input_prompt(std::cout, target_host, csync);
+					print_input_prompt(std::cout, target.host, csync);
 				// echo the command
 				std::cout << command << '\n';
 			}
@@ -220,7 +337,7 @@ int main_impl(const int argc, char** argv)
 		// interactive mode input loop
 		while (true) {
 			if (!quiet && !disablePromptAndEcho) // print the shell prompt
-				print_input_prompt(std::cout, target_host, csync);
+				print_input_prompt(std::cout, target.host, csync);
 
 			// get user input
 			std::string str;

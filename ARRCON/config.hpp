@@ -1,63 +1,97 @@
 #pragma once
-// 307lib
-#include <env.hpp>
+#include "logging.hpp"
+#include "net/target_info.hpp"
+
+// 307lib::filelib
+#include <simpleINI.hpp>	//< for ini::INI
 
 // STL
-#include <filesystem>	//< for std::filesystem::path
-#include <simpleINI.hpp>//< for ini::INI
+#include <filesystem>		//< for std::filesystem::path
+#include <map>				//< for std::map
 
 namespace config {
 	inline constexpr const auto HEADER_APPERANCE{ "appearance" };
-	inline constexpr const auto HEADER_TIMING{ "timing" };
 	inline constexpr const auto HEADER_TARGET{ "target" };
 	inline constexpr const auto HEADER_MISC{ "miscellaneous" };
 
-	/**
-	 * @class	Locator
-	 * @brief	Used to locate ARRCON's config files.
-	 */
-	class Locator {
-		std::filesystem::path program_location;
-		std::string name_no_ext;
-		std::filesystem::path env_path;
-		std::filesystem::path home_path;
+	class SavedHosts {
+		using target_info = net::rcon::target_info;
+		using map = std::map<std::string, target_info>;
+
+		map hosts;
 
 	public:
-		Locator(const std::filesystem::path& program_dir, const std::string& program_name_no_extension) :
-			program_location{ program_dir },
-			name_no_ext{ program_name_no_extension },
-			env_path{ env::getvar(name_no_ext + "_CONFIG_DIR").value_or("") },
-			home_path{ env::get_home() }
+		SavedHosts() = default;
+		SavedHosts(ini::INI const& ini)
 		{
+			import_from(ini);
 		}
-		Locator(const std::filesystem::path& program_dir, const std::filesystem::path& program_name_no_extension) :
-			Locator(program_dir, program_name_no_extension.generic_string())
+		SavedHosts(std::filesystem::path const& path) : SavedHosts(ini::INI(path)) {}
+
+		auto begin() const { return hosts.begin(); }
+		auto end() const { return hosts.end(); }
+		bool empty() const noexcept { return hosts.empty(); }
+		size_t size() const noexcept { return hosts.size(); }
+
+		void import_from(ini::INI const& ini)
 		{
+			if (ini.contains("")) {
+				// warn about global keys
+				const auto globalKeysCount{ ini.at("").size() };
+				std::clog << MessageHeader(LogLevel::Warning) << "Hosts file contains " << globalKeysCount << " key" << (globalKeysCount == 1 ? "" : "s") << " that aren't associated with a saved host!" << std::endl;
+			}
+
+			// enumerate entries
+			for (const auto& [entryKey, entryContent] : ini) {
+				// enumerate key-value pairs
+				for (const auto& [key, value] : entryContent) {
+					const std::string keyLower{ str::tolower(key) };
+
+					if (str::equalsAny<false>(keyLower, "sHost")) {
+						hosts[entryKey].host = value;
+
+						std::clog << MessageHeader(LogLevel::Trace) << '[' << entryKey << ']' << " Imported hostname \"" << value << '\"' << std::endl;
+					}
+					else if (str::equalsAny<false>(keyLower, "sPort")) {
+						hosts[entryKey].port = value;
+
+						std::clog << MessageHeader(LogLevel::Trace) << '[' << entryKey << ']' << " Imported port \"" << value << '\"' << std::endl;
+					}
+					else if (str::equalsAny<false>(keyLower, "sPass")) {
+						hosts[entryKey].pass = value;
+
+						std::clog << MessageHeader(LogLevel::Trace) << '[' << entryKey << ']' << " Imported password \"" << std::string(value.size(), '*') << '\"' << std::endl;
+					}
+					else {
+						std::clog << MessageHeader(LogLevel::Warning) << '[' << entryKey << ']' << " Skipped unrecognized key \"" << key << "\"" << std::endl;
+					}
+				}
+			}
+		}
+		void export_to(ini::INI& ini) const
+		{
+			for (const auto& [name, info] : hosts) {
+				ini[name] = ini::Section{
+					std::make_pair("sHost", info.host),
+					std::make_pair("sPort", info.port),
+					std::make_pair("sPass", info.pass),
+				};
+
+				std::clog << MessageHeader(LogLevel::Trace) << '[' << name << ']' << " was exported successfully." << std::endl;
+			}
 		}
 
-		/**
-		 * @brief		Retrieves the target location of the given file extension appended to the program name. (Excluding extension, if applicable.)
-		 * @param ext	The file extension of the target file.
-		 * @returns		std::filesystem::path
-		 *\n			This is NOT guaranteed to exist! If no valid config file was found, the .config directory in the user's home directory is returned.
-		 */
-		std::filesystem::path from_extension(const std::string& ext) const
+		std::optional<target_info> get_host(std::string const& name) const
 		{
-			if (ext.empty())
-				throw make_exception("Empty extension passed to Locator::from_extension()!");
-			std::string target{ name_no_ext + ((ext.front() != '.') ? ("." + ext) : ext) };
-			std::filesystem::path path;
-			// 1:  check the environment
-			if (!env_path.empty()) {
-				path = env_path / target;
-				return path;
+			if (const auto& it{ hosts.find(name) }; it != hosts.end()) {
+				return it->second;
 			}
-			// 2:  check the program directory. (support portable versions by checking this before the user's home dir)
-			if (path = program_location / target; std::filesystem::exists(path))
-				return path;
-			// 3:  user's home directory:
-			path = home_path / ".config" / name_no_ext / target;
-			return path; // return even if it doesn't exist
+			else return std::nullopt;
+		}
+
+		auto& operator[](std::string const& name)
+		{
+			return hosts[name];
 		}
 	};
 }

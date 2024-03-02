@@ -1,8 +1,14 @@
 ﻿{
-  "version": 2,
+  "version": 4,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 22,
+    "patch": 0
+  },
   "configurePresets": [
+    // Shared
     {
-      "name": "default",
+      "name": "base",
       "hidden": true,
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
@@ -16,96 +22,11 @@
       }
     },
 
+    // Windows
     {
-      "name": "Debug",
+      "name": "win-default",
+      "inherits": "base",
       "hidden": true,
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Debug",
-        "ARRCON_ENABLE_ADDITIONAL_RESOURCES": false,
-        "ARRCON_ENABLE_TESTING": true
-      }
-    },
-    {
-      "name": "RelWithDebInfo",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "RelWithDebInfo",
-        "ARRCON_ENABLE_ADDITIONAL_RESOURCES": false,
-        "ARRCON_ENABLE_TESTING": true
-      }
-    },
-    {
-      "name": "Release",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "Release"
-      }
-    },
-    {
-      "name": "MinSizeRel",
-      "hidden": true,
-      "cacheVariables": {
-        "CMAKE_BUILD_TYPE": "MinSizeRel"
-      }
-    },
-
-    {
-      "name": "linux-default",
-      "hidden": true,
-      "inherits": "default",
-      "displayName": "Linux",
-      "description": "Target the Windows Subsystem for Linux (WSL) or a remote Linux system.",
-      "generator": "Ninja",
-      "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Linux" ] },
-        "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": { "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}" }
-      }
-    },
-    {
-      "name": "linux-debug",
-      "hidden": false,
-      "inherits": [ "linux-default", "Debug" ],
-      "displayName": "Linux Debug"
-    },
-    {
-      "name": "linux-release",
-      "hidden": false,
-      "inherits": [ "linux-default", "Release" ],
-      "displayName": "Linux Release"
-    },
-
-    {
-      "name": "macos-default",
-      "hidden": true,
-      "inherits": "default",
-      "displayName": "macOS",
-      "description": "Target a remote macOS system with Ninja",
-      "generator": "Ninja",
-      "vendor": {
-        "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "macOS" ] },
-        "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": { "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}" }
-      }
-    },
-    {
-      "name": "macos-debug",
-      "hidden": false,
-      "inherits": [ "macos-default", "Debug" ],
-      "displayName": "macOS Debug"
-    },
-    {
-      "name": "macos-release",
-      "hidden": false,
-      "inherits": [ "macos-default", "Release" ],
-      "displayName": "macOS Release"
-    },
-
-    {
-      "name": "windows-default",
-      "hidden": true,
-      "inherits": "default",
-      "displayName": "Windows x64",
-      "description": "Target Windows with the Visual Studio development environment.",
-      "generator": "Ninja",
       "architecture": {
         "value": "x64",
         "strategy": "external"
@@ -113,40 +34,68 @@
       "vendor": { "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Windows" ] } }
     },
     {
-      "name": "windows-debug",
-      "hidden": false,
-      "inherits": [ "windows-default", "Debug" ],
-      "displayName": "Windows x64 Debug"
+      "name": "win-debug",
+      "inherits": "win-default",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
     },
     {
-      "name": "windows-release",
-      "hidden": false,
-      "inherits": [ "windows-default", "Release" ],
-      "displayName": "Windows x64 Release"
-    }
-  ],
-  "buildPresets": [
-    {
-      "name": "default-build"
+      "name": "win-release",
+      "inherits": "win-default",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
     },
+
+    // Linux
     {
-      "name": "release-clean",
+      "name": "linux-default",
+      "inherits": "base",
       "hidden": true,
-      "cleanFirst": true,
-      "verbose": false,
-      "jobs": 4
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "Linux" ] },
+        "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": { "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}" }
+      }
+    },
+    {
+      "name": "linux-debug",
+      "inherits": "linux-default",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
     },
     {
       "name": "linux-release",
-      "inherits": "release-clean",
-      "configurePreset": "linux-release",
-      "displayName": "Clean Release"
+      "inherits": "linux-default",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+
+    // MacOS
+    {
+      "name": "macos-default",
+      "inherits": "base",
+      "hidden": true,
+      "vendor": {
+        "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "macOS" ] },
+        "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": { "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}" }
+      }
     },
     {
-      "name": "windows-x64-release",
-      "inherits": "release-clean",
-      "configurePreset": "windows-release",
-      "displayName": "Clean Release"
+      "name": "macos-debug",
+      "inherits": "macos-default",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "macos-release",
+      "inherits": "macos-default",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
     }
   ]
 }
