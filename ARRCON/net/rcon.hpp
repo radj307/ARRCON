@@ -308,7 +308,7 @@ namespace net {
 			buffer flush()
 			{
 				const auto bytes{ socket.available() };
-				if (bytes == 0) return;
+				if (bytes == 0) return {};
 
 				buffer p{ bytes, 0, std::allocator<uint8_t>() };
 				boost::asio::read(socket, boost::asio::buffer(p));

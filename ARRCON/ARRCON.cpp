@@ -345,7 +345,7 @@ int main_impl(const int argc, char** argv)
 			std::string str;
 			std::getline(std::cin, str);
 
-			// check for buffered data
+			// check for data remaining in the socket's buffer from previous commands
 			if (const auto& buffer_size{ client.buffer_size() }; buffer_size > 0) {
 				std::clog << MessageHeader(LogLevel::Warning) << "The buffer contains " << buffer_size << " unexpected bytes! Dumping the buffer to STDOUT." << std::endl;
 
