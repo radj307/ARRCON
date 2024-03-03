@@ -10,6 +10,8 @@ file(GLOB_RECURSE SRCS
 	"*.c*"
 )
 
+string(TIMESTAMP _current_year "%Y")
+
 file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/rc")
 if (WIN32)
 	include(ResourceMaker)
@@ -17,7 +19,7 @@ if (WIN32)
 	MAKE_STRINGRC_VERSIONINFO(
 		_arrcon_stringrc_versioninfo
 		"${ARRCON_VERSION}"
-		"Copyright © 2022 by radj307"
+		"Copyright © ${_current_year} by radj307"
 		"radj307"
 		"ARRCON"
 		"Commandline client for communicating with servers using the Source RCON Protocol."
@@ -32,7 +34,7 @@ endif()
 
 MAKE_VERSION_HEADER("${CMAKE_CURRENT_BINARY_DIR}/rc/version.h" ARRCON "${ARRCON_VERSION_EXTENDED}")
 include(CopyrightMaker)
-MAKE_COPYRIGHT_HEADER("${CMAKE_CURRENT_BINARY_DIR}/rc/copyright.h" ARRCON 2022 radj307)
+MAKE_COPYRIGHT_HEADER("${CMAKE_CURRENT_BINARY_DIR}/rc/copyright.h" ARRCON ${_current_year} radj307)
 
 file(GLOB RESOURCES
 	CONFIGURE_DEPENDS
