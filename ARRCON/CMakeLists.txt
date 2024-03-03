@@ -72,20 +72,21 @@ target_link_libraries(ARRCON PRIVATE
 	Boost::asio
 )
 
-# Link Boost::Stacktrace
-# see https://www.boost.org/doc/libs/1_81_0/doc/html/stacktrace/configuration_and_build.html
-if(ARRCON_DISABLE_STACKTRACE OR CMAKE_BUILD_TYPE STREQUAL "Release")
-	# Disable stacktrace
-	target_link_libraries(ARRCON PRIVATE boost_stacktrace_noop)
-elseif(MSVC)
-	# Use COM stacktrace
-	target_link_libraries(ARRCON PRIVATE boost_stacktrace_windbg ole32 dbgeng)
-elseif(APPLE)
-	# Use addr2line
-	target_link_libraries(ARRCON PRIVATE boost_stacktrace_basic libdl)
-else()
-	# Use POSIX backtrace
-	target_link_libraries(ARRCON PRIVATE boost_stacktrace_backtrace dl backtrace)
+if (NOT APPLE)
+
+	# Link Boost::Stacktrace
+	# see https://www.boost.org/doc/libs/1_81_0/doc/html/stacktrace/configuration_and_build.html
+	if(ARRCON_DISABLE_STACKTRACE OR CMAKE_BUILD_TYPE STREQUAL "Release")
+		# Disable stacktrace
+		target_link_libraries(ARRCON PRIVATE boost_stacktrace_noop)
+	elseif(MSVC)
+		# Use COM stacktrace
+		target_link_libraries(ARRCON PRIVATE boost_stacktrace_windbg ole32 dbgeng)
+	else()
+		# Use POSIX backtrace
+		target_link_libraries(ARRCON PRIVATE boost_stacktrace_backtrace dl backtrace)
+	endif()
+
 endif()
 
 include(PackageInstaller)
