@@ -321,7 +321,7 @@ int main_impl(const int argc, char** argv)
 		commands.insert(commands.end(), parameters.begin(), parameters.end());
 	}
 
-	const bool noPrompt{ args.check_any<opt3::Flag, opt3::Option>('Q', "no-prompt")};
+	const bool noPrompt{ args.check_any<opt3::Flag, opt3::Option>('Q', "no-prompt") };
 	const bool echoCommands{ args.check_any<opt3::Flag, opt3::Option>('e', "echo") };
 
 	// Oneshot Mode
