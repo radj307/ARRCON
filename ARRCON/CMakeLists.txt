@@ -52,30 +52,37 @@ target_include_directories(ARRCON PRIVATE "${CMAKE_CURRENT_BINARY_DIR}/rc")
 
 target_sources(ARRCON PRIVATE "${HEADERS}")
 
-# Setup Boost
-include(FetchContent)
-FetchContent_Declare(
-	Boost
-	GIT_REPOSITORY	https://github.com/boostorg/boost.git
-	GIT_TAG			boost-1.84.0
-)
-#set(BOOST_INCLUDE_LIBRARIES asio stacktrace)
-FetchContent_MakeAvailable(Boost)
-
-if (APPLE)
-	# Fix Boost::Stacktrace
-	target_compile_options(ARRCON PRIVATE "-D_GNU_SOURCE")
+## Setup Boost:
+# Try to find an existing Boost 1.84.0 package
+find_package(Boost 1.84.0 COMPONENTS asio stacktrace)
+# Fallback to FetchContent if not found
+if (NOT Boost_FOUND)
+	include(FetchContent)
+	FetchContent_Declare(
+		Boost
+		GIT_REPOSITORY	https://github.com/boostorg/boost.git
+		GIT_TAG			boost-1.84.0
+	)
+	FetchContent_MakeAvailable(Boost)
 endif()
 
-target_link_libraries(ARRCON PRIVATE TermAPI filelib Boost::asio)
+target_link_libraries(ARRCON PRIVATE
+	TermAPI
+	filelib
+	Boost::asio
+)
 
 # Link Boost::Stacktrace
-if(ARRCON_DISABLE_STACKTRACE)
+# see https://www.boost.org/doc/libs/1_81_0/doc/html/stacktrace/configuration_and_build.html
+if(ARRCON_DISABLE_STACKTRACE OR CMAKE_BUILD_TYPE STREQUAL "Release")
 	# Disable stacktrace
-	target_link_libraries(ARRCON PRIVATE boost_stacktrace_noop)	
+	target_link_libraries(ARRCON PRIVATE boost_stacktrace_noop)
 elseif(MSVC)
 	# Use COM stacktrace
 	target_link_libraries(ARRCON PRIVATE boost_stacktrace_windbg ole32 dbgeng)
+elseif(APPLE)
+	# Use addr2line
+	target_link_libraries(ARRCON PRIVATE boost_stacktrace_basic libdl)
 else()
 	# Use POSIX backtrace
 	target_link_libraries(ARRCON PRIVATE boost_stacktrace_backtrace dl backtrace)

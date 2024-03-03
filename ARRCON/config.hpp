@@ -32,6 +32,7 @@ namespace config {
 		auto end() const { return hosts.end(); }
 		bool empty() const noexcept { return hosts.empty(); }
 		size_t size() const noexcept { return hosts.size(); }
+		bool contains(std::string const& name) const { return hosts.contains(name); }
 
 		void import_from(ini::INI const& ini)
 		{

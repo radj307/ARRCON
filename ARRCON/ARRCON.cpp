@@ -19,6 +19,10 @@
 #include <filesystem>	//< for std::filesystem
 #include <iostream>		//< for standard io streams
 
+// Global defaults
+static constexpr char const* const DEFAULT_TARGET_HOST{ "127.0.0.1" };
+static constexpr char const* const DEFAULT_TARGET_PORT{ "27015" };
+
 struct print_help {
 	std::string exeName;
 
@@ -27,7 +31,7 @@ struct print_help {
 	friend std::ostream& operator<<(std::ostream& os, const print_help& h)
 	{
 		return os << h.exeName << " v" << ARRCON_VERSION_EXTENDED << " (" << ARRCON_COPYRIGHT << ")\n"
-			<< "  A robust & powerful commandline Remote-CONsole (RCON) client designed for use with the Source RCON Protocol.\n"
+			<< "  A Robust Remote-CONsole (RCON) client designed for use with the Source RCON Protocol.\n"
 			<< "  It is also compatible with similar protocols such as the one used by Minecraft.\n"
 			<< '\n'
 			<< "  Report compatibility issues here: https://github.com/radj307/ARRCON/issues/new?template=support-request.md\n"
@@ -36,26 +40,27 @@ struct print_help {
 			<< "  " << h.exeName << " [OPTIONS] [COMMANDS]\n"
 			<< '\n'
 			<< "  Some arguments take additional inputs, labeled with <angle brackets>." << '\n'
-			<< "  Arguments that contain spaces must be enclosed with single (\') or double(\") quotation marks." << '\n'
+			<< "  Inputs that contain spaces must be enclosed with single (\') or double(\") quotation marks." << '\n'
 			<< '\n'
 			<< "TARGET SPECIFIER OPTIONS:\n"
-			<< "  -H, --host  <Host>          RCON Server IP/Hostname." << '\n'//"  (Default: \"" /*<< Global.DEFAULT_TARGET.hostname*/ << "\")" << '\n'
-			<< "  -P, --port  <Port>          RCON Server Port." << '\n'//"         (Default: \"" /*<< Global.DEFAULT_TARGET.port*/ << "\")" << '\n'
-			<< "  -p, --pass  <Pass>          RCON Server Password." << '\n'
-			<< "  -S, --saved <Host>          Use a saved host's connection information, if it isn't overridden by arguments." << '\n'
-			<< "      --save-host <H>         Create a new saved host named \"<H>\" using the current [Host/Port/Pass] value(s)." << '\n'
-			<< "      --remove-host <H>       Remove an existing saved host named \"<H>\" from the list, then exit." << '\n'
-			<< "  -l, --list-hosts            Show a list of all saved hosts, then exit." << '\n'
+			<< "  -H, --host <Host>           RCON Server IP/Hostname.  (Default: \"" << DEFAULT_TARGET_HOST << "\")" << '\n'
+			<< "  -P, --port <Port>           RCON Server Port.         (Default: \"" << DEFAULT_TARGET_PORT << "\")" << '\n'
+			<< "  -p, --pass <Pass>           RCON Server Password.     (Default: \"\")" << '\n'
+			<< "  -R, --recall <Name>         Recalls saved [Host|Port|Pass] values from the hosts file." << '\n'
+			<< "      --save   <Name>         Saves the specified [Host|Port|Pass] as \"<Name>\" in the hosts file." << '\n'
+			<< "      --remove <Name>         Removes an entry from the hosts file." << '\n'
+			<< "  -l, --list                  Lists the servers currently saved in the host file." << '\n'
 			<< '\n'
 			<< "OPTIONS:\n"
-			<< "  -h, --help                  Show this help display, then exits." << '\n'
+			<< "  -h, --help                  Shows this help display, then exits." << '\n'
 			<< "  -v, --version               Prints the current version number, then exits." << '\n'
-			<< "  -q, --quiet                 Silent/Quiet mode; prevents or minimizes console output." << '\n'
+			<< "  -q, --quiet                 Silent/Quiet mode; prevents or minimizes console output. Use \"-qn\" for scripts." << '\n'
 			<< "  -i, --interactive           Starts an interactive command shell after sending any scripted commands." << '\n'
+			<< "  -e, --echo                  Enables command echo in oneshot mode." << '\n'
 			<< "  -w, --wait <ms>             Sets the number of milliseconds to wait between sending each queued command. Default: 0" << '\n'
 			<< "  -t, --timeout <ms>          Sets the number of milliseconds to wait for a response before timing out. Default: 3000" << '\n'
 			<< "  -n, --no-color              Disables colorized console output." << '\n'
-			<< "  -Q, --no-prompt             Disables the prompt in interactive mode and/or command echo in commandline mode." << '\n'
+			<< "  -Q, --no-prompt             Disables the prompt in interactive mode." << '\n'
 			<< "      --no-exit               Disables handling the \"exit\" keyword in interactive mode." << '\n'
 			<< "      --allow-empty           Enables sending empty (whitespace-only) commands to the server in interactive mode." << '\n'
 			//	<< "      --print-env             Prints all recognized environment variables, their values, and descriptions." << '\n'
@@ -93,23 +98,19 @@ int main(const int argc, char** argv)
 	}
 }
 
-static constexpr char const* const DEFAULT_TARGET_HOST{ "127.0.0.1" };
-static constexpr char const* const DEFAULT_TARGET_PORT{ "27015" };
-static constexpr char const* const DEFAULT_TARGET_PASS{ "" };
-
 int main_impl(const int argc, char** argv)
 {
 	const opt3::ArgManager args{ argc, argv,
 		// define capturing args:
 		opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, 'H', "host", "hostname"),
-		opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, 'S', "saved"),
 		opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, 'P', "port"),
 		opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, 'p', "pass", "password"),
+		opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, 'S', 'R', "saved", "recall"),
+		opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, "save", "save-host"),
+		opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, "rm", "remove", "rm-host" "remove-host"),
 		opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, 'w', "wait"),
 		opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, 't', "timeout"),
 		opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, 'f', "file"),
-		opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, "save-host"),
-		opt3::make_template(opt3::CaptureStyle::Required, opt3::ConflictStyle::Conflict, "remove-host"),
 	};
 
 	// get the executable's location & name
@@ -121,6 +122,15 @@ int main_impl(const int argc, char** argv)
 	std::ofstream logfs{ locator.from_extension(".log") };
 	// log manager object
 	Logger logManager{ logfs.rdbuf() };
+	logManager.print_header();
+	// write commandline to log
+	{
+		const auto argVec{ opt3::vectorize(argc, argv) };
+		std::clog
+			<< MessageHeader(LogLevel::Debug) << "Commandline Arguments: \""
+			<< str::stringify_join(argVec.begin(), argVec.end(), ' ') << '\"'
+			<< std::endl;
+	}
 
 	// -h|--help
 	if (args.empty() || args.check_any<opt3::Flag, opt3::Option>('h', "help")) {
@@ -143,23 +153,23 @@ int main_impl(const int argc, char** argv)
 	// -n|--no-color
 	csync.setEnabled(!args.check_any<opt3::Flag, opt3::Option>('n', "no-color"));
 
-	/// Select a target server & operate on the hosts file
+	/// determine the target server info & operate on the hosts file
 	const auto hostsfile_path{ locator.from_extension(".hosts") };
 	std::optional<config::SavedHosts> hostsfile;
 
-	// --rm-host|--remove-host
-	if (const auto& arg_removeHost{ args.getv_any<opt3::Option>("rm-host", "remove-host") }; arg_removeHost.has_value()) {
+	// --remove|--rm|--rm-host|--remove-host
+	if (const auto& arg_removeHost{ args.getv_any<opt3::Option>("rm", "remove", "rm-host", "remove-host") }; arg_removeHost.has_value()) {
 		if (!std::filesystem::exists(hostsfile_path))
-			throw make_exception("The hosts file hasn't been created yet. (Use \"--save-host\" to create one)");
+			throw make_exception("The hosts file hasn't been created yet. (Use \"--save\" to create one)");
 
-		// load the hosts file
+		// load the hosts file directly
 		ini::INI ini(hostsfile_path);
 
 		// remove the specified entry
 		if (const auto it{ ini.find(arg_removeHost.value()) }; it != ini.end())
 			ini.erase(it);
 		else
-			throw make_exception("The specified saved host \"", arg_removeHost.value(), "\" doesn't exist! (Use \"--list-hosts\" to see a list of saved hosts.)");
+			throw make_exception("The specified saved host \"", arg_removeHost.value(), "\" doesn't exist! (Use \"--list\" to see a list of saved hosts.)");
 
 		// save the hosts file
 		if (ini.write(hostsfile_path)) {
@@ -168,8 +178,9 @@ int main_impl(const int argc, char** argv)
 		}
 		else throw make_exception("Failed to save hosts file to ", hostsfile_path, '!');
 	}
-	// --list-hosts
-	else if (args.check_any<opt3::Option>("list-hosts", "list-host")) {
+
+	// --list|--list-hosts
+	if (args.check_any<opt3::Flag, opt3::Option>('l', "list", "list-hosts", "list-host")) {
 		if (!std::filesystem::exists(hostsfile_path))
 			throw make_exception("The hosts file hasn't been created yet. (Use \"--save-host\" to create one)");
 
@@ -211,12 +222,12 @@ int main_impl(const int argc, char** argv)
 	}
 
 	/// get the target connection info:
-	net::rcon::target_info target{ DEFAULT_TARGET_HOST, DEFAULT_TARGET_PORT, DEFAULT_TARGET_PASS };
+	net::rcon::target_info target{ DEFAULT_TARGET_HOST, DEFAULT_TARGET_PORT, "" };
 
-	// -S|--saved|--server
-	if (const auto& arg_saved{ args.getv_any<opt3::Flag, opt3::Option>('S', "saved", "server") }; arg_saved.has_value()) {
+	// -S|-R|--saved|--recall
+	if (const auto& arg_saved{ args.getv_any<opt3::Flag, opt3::Option>('S', 'R', "saved", "recall") }; arg_saved.has_value()) {
 		if (!std::filesystem::exists(hostsfile_path))
-			throw make_exception("The hosts file hasn't been created yet. (Use \"--save-host\" to create one)");
+			throw make_exception("The hosts file hasn't been created yet. (Use \"--save\" to create one)");
 
 		// load the hosts file
 		if (!hostsfile.has_value())
@@ -226,7 +237,9 @@ int main_impl(const int argc, char** argv)
 		if (const auto savedTarget{ hostsfile->get_host(arg_saved.value()) }; savedTarget.has_value()) {
 			target = savedTarget.value();
 		}
-		else throw make_exception("The specified saved host \"", arg_saved.value(), "\" doesn't exist! (Use \"--list-hosts\" to see a list of saved hosts.)");
+		else throw make_exception("The specified saved host \"", arg_saved.value(), "\" doesn't exist! (Use \"--list\" to see a list of saved hosts)");
+
+		std::clog << MessageHeader(LogLevel::Debug) << "Recalled saved host information for \"" << arg_saved.value() << "\": " << target << std::endl;
 	}
 	// -H|--host|--hostname
 	if (const auto& arg_hostname{ args.getv_any<opt3::Flag, opt3::Option>('H', "host", "hostname") }; arg_hostname.has_value())
@@ -238,8 +251,8 @@ int main_impl(const int argc, char** argv)
 	if (const auto& arg_password{ args.getv_any<opt3::Flag, opt3::Option>('p', "pass", "password") }; arg_password.has_value())
 		target.pass = arg_password.value();
 
-	// --save-host
-	if (const auto& arg_saveHost{ args.getv_any<opt3::Option>("save-host") }; arg_saveHost.has_value()) {
+	// --save|--save-host
+	if (const auto& arg_saveHost{ args.getv_any<opt3::Option>("save", "save-host") }; arg_saveHost.has_value()) {
 		// load the hosts file
 		if (!hostsfile.has_value()) {
 			hostsfile = std::filesystem::exists(hostsfile_path)
@@ -247,52 +260,69 @@ int main_impl(const int argc, char** argv)
 				: config::SavedHosts();
 		}
 
-		// TODO: Improve feedback when target already exists, maybe prompt the user if changes are going to be made
+		const bool exists{ hostsfile->contains(arg_saveHost.value()) };
+		auto& entry{ (*hostsfile)[arg_saveHost.value()] };
+
+		// break early if no changes will be made
+		if (exists && entry == target) {
+			std::cout << "Host \"" << csync(color::yellow) << arg_saveHost.value() << csync() << "\" was already saved with the specified server info.\n";
+			return 0;
+		}
+
 		// set the target
-		(*hostsfile)[arg_saveHost.value()] = target;
+		entry = target;
+
+		// create directory structure
+		if (!std::filesystem::exists(hostsfile_path))
+			std::filesystem::create_directories(hostsfile_path.parent_path());
 
 		// write to disk
 		ini::INI ini;
 		hostsfile->export_to(ini);
 		if (ini.write(hostsfile_path)) {
-			std::cout << "Successfully added \"" << csync(color::yellow) << arg_saveHost.value() << csync() << "\" to the hosts list.\n";
+			std::cout
+				<< "Host \"" << csync(color::yellow) << arg_saveHost.value() << csync() << "\" was " << (exists ? "updated" : "created") << " with the specified server info.\n"
+				<< "Saved hosts file to " << hostsfile_path << '\n'
+				;
 			return 0;
 		}
 		else throw make_exception("Failed to save hosts file to ", hostsfile_path, '!');
 	}
 
 	// validate & log the target host information
-	std::clog << MessageHeader(LogLevel::Info) << "Target Host: \"" << target.host << ':' << target.port << '\"' << std::endl;
-
-	// TODO: add a check for blank passwords
+	std::clog << MessageHeader(LogLevel::Info) << "Target Server Info: \"" << target.host << ':' << target.port << '\"' << std::endl;
 
 	// initialize and connect the client
-	net::rcon::RconClient client{ target.host, target.port };
+	net::rcon::RconClient client;
+
+	// connect to the server and authenticate
+	// TODO: Add better error output when this fails:
+	client.connect(target.host, target.port);
 
 	// -t|--timeout
 	client.set_timeout(args.castgetv_any<int, opt3::Flag, opt3::Option>([](auto&& arg) { return str::stoi(std::forward<decltype(arg)>(arg)); }, 't', "timeout").value_or(3000));
+	// ^ this needs to be set after connecting
 
-	// authenticate with the server
+	// TODO: Add better error output when this fails:
 	if (!client.authenticate(target.pass)) {
 		throw make_exception("Authentication failed due to incorrect password!");
 	}
 
-	// get the list of commands from the commandline
+	// get commands from STDIN & the commandline
 	std::vector<std::string> commands;
-
 	if (hasPendingDataSTDIN()) {
 		// get commands from STDIN
 		for (std::string buf; std::getline(std::cin, buf);) {
 			commands.emplace_back(buf);
 		}
 	}
-	// get commands from the commandline
 	if (const auto parameters{ args.getv_all<opt3::Parameter>() };
 		!parameters.empty()) {
 		commands.insert(commands.end(), parameters.begin(), parameters.end());
 	}
 
-	const bool disablePromptAndEcho{ args.check_any<opt3::Flag, opt3::Option>('Q', "no-prompt") };
+	const bool noPrompt{ args.check_any<opt3::Flag, opt3::Option>('Q', "no-prompt")};
+	const bool echoCommands{ args.check_any<opt3::Flag, opt3::Option>('e', "echo") };
 
 	// Oneshot Mode
 	if (!commands.empty()) {
@@ -313,8 +343,8 @@ int main_impl(const int argc, char** argv)
 				else std::this_thread::sleep_for(commandDelay);
 			}
 
-			if (!quiet) {
-				if (!disablePromptAndEcho) // print the shell prompt
+			if (echoCommands) {
+				if (!noPrompt) // print the shell prompt
 					print_input_prompt(std::cout, target.host, csync);
 				// echo the command
 				std::cout << command << '\n';
@@ -325,12 +355,12 @@ int main_impl(const int argc, char** argv)
 		}
 	}
 
-	bool disableExitKeyword{ args.check_any<opt3::Option>("no-exit") };
-	bool allowEmptyCommands{ args.check_any<opt3::Option>("allow-empty") };
+	const bool disableExitKeyword{ args.check_any<opt3::Option>("no-exit") };
+	const bool allowEmptyCommands{ args.check_any<opt3::Option>("allow-empty") };
 
 	// Interactive mode
 	if (commands.empty() || args.check_any<opt3::Flag, opt3::Option>('i', "interactive")) {
-		if (!disablePromptAndEcho) {
+		if (!noPrompt) {
 			std::cout << "Authentication Successful.\nUse <Ctrl + C>";
 			if (!disableExitKeyword) std::cout << " or type \"exit\"";
 			std::cout << " to quit.\n";
@@ -338,7 +368,7 @@ int main_impl(const int argc, char** argv)
 
 		// interactive mode input loop
 		while (true) {
-			if (!quiet && !disablePromptAndEcho) // print the shell prompt
+			if (!quiet && !noPrompt) // print the shell prompt
 				print_input_prompt(std::cout, target.host, csync);
 
 			// get user input

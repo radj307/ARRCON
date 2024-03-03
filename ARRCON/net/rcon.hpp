@@ -143,7 +143,7 @@ namespace net {
 				packet_header header{};
 				boost::asio::mutable_buffer buf(&header, sizeof(packet_header));
 				boost::asio::read(socket, buf, ec); //< TODO: validate received byte count
-
+				
 				// check for errors
 				if (ec) {
 					const auto error_message{ str::stringify("Failed to read packet header due to error: \"", ec.what(), "\"! Flushing the buffer.") };
@@ -174,6 +174,19 @@ namespace net {
 				body_buffer.erase(std::remove(body_buffer.begin(), body_buffer.end(), '\0'), body_buffer.end());
 
 				return std::make_pair(header, body_buffer);
+			}
+
+		public:
+			/**
+			 * @brief			Creates a new RconClient instance and connects it to the specified endpoint.
+			 * @param host    -	The hostname of the target endpoint.
+			 * @param port	  -	The port of the target endpoint.
+			 */
+			RconClient() : socket{ ioContext } {}
+			~RconClient()
+			{
+				ioContext.run(); //< wait for async operations to finish
+				socket.close(); //< close the socket
 			}
 
 			/// @brief	Connects the RCON client to the specified endpoint.
@@ -211,22 +224,6 @@ namespace net {
 
 					throw_with_stacktrace(make_exception("Failed to connect to target \"", host, ':', port, "\". Original exception message: ", ex.what()));
 				}
-			}
-
-		public:
-			/**
-			 * @brief			Creates a new RconClient instance and connects it to the specified endpoint.
-			 * @param host    -	The hostname of the target endpoint.
-			 * @param port	  -	The port of the target endpoint.
-			 */
-			RconClient(std::string_view host, std::string_view port) noexcept(false) : socket{ ioContext }
-			{
-				connect(host, port);
-			}
-			~RconClient()
-			{
-				ioContext.run(); //< wait for async operations to finish
-				socket.close(); //< close the socket
 			}
 
 			/**
