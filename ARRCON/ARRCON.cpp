@@ -170,7 +170,10 @@ int main_impl(const int argc, char** argv)
 
 		// save the hosts file
 		if (ini.write(hostsfile_path)) {
-			std::cout << "Successfully removed \"" << csync(color::yellow) << arg_removeHost.value() << csync() << "\" from the hosts list.\n";
+			std::cout
+				<< "Successfully removed \"" << csync(color::yellow) << arg_removeHost.value() << csync() << "\" from the hosts list.\n"
+				<< "Saved hosts file to " << hostsfile_path << '\n'
+				;
 			return 0;
 		}
 		else throw make_exception("Failed to save hosts file to ", hostsfile_path, '!');
