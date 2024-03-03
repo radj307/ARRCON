@@ -83,12 +83,10 @@ int main(const int argc, char** argv)
 	} catch (std::exception const& ex) {
 		std::cerr << csync.get_fatal() << ex.what() << std::endl;
 
-	#ifndef OS_MAC //< see exceptions.hpp for more information on MacOS stacktrace compat
-
+	#if defined(_DEBUG) && !defined(OS_MAC)//< see exceptions.hpp for more information on MacOS stacktrace compat
 		// try getting a stacktrace for this exception and print it
 		if (const auto* trace = boost::get_error_info<traced_exception>(ex))
 			std::cerr << "Stacktrace:\n" << *trace;
-
 	#endif
 
 		return 1;
@@ -168,8 +166,7 @@ int main_impl(const int argc, char** argv)
 		// remove the specified entry
 		if (const auto it{ ini.find(arg_removeHost.value()) }; it != ini.end())
 			ini.erase(it);
-		else
-			throw make_exception("The specified saved host \"", arg_removeHost.value(), "\" doesn't exist! (Use \"--list\" to see a list of saved hosts.)");
+		else throw make_exception("The specified saved host \"", arg_removeHost.value(), "\" doesn't exist! (Use \"--list\" to see a list of saved hosts)");
 
 		// save the hosts file
 		if (ini.write(hostsfile_path)) {
@@ -178,9 +175,8 @@ int main_impl(const int argc, char** argv)
 		}
 		else throw make_exception("Failed to save hosts file to ", hostsfile_path, '!');
 	}
-
 	// --list|--list-hosts
-	if (args.check_any<opt3::Flag, opt3::Option>('l', "list", "list-hosts", "list-host")) {
+	else if (args.check_any<opt3::Flag, opt3::Option>('l', "list", "list-hosts", "list-host")) {
 		if (!std::filesystem::exists(hostsfile_path))
 			throw make_exception("The hosts file hasn't been created yet. (Use \"--save-host\" to create one)");
 
@@ -221,7 +217,6 @@ int main_impl(const int argc, char** argv)
 		return 0;
 	}
 
-	/// get the target connection info:
 	net::rcon::target_info target{ DEFAULT_TARGET_HOST, DEFAULT_TARGET_PORT, "" };
 
 	// -S|-R|--saved|--recall
@@ -308,7 +303,7 @@ int main_impl(const int argc, char** argv)
 		throw make_exception("Authentication failed due to incorrect password!");
 	}
 
-	// get commands from STDIN & the commandline
+	/// get commands from STDIN & the commandline
 	std::vector<std::string> commands;
 	if (hasPendingDataSTDIN()) {
 		// get commands from STDIN
