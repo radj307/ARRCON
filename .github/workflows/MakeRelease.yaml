@@ -1,0 +1,127 @@
+name: Make Release
+
+on:
+  push:
+    tags: [ '[0-9]+.[0-9]+.[0-9]+-?**' ]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        fetch-depth: 0
+
+    - name: Install Requirements
+      run:  choco install ninja
+
+    #- uses: ilammy/msvc-dev-cmd@v1
+
+    - name: CMake Configure
+      run:  cmake -B build -DCMAKE_BUILD_TYPE=Release -G Ninja
+
+    - name: CMake Build
+      run:  cmake --build build --config Release
+
+    - name: Create Archive
+      run:  Compress-Archive build/ARRCON/*.exe ARRCON-$(.\ARRCON -vq)-Windows.zip
+      shell: pwsh
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-windows
+        path: 'ARRCON*.zip'
+
+
+  build-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        fetch-depth: 0
+
+    - name: Install Requirements
+      run:  sudo apt-get install -y gcc-10 cmake ninja-build
+
+    - name: CMake Configure
+      run:  cmake -B build -DCMAKE_BUILD_TYPE=Release -G Ninja
+      env:
+        CC: gcc-10
+        CXX: g++-10
+
+    - name: CMake Build
+      run:  cmake --build build --config Release
+
+    - name: Create Archive
+      run: |
+        cd build/ARRCON
+        zip -T9 ARRCON-$(./ARRCON -vq)-Linux.zip *.exe
+        mv *.zip ../..
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-linux
+        path: 'ARRCON*.zip'
+
+
+  build-macos:
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        fetch-depth: 0
+
+    - name: Install Requirements
+      run:  brew install cmake ninja
+
+    - name: CMake Configure
+      run:  cmake -B build -DCMAKE_BUILD_TYPE=Release -G Ninja
+      env:
+        CC: clang
+        CXX: clang++
+
+    - name: CMake Build
+      run:  cmake --build build --config Release
+
+    - name: Create Archive
+      run: |
+        cd build/ARRCON
+        zip -T9 ARRCON-$(./ARRCON -vq)-MacOS.zip *.exe
+        mv *.zip ../..
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-macos
+        path: 'ARRCON*.zip'
+    
+
+  make-release:
+    runs-on: ubuntu-latest
+    needs: [ build-windows, build-linux, build-macos ]
+    if: ${{ always() && contains(needs.*.result, 'success') }}
+    # ^ Run when at least one of the builds was successful
+
+    steps:
+    - name: Download Artifacts
+      uses: actions/download-artifact@v4
+
+    - name: Stage Files
+      run:  mv ./build-*/* ./
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        draft: true
+        tag_name: ${{ github.ref_name }}
+        generate_release_notes: true
+        fail_on_unmatched_files: true
+        files: '*.zip'
