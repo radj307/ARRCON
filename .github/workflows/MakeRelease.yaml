@@ -88,8 +88,8 @@ jobs:
     - name: CMake Configure
       run:  cmake -B build -DCMAKE_BUILD_TYPE=Release -G Ninja
       env:
-        CC: $(brew --prefix llvm@15)/bin/clang
-        CXX: $(brew --prefix llvm@15)/bin/clang++
+        CC: clang-15
+        CXX: clang++-15
 
     - name: CMake Build
       run:  cmake --build build --config Release
