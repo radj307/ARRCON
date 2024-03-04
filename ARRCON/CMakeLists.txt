@@ -56,7 +56,7 @@ target_sources(ARRCON PRIVATE "${HEADERS}")
 
 ## Setup Boost:
 # Try to find an existing Boost 1.84.0 package
-find_package(Boost 1.84.0 COMPONENTS asio stacktrace)
+find_package(Boost 1.84.0 COMPONENTS asio)
 # Fallback to FetchContent if not found
 if (NOT Boost_FOUND)
 	include(FetchContent)
@@ -73,24 +73,3 @@ target_link_libraries(ARRCON PRIVATE
 	filelib
 	Boost::asio
 )
-
-if (NOT APPLE)
-
-	# Link Boost::Stacktrace
-	# see https://www.boost.org/doc/libs/1_81_0/doc/html/stacktrace/configuration_and_build.html
-	if(ARRCON_DISABLE_STACKTRACE OR CMAKE_BUILD_TYPE STREQUAL "Release")
-		# Disable stacktrace
-		target_link_libraries(ARRCON PRIVATE boost_stacktrace_noop)
-	elseif(MSVC)
-		# Use COM stacktrace
-		target_link_libraries(ARRCON PRIVATE boost_stacktrace_windbg ole32 dbgeng)
-	else()
-		# Use POSIX backtrace
-		target_link_libraries(ARRCON PRIVATE boost_stacktrace_backtrace dl backtrace)
-	endif()
-
-endif()
-
-include(PackageInstaller)
-
-INSTALL_EXECUTABLE(ARRCON "${CMAKE_INSTALL_PREFIX}/bin")

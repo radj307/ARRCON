@@ -68,6 +68,12 @@ struct MessageHeader {
 			<< '[' << level << ']' << indent(LM_LEVEL, level.size() + 2);
 	}
 };
+struct BlankHeader {
+	friend std::ostream& operator<<(std::ostream& os, const BlankHeader& m)
+	{
+		return os << indent(LM_TIMESTAMP + LM_LEVEL);
+	}
+};
 
 /**
  * @class	Logger

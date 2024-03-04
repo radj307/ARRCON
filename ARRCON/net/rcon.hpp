@@ -1,6 +1,9 @@
 #pragma once
 #include "../logging.hpp"
-#include "../exceptions.hpp"
+#include "../ExceptionBuilder.hpp"
+
+// 307lib::TermAPI
+#include <Message.hpp>	//< for term::MessageMarginSize
 
 // Boost::asio
 #include <boost/asio.hpp>
@@ -131,7 +134,7 @@ namespace net {
 			}
 
 			/**
-			 * @brief	Receives a single packet.
+			 * @brief	Receives a single RCON packet.
 			 * @returns	A pair containing the packet header and the packet body.
 			 */
 			std::pair<packet_header, buffer> recv() noexcept(false)
@@ -142,17 +145,11 @@ namespace net {
 				// read the packet header
 				packet_header header{};
 				boost::asio::mutable_buffer buf(&header, sizeof(packet_header));
-				boost::asio::read(socket, buf, ec); //< TODO: validate received byte count
-				
+				boost::asio::read(socket, buf, ec);
+
 				// check for errors
-				if (ec) {
-					const auto error_message{ str::stringify("Failed to read packet header due to error: \"", ec.what(), "\"! Flushing the buffer.") };
-					std::clog << MessageHeader(LogLevel::Error) << error_message << std::endl;
-
-					flush();
-
-					throw_with_stacktrace(make_exception(error_message));
-				}
+				if (ec)
+					throw make_exception("Failed to read packet header due to error: \"", ec.what(), "\"!");
 
 				// read the packet body
 				const auto avail{ socket.available() };
@@ -161,14 +158,8 @@ namespace net {
 				boost::asio::read(socket, boost::asio::buffer(body_buffer), ec); //< TODO: validate received byte count
 
 				// check for errors
-				if (ec) {
-					const auto error_message{ str::stringify("Failed to read packet body due to error: \"", ec.what(), "\"! Flushing the buffer.") };
-					std::clog << MessageHeader(LogLevel::Error) << error_message << std::endl;
-
-					flush();
-
-					throw_with_stacktrace(make_exception(error_message));
-				}
+				if (ec)
+					throw make_exception("Failed to read packet body due to error: \"", ec.what(), "\"!");
 
 				// remove the null terminators from the body buffer
 				body_buffer.erase(std::remove(body_buffer.begin(), body_buffer.end(), '\0'), body_buffer.end());
@@ -192,38 +183,46 @@ namespace net {
 			/// @brief	Connects the RCON client to the specified endpoint.
 			void connect(std::string_view host, std::string_view port) noexcept(false)
 			{
-				// resolve the target endpoint
+				// resolve DNS
 				tcp::resolver::results_type targets;
 				try {
-					targets = resolve_targets(ioContext, host, port);
-
-					if (const auto targetCount{ targets.size() }; targetCount > 0) {
-						// write a success log message
-						std::clog << MessageHeader(LogLevel::Debug) << "Successfully resolved " << targetCount << " endpoint" << (targetCount != 1 ? "s" : "") << " for target \"" << host << ':' << port << '\"' << std::endl;
-					}
-					else {
-						// target resolution failed; log the error & throw
-						std::clog << MessageHeader(LogLevel::Error) << "Failed to resolve target \"" << host << ':' << port << '\"' << std::endl;
-
-						throw_with_stacktrace(make_exception("Failed to resolve target \"", host, ':', port, "\"!"));
-					}
+					targets = resolve_targets(ioContext, host, port); //< this throws on failure & can't use boost::system::error_code
 				} catch (std::exception const& ex) {
-					// target resolution threw an exception; log the error & throw
-					std::clog << MessageHeader(LogLevel::Error) << "Failed to resolve target \"" << host << ':' << port << "\" due to exception: \"" << ex.what() << "\"" << std::endl;
-
-					throw_with_stacktrace(make_exception("Failed to resolve target \"", host, ':', port, "\" due to exception: \"", ex.what(), '\"'));
+					// rethrow with stacktrace & custom message
+					throw ExceptionBuilder()
+						.line("Connection Error:    DNS Resolution Failed!")
+						.line("Target Hostname/IP:  ", host)
+						.line("Target Port:         ", port)
+						.line("Original Exception:  ", ex.what())
+						.line("Suggested Solutions:")
+						.line("1.  Verify that you're using the correct Hostname/IP & Port.")
+						.line("2.  Verify that the target is online and connected to the internet.")
+						.build();
 				}
 
-				// connect the socket to the endpoint
-				try {
-					const auto endpoint{ boost::asio::connect(socket, targets) }; //< connect() throws on error
-
-					std::clog << MessageHeader(LogLevel::Debug) << "Successfully connected to endpoint \"" << endpoint << '\"' << std::endl;;
-				} catch (std::exception const& ex) {
-					std::clog << MessageHeader(LogLevel::Error) << "Failed to connect to target \"" << host << ':' << port << "\" due to exception: \"" << ex.what() << '\"' << std::endl;
-
-					throw_with_stacktrace(make_exception("Failed to connect to target \"", host, ':', port, "\". Original exception message: ", ex.what()));
+				std::clog << MessageHeader(LogLevel::Debug) << "Resolved \"" << host << ':' << port << "\" to " << targets.size() << " endpoint" << (targets.size() == 1 ? "" : "s") << ':' << std::endl;
+				for (const auto& target : targets) {
+					std::clog << BlankHeader() << "- \"" << target.endpoint() << '\"' << std::endl;
 				}
+
+				// connect to the target
+				boost::system::error_code ec{};
+				tcp::endpoint endpoint{ boost::asio::connect(socket, targets, ec) };
+
+				if (ec) {
+					// an error occurred
+					throw ExceptionBuilder()
+						.line("Connection Error:    Failed to establish a connection with the target!")
+						.line("Target Hostname/IP:  ", host)
+						.line("Target Port:         ", port)
+						.line("Error Code:          ", ec.value())
+						.line("Error Message:       ", ec.message())
+						.line("Suggested Solutions:")
+						.line("1.  Verify that you're using the correct IP/hostname & Port.")
+						.line("2.  Verify that port ", port, " is accessible from your network.")
+						.build();
+				}
+				else std::clog << MessageHeader(LogLevel::Debug) << "Connected to endpoint \"" << endpoint << '\"' << std::endl;;
 			}
 
 			/**
@@ -250,7 +249,7 @@ namespace net {
 					};
 
 					std::clog << MessageHeader(LogLevel::Error) << error_message << std::endl;
-					throw_with_stacktrace(make_exception(error_message));
+					throw make_exception(error_message);
 				}
 
 				std::clog << MessageHeader(LogLevel::Debug) << "Sent packet #" << packetId << " with command \"" << command << '\"' << std::endl;
@@ -286,19 +285,13 @@ namespace net {
 
 				const buffer p{ build_packet(packet_header{ get_packet_size(password.size()), 1, (int32_t)PacketType::SERVERDATA_AUTH }, password.data()) };
 
-				if (boost::asio::write(socket, boost::asio::buffer(p), ec) != p.size()) {
-					std::clog << MessageHeader(LogLevel::Error) << "Failed to send authentication packet!" << std::endl;
-
+				if (boost::asio::write(socket, boost::asio::buffer(p), ec) != p.size() || ec) {
+					std::clog << MessageHeader(LogLevel::Error) << "Failed to send authentication packet due to error: " << ec.what() << std::endl;
 					return false;
 				}
 
-				// receive response
-				const auto& [auth_response_header, _] { recv() };
-
-				if (auth_response_header.id == -1) {
-					throw make_exception("Authentication refused by server! (Incorrect password)");
-				}
-				else return true;
+				// receive response & return success/fail
+				return recv().first.id != -1;
 			}
 
 			/// @brief	Empties the buffer and returns its contents.
@@ -309,6 +302,9 @@ namespace net {
 
 				buffer p{ bytes, 0, std::allocator<uint8_t>() };
 				boost::asio::read(socket, boost::asio::buffer(p));
+
+				std::clog << MessageHeader(LogLevel::Trace) << "Flushed " << bytes << " bytes from the buffer." << std::endl;
+
 				return p;
 			}
 
