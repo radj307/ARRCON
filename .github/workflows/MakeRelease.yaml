@@ -83,13 +83,16 @@ jobs:
         fetch-depth: 0
 
     - name: Install Ninja & LLVM/Clang 15
-      run:  brew install ninja llvm@15
+      id: install-deps
+      run: |
+        brew install ninja llvm@15
+        echo "clang_path=$(brew --prefix llvm@15)/bin/clang" >> "$GITHUB_OUTPUT"
 
     - name: CMake Configure
       run:  cmake -B build -DCMAKE_BUILD_TYPE=Release -G Ninja
       env:
-        CC: clang-15
-        CXX: clang++-15
+        CC: ${{ steps.install-deps.outputs.clang_path }}
+        CXX: ${{ steps.install-deps.outputs.clang_path }}++
 
     - name: CMake Build
       run:  cmake --build build --config Release
