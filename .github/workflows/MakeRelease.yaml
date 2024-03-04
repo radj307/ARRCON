@@ -74,10 +74,7 @@ jobs:
 
 
   build-macos:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ macos-latest, macos-13-xlarge ]
+    runs-on: macos-latest
 
     steps:
     - uses: actions/checkout@v4
@@ -100,13 +97,13 @@ jobs:
     - name: Create Archive
       run: |
         cd build/ARRCON
-        zip -T9 ARRCON-$(./ARRCON -vq)-MacOS-${{ runner.arch }}.zip ARRCON
+        zip -T9 ARRCON-$(./ARRCON -vq)-MacOS.zip ARRCON
         mv *.zip ../..
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: build-macos-${{ runner.arch }}
+        name: build-macos
         path: 'ARRCON*.zip'
     
 
