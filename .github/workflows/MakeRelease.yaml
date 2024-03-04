@@ -82,11 +82,11 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
-    - name: Install Ninja & LLVM/Clang 15
+    - name: Install Ninja & LLVM/Clang 16
       id: install-deps
       run: |
-        brew install ninja llvm@15
-        echo "clang_path=$(brew --prefix llvm@15)/bin/clang" >> "$GITHUB_OUTPUT"
+        brew install ninja llvm@16
+        echo "clang_path=$(brew --prefix llvm@16)/bin/clang" >> "$GITHUB_OUTPUT"
 
     - name: CMake Configure
       run:  cmake -B build -DCMAKE_BUILD_TYPE=Release -G Ninja
