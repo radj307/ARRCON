@@ -26,7 +26,10 @@ jobs:
       run:  cmake --build build --config Release
 
     - name: Create Archive
-      run:  Compress-Archive build/ARRCON/ARRCON.exe ARRCON-$(.\ARRCON -vq)-Windows.zip
+      run: |
+        cd build/ARRCON
+        Compress-Archive ARRCON.exe ARRCON-$(.\ARRCON -vq)-Windows.zip
+        mv *.zip ../..
       shell: pwsh
 
     - name: Upload Artifact
@@ -80,13 +83,13 @@ jobs:
         fetch-depth: 0
 
     - name: Install Requirements
-      run:  brew install cmake ninja
+      run:  brew install cmake ninja clang@17
 
     - name: CMake Configure
       run:  cmake -B build -DCMAKE_BUILD_TYPE=Release -G Ninja
       env:
-        CC: clang
-        CXX: clang++
+        CC: clang-17
+        CXX: clang++-17
 
     - name: CMake Build
       run:  cmake --build build --config Release
