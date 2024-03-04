@@ -14,6 +14,7 @@
 #include <color-sync.hpp>			//< for color::sync
 #include <envpath.hpp>				//< for env::PATH
 #include <hasPendingDataSTDIN.h>	//< for hasPendingDataSTDIN
+#include <str/strconv.hpp>
 
 // STL
 #include <filesystem>	//< for std::filesystem

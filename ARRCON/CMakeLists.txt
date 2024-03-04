@@ -41,6 +41,8 @@ file(GLOB RESOURCES
 	"${CMAKE_CURRENT_BINARY_DIR}/rc/*"
 )
 
+include_directories("/opt/local/include")
+
 add_executable(ARRCON "${SRCS}" "${RESOURCES}")
 
 set_property(TARGET ARRCON PROPERTY CXX_STANDARD 20)
@@ -59,6 +61,8 @@ target_sources(ARRCON PRIVATE "${HEADERS}")
 find_package(Boost 1.84.0 COMPONENTS asio)
 # Fallback to FetchContent if not found
 if (NOT Boost_FOUND)
+	message(STATUS "Downloading Boost 1.84.0 via FetchContent")
+
 	include(FetchContent)
 	FetchContent_Declare(
 		Boost

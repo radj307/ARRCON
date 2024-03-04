@@ -314,7 +314,11 @@ namespace net {
 			 */
 			void set_timeout(int timeout_ms)
 			{
-				socket.set_option(boost::asio::detail::socket_option::integer<SOL_SOCKET, SO_RCVTIMEO>{ timeout_ms });
+				try {
+					socket.set_option(boost::asio::detail::socket_option::integer<SOL_SOCKET, SO_RCVTIMEO>{ timeout_ms });
+				} catch (std::exception const& ex) {
+					std::clog << MessageHeader(LogLevel::Error) << "Failed to set socket timeout due to exception: \"" << ex.what() << '\"' << std::endl;
+				}
 			}
 
 			/**

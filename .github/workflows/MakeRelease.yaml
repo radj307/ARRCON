@@ -26,7 +26,7 @@ jobs:
       run:  cmake --build build --config Release
 
     - name: Create Archive
-      run:  Compress-Archive build/ARRCON/*.exe ARRCON-$(.\ARRCON -vq)-Windows.zip
+      run:  Compress-Archive build/ARRCON/ARRCON.exe ARRCON-$(.\ARRCON -vq)-Windows.zip
       shell: pwsh
 
     - name: Upload Artifact
@@ -60,7 +60,7 @@ jobs:
     - name: Create Archive
       run: |
         cd build/ARRCON
-        zip -T9 ARRCON-$(./ARRCON -vq)-Linux.zip *.exe
+        zip -T9 ARRCON-$(./ARRCON -vq)-Linux.zip ARRCON
         mv *.zip ../..
 
     - name: Upload Artifact
@@ -94,7 +94,7 @@ jobs:
     - name: Create Archive
       run: |
         cd build/ARRCON
-        zip -T9 ARRCON-$(./ARRCON -vq)-MacOS.zip *.exe
+        zip -T9 ARRCON-$(./ARRCON -vq)-MacOS.zip ARRCON
         mv *.zip ../..
 
     - name: Upload Artifact

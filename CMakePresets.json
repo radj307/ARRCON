@@ -12,9 +12,6 @@
       "hidden": true,
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/out/build/${presetName}",
-      "cacheVariables": {
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}"
-      },
       "warnings": {
         "deprecated": true,
         "unusedCli": true,
@@ -78,6 +75,12 @@
       "name": "macos-default",
       "inherits": "base",
       "hidden": true,
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "/opt/local/bin/clang-mp-17",
+        "CMAKE_CXX_COMPILER": "/opt/local/bin/clang++-mp-17",
+        // This requires the full path to ninja because visual studio doesn't find it on the PATH when cross compiling:
+        "CMAKE_MAKE_PROGRAM": "/usr/local/bin/ninja"
+      },
       "vendor": {
         "microsoft.com/VisualStudioSettings/CMake/1.0": { "hostOS": [ "macOS" ] },
         "microsoft.com/VisualStudioRemoteSettings/CMake/1.0": { "sourceDir": "$env{HOME}/.vs/$ms{projectDirName}" }
