@@ -17,7 +17,7 @@ jobs:
     - name: Install Requirements
       run:  choco install ninja
 
-    #- uses: ilammy/msvc-dev-cmd@v1
+    - uses: ilammy/msvc-dev-cmd@v1
 
     - name: CMake Configure
       run:  cmake -B build -DCMAKE_BUILD_TYPE=Release -G Ninja
