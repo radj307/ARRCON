@@ -63,7 +63,7 @@ struct print_help {
 			<< "  -Q, --no-prompt             Disables the prompt in interactive mode." << '\n'
 			<< "      --no-exit               Disables handling the \"exit\" keyword in interactive mode." << '\n'
 			<< "      --allow-empty           Enables sending empty (whitespace-only) commands to the server in interactive mode." << '\n'
-			//	<< "      --print-env             Prints all recognized environment variables, their values, and descriptions." << '\n'
+			<< "      --print-env             Prints all recognized environment variables, their values, and descriptions." << '\n'
 			//	<< "      --write-ini             (Over)write the INI file with the default configuration values & exit." << '\n'
 			//	<< "      --update-ini            Writes the current configuration values to the INI file, and adds missing keys." << '\n'
 			//	<< "  -f, --file <file>           Load the specified file and run each line as a command." << '\n'
@@ -145,6 +145,47 @@ int main_impl(const int argc, char** argv)
 		// -n|--no-color
 		csync.setEnabled(!args.check_any<opt3::Flag, opt3::Option>('n', "no-color"));
 
+		std::string programNameStr{ std::filesystem::path(programName).replace_extension().generic_string() };
+
+		// --print-env
+		if (args.check<opt3::Option>("print-env")) {
+			const auto
+				config_dir{ env::getvar(programNameStr + "_CONFIG_DIR") },
+				hostname{ env::getvar(programNameStr + "_HOST") },
+				port{ env::getvar(programNameStr + "_PORT") },
+				password{ env::getvar(programNameStr + "_PASS") };
+			std::cout << std::boolalpha
+				<< "Environment Variables" << '\n'
+				<< "  " << csync(color::yellow) << programNameStr << "_CONFIG_DIR" << csync() << '\n'
+				<< "    Is Defined:     " << config_dir.has_value() << '\n'
+				<< "    Current Value:  " << config_dir.value_or("") << '\n'
+				<< "    Description:\n"
+				<< "      Overrides the config file search location.\n"
+				<< "      When this is set, config files in other directories on the search path are ignored.\n"
+				<< '\n'
+				<< "  " << csync(color::yellow) << programNameStr << "_HOST" << csync() << '\n'
+				<< "    Is Defined:     " << hostname.has_value() << '\n'
+				<< "    Current Value:  " << hostname.value_or("") << '\n'
+				<< "    Description:\n"
+				<< "      Overrides the target hostname, unless one is specified on the commandline with [-H|--host].\n"
+				//<< "      When this is set, the " << csync(color::yellow) << "sDefaultHost" << csync() << " key in the INI will be ignored.\n"
+				<< '\n'
+				<< "  " << csync(color::yellow) << programNameStr << "_PORT" << csync() << '\n'
+				<< "    Is Defined:     " << port.has_value() << '\n'
+				<< "    Current Value:  " << port.value_or("") << '\n'
+				<< "    Description:\n"
+				<< "      Overrides the target port, unless one is specified on the commandline with [-P|--port].\n"
+				//<< "      When this is set, the " << csync(color::yellow) << "sDefaultPort" << csync() << " key in the INI will be ignored.\n"
+				<< '\n'
+				<< "  " << csync(color::yellow) << programNameStr << "_PASS" << csync() << '\n'
+				<< "    Is Defined:     " << password.has_value() << '\n'
+				<< "    Description:\n"
+				<< "      Overrides the target password, unless one is specified on the commandline with [-p|--pass].\n"
+				//<< "      When this is set, the " << csync(color::yellow) << "sDefaultPass" << csync() << " key in the INI will be ignored.\n"
+				;
+			return 0;
+		}
+
 		/// determine the target server info & operate on the hosts file
 		const auto hostsfile_path{ locator.from_extension(".hosts") };
 		std::optional<config::SavedHosts> hostsfile;
@@ -214,7 +255,11 @@ int main_impl(const int argc, char** argv)
 			return 0;
 		}
 
-		net::rcon::target_info target{ DEFAULT_TARGET_HOST, DEFAULT_TARGET_PORT, "" };
+		net::rcon::target_info target{
+			env::getvar(programNameStr + "_HOST").value_or(DEFAULT_TARGET_HOST),
+			env::getvar(programNameStr + "_PORT").value_or(DEFAULT_TARGET_PORT),
+			env::getvar(programNameStr + "_PASS").value_or("")
+		};
 
 		// -S|-R|--saved|--recall
 		if (const auto& arg_saved{ args.getv_any<opt3::Flag, opt3::Option>('S', 'R', "saved", "recall") }; arg_saved.has_value()) {
