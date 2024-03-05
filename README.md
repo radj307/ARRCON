@@ -103,6 +103,74 @@ To see a list of environment variables, their current values, and a description 
       Comments are always considered line comments.  
       _Use the '`-f`' or '`--file`' options to specify a scriptfile to load._
 
+## Using ARRCON with Python
+
+**Expanding Scripting Capabilities:**
+
+While ARRCON supports various scripting methods, Python libraries like `subprocess` offer robust and flexible control, especially when combined with effective logging. Here's how to integrate ARRCON into your Python projects, ensuring clarity, error tracking, and improved maintainability:
+
+**Prerequisites:**
+
+- Python installed ([https://www.python.org/](https://www.python.org/))
+
+**Example Usage:**
+
+This code demonstrates saving a game server using ARRCON:
+
+```python
+import subprocess
+import logging
+
+# Server details
+server_name = "palserver"
+command = "Save"
+
+# Logging setup
+log_file = "C:/steamcmd/steamapps/common/PalServer/autosave_log.txt"
+logging.basicConfig(filename=log_file, level=logging.INFO, format='%(asctime)s - %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+
+# Execute ARRCON command
+try:
+    logging.info(f"Sending '{command}' command to ARRCON on {server_name}...")
+    with subprocess.Popen(["ARRCON", "-S", server_name], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as proc:
+        proc.stdin.write(command)
+        proc.stdin.flush()
+        stdout, stderr = proc.communicate()
+
+        if proc.returncode == 0:
+            logging.info(f"Command '{command}' sent successfully to ARRCON on {server_name}.")
+        else:
+            logging.error(f"Error sending '{command}' to ARRCON on {server_name}. Error message: {stderr}")
+except Exception as e:
+    logging.error(f"Error: {e}")
+
+print("Script complete. Check the log file for details.")
+```
+
+**Key Points:**
+
+- Import `subprocess` for process handling and `logging` for recording progress.
+- Define server details (name, command).
+- Configure logging with a file destination (e.g., `logging.basicConfig(filename="logfile.txt", ...)`).
+- Use `subprocess.Popen` to launch ARRCON with server name.
+- Send the command via `stdin.write` and flush.
+- Capture and log both standard output and error streams.
+- Check return code for success/failure and log accordingly.
+
+**Customization and Automation:**
+
+- Modify `server_name` and `command` based on your needs.
+- Leverage Python's control flow and data structures for complex interactions.
+- Integrate with other tools and libraries for enhanced automation.
+
+**Benefits of Using Logging:**
+
+- **Detailed Audit Trail:** Track every executed command and its outcome, including success/failure status and any returned messages. This creates a historical record for debugging, analyzing trends, and auditing server actions.
+- **Enhanced Troubleshooting:** Quickly identify issues by pinpointing the exact commands involved in errors or unexpected behavior. Logs capture timestamps, server names, and command details for efficient problem-solving.
+- **Improved Maintainability:** Future developers or yourself can easily understand the purpose and sequence of script actions by reviewing the logged information. This aids in future modifications and maintenance tasks.
+
+By following these guidelines and incorporating effective logging, you can effectively leverage Python's power to manage and automate ARRCON tasks, ensuring clarity, error tracking, and improved maintainability, adding control and flexibility to your server administration efforts.
+
 # Contributing
 
 If you want to add a new feature, fix a bug, or just improve something that annoys you, feel free to submit pull requests and/or issues.
